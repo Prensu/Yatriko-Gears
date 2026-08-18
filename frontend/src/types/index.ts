@@ -23,7 +23,9 @@ export const gearSchema = z.object({
   colors: z.array(z.string()).optional().default([]),
   specs: z.record(z.string()).optional().default({}),
   image: z.string().optional().default(""),
-  category: z.union([z.string(), gearCategorySchema]).optional(),
+  // Uncategorised gear comes back as null, not undefined — .optional() alone
+  // would reject it and take the whole list down with it.
+  category: z.union([z.string(), gearCategorySchema]).nullish(),
   isNew: z.boolean().optional().default(false),
 })
 export type Gear = z.infer<typeof gearSchema>

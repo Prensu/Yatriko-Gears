@@ -5,6 +5,7 @@ import { appConfig } from "../../config/AppConfig"
 import AuthModel from "./AuthModel"
 import UserModel from "../user/UserModel"
 import EmailService from "../../services/EmailService"
+import { mapImage } from "../../utilities/helpers"
 import type { IAuthRequest } from "./AuthContract"
 
 const emailService = new EmailService()
@@ -76,10 +77,45 @@ class AuthController {
     }
   }
 
-  /** GET /api/v1/auth/me */
+  /**
+   * GET /api/v1/auth/me
+   * Reads the stored document rather than the trimmed `loggedInUser` the auth
+   * middleware attaches, so the caller also gets phone/address/image.
+   */
   me = async (req: IAuthRequest, res: Response, next: NextFunction) => {
     try {
-      res.json({ data: req.loggedInUser, message: "Logged in user detail", meta: null })
+      const user = await UserModel.findById(req.loggedInUser?._id, { password: 0 })
+      if (!user) throw { code: 404, message: "User not found or already deleted" }
+
+      res.json({ data: user, message: "Logged in user detail", meta: null })
+    } catch (exception) {
+      next(exception)
+    }
+  }
+
+  /**
+   * PATCH /api/v1/auth/me — update your own profile (multipart, field: image).
+   * email, password and role can never be changed through this route.
+   */
+  updateProfile = async (req: IAuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const data = req.body as Record<string, unknown>
+
+      // Privilege escalation guard — these are not editable here, whatever is posted.
+      delete data.email
+      delete data.password
+      delete data.role
+
+      if (req.file) data.image = mapImage(req.file as Express.Multer.File, "user/")
+
+      const user = await UserModel.findByIdAndUpdate(req.loggedInUser?._id, data, {
+        new: true,
+        runValidators: true,
+        projection: { password: 0 },
+      })
+      if (!user) throw { code: 404, message: "User not found or already deleted" }
+
+      res.json({ data: user, message: "Profile updated successfully", meta: null })
     } catch (exception) {
       next(exception)
     }

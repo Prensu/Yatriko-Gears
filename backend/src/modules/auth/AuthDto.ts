@@ -24,6 +24,21 @@ export const UserLoginDTO = z.object({
 })
 export type UserLoginDTOType = z.infer<typeof UserLoginDTO>
 
+/**
+ * PATCH /auth/me — the logged-in user edits their own profile.
+ * Multipart (the avatar rides along as `image`), so every field is a string
+ * and all of them are optional. email/password/role are NOT editable here.
+ */
+export const UpdateProfileDTO = z.object({
+  name: z.string().min(2, "Name must have atleast 2 character").max(50).optional(),
+  phone: z
+    .string()
+    .regex(/^(\+977[- ]?)?9\d{9}$/, "Enter a valid Nepali mobile number")
+    .optional(),
+  address: z.string().max(200).nullable().optional(),
+})
+export type UpdateProfileDTOType = z.infer<typeof UpdateProfileDTO>
+
 export const RefreshTokenDTO = z.object({
   refreshToken: z.string().min(1, "Refresh token is compulsory"),
 })

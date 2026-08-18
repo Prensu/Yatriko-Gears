@@ -1,10 +1,5 @@
 # AGENTS.md — Yatriko Gears (Full-Stack Project)
 
-> Paste this whole file (or relevant sections) into Gemini/Antigravity as project
-> context before asking it to do any coding task. It describes the exact stack,
-> folder layout, conventions, and API contract already in place. Follow these
-> conventions exactly — do not introduce new patterns, libraries, or folder
-> structures without being asked.
 
 ---
 
