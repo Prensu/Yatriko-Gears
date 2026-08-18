@@ -1,0 +1,57 @@
+# ============================================
+# Yatriko Gears — root .gitignore
+# (covers both yatriko-frontend/ and yatriko-backend/)
+# Rename this file to ".gitignore" at the project root
+# ============================================
+
+# --- Dependencies ---
+node_modules/
+.pnpm-store/
+
+# --- Environment & secrets (NEVER commit) ---
+.env
+.env.*
+!.env-sample
+!.env.example
+
+# --- Build output ---
+dist/
+build/
+*.tsbuildinfo
+
+# --- Uploaded media (backend multer storage) ---
+yatriko-backend/public/uploads/
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Test coverage ---
+coverage/
+
+# --- Vite ---
+.vite/
+*.local
+
+# --- Editor / IDE ---
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Misc ---
+*.zip
+*.tgz
+.cache/
+tmp/
+temp/

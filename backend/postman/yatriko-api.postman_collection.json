@@ -1,0 +1,265 @@
+{
+  "info": {
+    "name": "Yatriko Gears API",
+    "description": "All endpoints for the Yatriko Gears backend. Run 'Auth / Login (admin)' first \u2014 it auto-saves the tokens. Envelope: { data, message, meta }.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:9005/api/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (customer)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Customer\",\n  \"email\": \"customer1@example.com\",\n  \"password\": \"Password@123\",\n  \"confirmPassword\": \"Password@123\",\n  \"phone\": \"9800000001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "  console.log('Tokens saved to collection variables');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@yatrikogears.com\",\n  \"password\": \"Admin@12345\"\n}"
+            }
+          }
+        },
+        { "name": "Me", "request": { "method": "GET", "url": "{{baseUrl}}/auth/me" } },
+        {
+          "name": "Refresh token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/refresh-token",
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" }
+          }
+        },
+        { "name": "Logout", "request": { "method": "POST", "url": "{{baseUrl}}/auth/logout" } }
+      ]
+    },
+    {
+      "name": "Gear",
+      "item": [
+        {
+          "name": "List gear (public)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{baseUrl}}/gear?page=1&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["gear"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "25" },
+                { "key": "search", "value": "tent", "disabled": true },
+                { "key": "category", "value": "tents-and-shelter", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Gear detail (public)",
+          "request": { "method": "GET", "auth": { "type": "noauth" }, "url": "{{baseUrl}}/gear/tent-3-person" }
+        },
+        {
+          "name": "Create gear (admin, multipart)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/gear",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Camping Lantern Pro", "type": "text" },
+                { "key": "description", "value": "Rechargeable 3-mode lantern", "type": "text" },
+                { "key": "realPrice", "value": "350", "type": "text" },
+                { "key": "discountedPrice", "value": "300", "type": "text" },
+                { "key": "availableFor", "value": "[\"rent\",\"sale\"]", "type": "text" },
+                { "key": "colors", "value": "[\"black\",\"green\"]", "type": "text" },
+                { "key": "specs", "value": "{\"battery\":\"5000mAh\"}", "type": "text" },
+                { "key": "isNew", "value": "true", "type": "text" },
+                { "key": "image", "type": "file", "src": [] }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update gear (admin)",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/gear/camping-lantern-pro",
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "discountedPrice", "value": "280", "type": "text" }]
+            }
+          }
+        },
+        { "name": "Delete gear (admin)", "request": { "method": "DELETE", "url": "{{baseUrl}}/gear/camping-lantern-pro" } }
+      ]
+    },
+    {
+      "name": "Category",
+      "item": [
+        { "name": "List categories (public)", "request": { "method": "GET", "auth": { "type": "noauth" }, "url": "{{baseUrl}}/category" } },
+        {
+          "name": "Create category (admin)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/category",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Water & Hydration", "type": "text" },
+                { "key": "description", "value": "Bottles, filters and jugs", "type": "text" },
+                { "key": "image", "type": "file", "src": [] }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Package",
+      "item": [
+        { "name": "List packages (public)", "request": { "method": "GET", "auth": { "type": "noauth" }, "url": "{{baseUrl}}/package" } },
+        {
+          "name": "Create package (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/package",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Duo Weekend Kit\",\n  \"price\": 2500,\n  \"items\": [\"Tent (3 Person)\", \"Sleeping Bag x2\", \"Mattress x2\", \"Tent Light\"],\n  \"description\": \"Compact combo for two people\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Destination",
+      "item": [
+        { "name": "List destinations (public)", "request": { "method": "GET", "auth": { "type": "noauth" }, "url": "{{baseUrl}}/destination" } },
+        {
+          "name": "Create destination (admin)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/destination",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Shivapuri", "type": "text" },
+                { "key": "blurb", "value": "Forest trails and waterfalls on the north rim", "type": "text" },
+                { "key": "image", "type": "file", "src": [] }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Video (Cloudinary)",
+      "item": [
+        { "name": "List videos (public)", "request": { "method": "GET", "auth": { "type": "noauth" }, "url": "{{baseUrl}}/video" } },
+        { "name": "Get upload signature (admin)", "request": { "method": "POST", "url": "{{baseUrl}}/video/upload-signature" } },
+        {
+          "name": "Register uploaded video (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/video",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Camp at Hattiban\",\n  \"category\": \"Camps\",\n  \"cloudinaryUrl\": \"https://res.cloudinary.com/YOUR_CLOUD/video/upload/v123/yatriko/videos/abc.mp4\",\n  \"publicId\": \"yatriko/videos/abc\"\n}"
+            }
+          }
+        },
+        { "name": "Delete video (admin)", "request": { "method": "DELETE", "url": "{{baseUrl}}/video/REPLACE_ID" } }
+      ]
+    },
+    {
+      "name": "Contact",
+      "item": [
+        {
+          "name": "Submit contact (public)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/contact",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ram Shrestha\",\n  \"email\": \"ram@example.com\",\n  \"phone\": \"9812345678\",\n  \"subject\": \"Tent availability\",\n  \"message\": \"Do you have a 4P tent free this Saturday?\"\n}"
+            }
+          }
+        },
+        { "name": "List contacts (admin)", "request": { "method": "GET", "url": "{{baseUrl}}/contact" } },
+        {
+          "name": "Mark contact read (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/contact/REPLACE_ID/status",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"read\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriber",
+      "item": [
+        {
+          "name": "Subscribe (public)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/subscriber",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"lead@example.com\"\n}" }
+          }
+        },
+        { "name": "List subscribers (admin)", "request": { "method": "GET", "url": "{{baseUrl}}/subscriber" } }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        { "name": "List users (admin)", "request": { "method": "GET", "url": "{{baseUrl}}/user" } },
+        { "name": "Delete user (admin)", "request": { "method": "DELETE", "url": "{{baseUrl}}/user/REPLACE_ID" } }
+      ]
+    }
+  ]
+}
