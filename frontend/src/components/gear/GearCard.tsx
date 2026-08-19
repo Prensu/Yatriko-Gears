@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import type { Gear } from "@/types"
 import { resolveGearImage } from "@/lib/gearImages"
 
@@ -46,6 +47,14 @@ export default function GearCard({ gear }: { gear: Gear }) {
         {gear.colors.length > 0 && (
           <p className="mt-2 text-[11px] text-slate-400">Colors: {gear.colors.join(" · ")}</p>
         )}
+        <Link
+          to={`/book/${gear.slug}`}
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full bg-forest-600 px-4 py-2
+                     font-display text-sm font-semibold text-white transition hover:bg-forest-700"
+        >
+          Rent Now
+          <span aria-hidden="true">→</span>
+        </Link>
       </div>
     </article>
   )

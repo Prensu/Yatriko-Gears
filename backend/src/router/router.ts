@@ -9,6 +9,8 @@ import destinationRouter from "../modules/destination/DestinationRoute"
 import videoRouter from "../modules/video/VideoRoute"
 import contactRouter from "../modules/contact/ContactRoute"
 import subscriberRouter from "../modules/subscriber/SubscriberRoute"
+import bookingRouter from "../modules/booking/BookingRoute"
+import paymentRouter from "../modules/payment/PaymentRoute"
 import chatRouter from "../modules/chat/ChatRouter"
 
 const router = Router()
@@ -38,6 +40,8 @@ router.use("/gear", gearRouter)
 router.use("/package", packageRouter)
 router.use("/destination", destinationRouter)
 router.use("/video", videoRouter)
+router.use("/booking", bookingRouter)
+router.use("/payment", paymentRouter)
 router.use("/contact", formLimiter, contactRouter)
 router.use("/subscriber", formLimiter, subscriberRouter)
 router.use("/chat",chatRouter)

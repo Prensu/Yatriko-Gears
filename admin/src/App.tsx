@@ -12,6 +12,7 @@ import PackageFormPage from "@/pages/packages/PackageFormPage"
 import DestinationListPage from "@/pages/destinations/DestinationListPage"
 import DestinationFormPage from "@/pages/destinations/DestinationFormPage"
 import VideosPage from "@/pages/VideosPage"
+import BookingsPage from "@/pages/BookingsPage"
 import LeadsPage from "@/pages/LeadsPage"
 import SubscribersPage from "@/pages/SubscribersPage"
 import CustomersPage from "@/pages/CustomersPage"
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="destinations/:slug/edit" element={<DestinationFormPage />} />
 
           <Route path="videos" element={<VideosPage />} />
+          <Route path="bookings" element={<BookingsPage />} />
           <Route path="leads" element={<LeadsPage />} />
           <Route path="subscribers" element={<SubscribersPage />} />
           <Route path="customers" element={<CustomersPage />} />

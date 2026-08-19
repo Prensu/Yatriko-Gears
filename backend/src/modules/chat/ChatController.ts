@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai"
+import { GoogleGenAI, ThinkingLevel } from "@google/genai"
 import type { NextFunction, Response } from "express"
 import type { IAuthRequest } from "../auth/AuthContract"
 import { geminiConfig } from "../../config/AppConfig"
@@ -129,13 +129,28 @@ setInterval(() => {
   sessions.clear()
 }, 30 * 60 * 1000)
 
-// Ordered newest -> oldest. If one gets retired/blocked for your account, the next still works.
+/**
+ * Tried in order. Deliberately NOT newest-first: gemini-3.7-flash is the
+ * newest and therefore the most contended, and it was returning 503
+ * "high demand" for this key. 3.6 is a generation behind and far quieter,
+ * which matters more than raw capability for a support chat widget.
+ * 3.7 stays in the list as a fallback. gemini-2.5-flash was dropped: it now
+ * returns 404 "no longer available to new users".
+ */
 const MODEL_CANDIDATES = [
-  "gemini-3.7-flash",
   "gemini-3.6-flash",
   "gemini-3.5-flash",
-  "gemini-2.5-flash",
+  "gemini-3.7-flash",
 ]
+
+/**
+ * Worth moving to the next model rather than giving up:
+ *   404 model missing/not enabled · 429 rate limited
+ *   500/502/503 transient capacity ("high demand")
+ */
+function shouldTryNextModel(status: number | undefined): boolean {
+  return status === 404 || status === 429 || status === 500 || status === 502 || status === 503
+}
 
 class ChatController {
   private ai: GoogleGenAI | null = null
@@ -166,17 +181,22 @@ class ChatController {
           contents: history,
           config: {
             systemInstruction: SYSTEM_PROMPT,
-            maxOutputTokens: 400,
+            // Thinking tokens are drawn from this same budget, so leaving
+            // thinking on default truncated replies mid-sentence and pushed
+            // responses past 40s. MINIMAL keeps the whole budget for the answer.
+            maxOutputTokens: 800,
             temperature: 0.5,
-            thinkingConfig: { thinkingLevel: "medium" },
+            thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
           },
         })
         this.workingModel = model
         return response
       } catch (err: unknown) {
         const status = (err as { status?: number })?.status
-        if (status === 404) {
-          console.warn(`Model "${model}" unavailable (404), trying next candidate...`)
+        if (shouldTryNextModel(status)) {
+          console.warn(`Model "${model}" unavailable (${status}), trying next candidate...`)
+          // Don't keep preferring a model that just failed.
+          if (this.workingModel === model) this.workingModel = null
           lastError = err
           continue
         }
@@ -227,6 +247,14 @@ class ChatController {
         console.error("Gemini API error:", geminiError)
         // Remove the failed user message from history so retry works
         history.pop()
+        const status = (geminiError as { status?: number })?.status
+        // Every candidate was busy — say so in plain language.
+        if (shouldTryNextModel(status)) {
+          throw {
+            code: 503,
+            message: "Our assistant is busy right now — please try again in a moment.",
+          }
+        }
         const errMsg =
           geminiError instanceof Error ? geminiError.message : "Gemini API call failed"
         throw { code: 502, message: `AI service error: ${errMsg}` }

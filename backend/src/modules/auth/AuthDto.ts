@@ -39,6 +39,11 @@ export const UpdateProfileDTO = z.object({
 })
 export type UpdateProfileDTOType = z.infer<typeof UpdateProfileDTO>
 
+/** POST /auth/google — the ID token the browser got from Google Sign-In. */
+export const GoogleLoginDTO = z.object({
+  credential: z.string().min(1, "Google credential is compulsory"),
+})
+
 export const RefreshTokenDTO = z.object({
   refreshToken: z.string().min(1, "Refresh token is compulsory"),
 })

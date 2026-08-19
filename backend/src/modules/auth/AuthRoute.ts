@@ -6,6 +6,7 @@ import AuthController from "./AuthController"
 import {
   UserRegisterDTO,
   UserLoginDTO,
+  GoogleLoginDTO,
   RefreshTokenDTO,
   UpdateProfileDTO,
   ForgotPasswordDTO,
@@ -17,6 +18,7 @@ const authCtrl = new AuthController()
 
 authRouter.post("/register", bodyValidator(UserRegisterDTO), authCtrl.register)
 authRouter.post("/login", bodyValidator(UserLoginDTO), authCtrl.login)
+authRouter.post("/google", bodyValidator(GoogleLoginDTO), authCtrl.googleLogin)
 authRouter.get("/me", Auth(), authCtrl.me)
 authRouter.patch(
   "/me",

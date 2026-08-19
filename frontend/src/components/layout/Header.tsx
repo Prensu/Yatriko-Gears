@@ -1,6 +1,8 @@
 import { useState } from "react"
-import { Link, NavLink } from "react-router-dom"
+import { Link, NavLink, useNavigate } from "react-router-dom"
 import logoImg from "@/assets/logo.png"
+import { useAuth } from "@/context/AuthContext"
+import AccountMenu, { Avatar } from "@/components/layout/AccountMenu"
 
 const navItems = [
   { to: "/", label: "Home" },
@@ -11,6 +13,14 @@ const navItems = [
 
 export default function Header() {
   const [open, setOpen] = useState(false)
+  const { user, status, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSignOut = async () => {
+    await signOut()
+    setOpen(false)
+    navigate("/")
+  }
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
       <div className="container-site flex h-20 items-center justify-between">
@@ -32,6 +42,17 @@ export default function Header() {
               {item.label}
             </NavLink>
           ))}
+          {status === "authenticated" ? (
+            <AccountMenu />
+          ) : (
+            <Link
+              to="/login"
+              className="font-display text-sm font-semibold text-navy-800 transition hover:text-forest-600"
+            >
+              Login
+            </Link>
+          )}
+
           <Link to="/gear" className="btn-primary !px-5 !py-2 text-sm">
             Rent Gear
           </Link>
@@ -59,6 +80,51 @@ export default function Header() {
               {item.label}
             </NavLink>
           ))}
+
+          <div className="mt-2 border-t border-slate-100 pt-2">
+            {status === "authenticated" ? (
+              <>
+                <div className="mb-1 flex items-center gap-3 rounded-2xl bg-sand px-3 py-3">
+                  <Avatar size="h-10 w-10" />
+                  <div className="min-w-0">
+                    <p className="truncate font-display font-bold text-navy-900">{user?.name}</p>
+                    <p className="truncate text-xs text-slate-500">{user?.email}</p>
+                  </div>
+                </div>
+                <NavLink
+                  to="/bookings"
+                  onClick={() => setOpen(false)}
+                  className="block py-3 font-display font-semibold text-navy-800"
+                >
+                  My Bookings
+                </NavLink>
+                <button
+                  type="button"
+                  onClick={() => void handleSignOut()}
+                  className="block w-full py-3 text-left font-display font-semibold text-navy-800"
+                >
+                  Logout ({user?.name?.split(" ")[0]})
+                </button>
+              </>
+            ) : (
+              <>
+                <NavLink
+                  to="/login"
+                  onClick={() => setOpen(false)}
+                  className="block py-3 font-display font-semibold text-navy-800"
+                >
+                  Login
+                </NavLink>
+                <NavLink
+                  to="/register"
+                  onClick={() => setOpen(false)}
+                  className="block py-3 font-display font-semibold text-forest-700"
+                >
+                  Create account
+                </NavLink>
+              </>
+            )}
+          </div>
         </nav>
       )}
     </header>

@@ -6,6 +6,7 @@ import AuthModel from "./AuthModel"
 import UserModel from "../user/UserModel"
 import EmailService from "../../services/EmailService"
 import { mapImage } from "../../utilities/helpers"
+import { verifyGoogleIdToken } from "./GoogleVerifier"
 import type { IAuthRequest } from "./AuthContract"
 
 const emailService = new EmailService()
@@ -53,12 +54,69 @@ class AuthController {
       const userDetail = await UserModel.findOne({ email })
       if (!userDetail) throw { code: 422, message: "Credentials do not match." }
 
+      // Google-only accounts have no password to compare against.
+      if (!userDetail.password) {
+        throw { code: 422, message: "This account uses Google sign-in — use the Google button." }
+      }
+
       if (!bcrypt.compareSync(password, userDetail.password)) {
         throw { code: 422, message: "Credentials do not match." }
       }
 
       const accessToken = jwt.sign({ sub: userDetail._id }, appConfig.jwtSecret, { expiresIn: "1h" })
       const refreshToken = jwt.sign({ sub: userDetail._id }, appConfig.jwtRefreshSecret, { expiresIn: "1d" })
+
+      await new AuthModel({
+        userId: userDetail._id,
+        accessToken,
+        refreshToken,
+        status: "active",
+        agent: req.headers["user-agent"] ?? "web",
+      }).save()
+
+      const user = userDetail.toObject() as Record<string, unknown>
+      delete user.password
+
+      res.json({ data: { accessToken, refreshToken, user }, message: "You are loggedIn", meta: null })
+    } catch (exception) {
+      next(exception)
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/google — sign in (or sign up) with a Google account.
+   *
+   * Matching is by verified email, so someone who registered with a password
+   * and later clicks "Continue with Google" lands on the same account rather
+   * than a duplicate. The role is never taken from Google — a Google sign-in
+   * can only ever be a customer.
+   */
+  googleLogin = async (req: IAuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const profile = await verifyGoogleIdToken(req.body.credential)
+
+      let userDetail = await UserModel.findOne({ email: profile.email })
+
+      if (!userDetail) {
+        userDetail = await new UserModel({
+          name: profile.name,
+          email: profile.email,
+          provider: "google",
+          googleId: profile.googleId,
+          avatarUrl: profile.picture,
+          role: "customer",
+        }).save()
+      } else if (!userDetail.get("googleId")) {
+        // Existing password account signing in with Google for the first time.
+        userDetail.set("googleId", profile.googleId)
+        if (!userDetail.get("avatarUrl")) userDetail.set("avatarUrl", profile.picture)
+        await userDetail.save()
+      }
+
+      const accessToken = jwt.sign({ sub: userDetail._id }, appConfig.jwtSecret, { expiresIn: "1h" })
+      const refreshToken = jwt.sign({ sub: userDetail._id }, appConfig.jwtRefreshSecret, {
+        expiresIn: "1d",
+      })
 
       await new AuthModel({
         userId: userDetail._id,

@@ -57,6 +57,53 @@ export const videoSchema = z.object({
 })
 export type Video = z.infer<typeof videoSchema>
 
+/* ------------------------------------------------------------------ */
+/* Bookings                                                             */
+/* ------------------------------------------------------------------ */
+
+export const bookingItemSchema = z.object({
+  gear: z.string(),
+  name: z.string(),
+  pricePerDay: z.number(),
+  quantity: z.number(),
+})
+
+export const bookingStatusSchema = z.enum([
+  "pending",
+  "confirmed",
+  "active",
+  "completed",
+  "cancelled",
+])
+export type BookingStatus = z.infer<typeof bookingStatusSchema>
+
+export const bookingSchema = z.object({
+  _id: z.string(),
+  code: z.string(),
+  items: z.array(bookingItemSchema),
+  startDate: z.string(),
+  endDate: z.string(),
+  days: z.number(),
+  subtotal: z.number(),
+  deliveryCharge: z.number().default(0),
+  total: z.number(),
+  status: bookingStatusSchema,
+  paymentMethod: z.enum(["esewa", "cash"]),
+  paymentStatus: z.enum(["unpaid", "paid", "refunded"]),
+  deliveryAddress: z.string().default(""),
+  customerPhone: z.string().default(""),
+  note: z.string().nullish().transform((v) => v ?? ""),
+  createdAt: z.string().optional(),
+})
+export type Booking = z.infer<typeof bookingSchema>
+
+/** Signed form payload from POST /payment/esewa/initiate. */
+export const esewaFormSchema = z.object({
+  formUrl: z.string().url(),
+  fields: z.record(z.string()),
+})
+export type EsewaForm = z.infer<typeof esewaFormSchema>
+
 /** Envelope: every backend response is { data, message, meta } */
 export const envelopeSchema = <T extends z.ZodTypeAny>(data: T) =>
   z.object({

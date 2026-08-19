@@ -206,6 +206,56 @@ export const subscriberSchema = z.object({
 export type Subscriber = z.infer<typeof subscriberSchema>
 
 /* ------------------------------------------------------------------ */
+/* Bookings                                                             */
+/* ------------------------------------------------------------------ */
+
+export const bookingStatusSchema = z.enum([
+  "pending",
+  "confirmed",
+  "active",
+  "completed",
+  "cancelled",
+])
+export type BookingStatus = z.infer<typeof bookingStatusSchema>
+
+export const bookingSchema = z.object({
+  _id: z.string(),
+  code: z.string(),
+  customerName: z.string(),
+  customerEmail: z.string(),
+  customerPhone: z.string(),
+  deliveryAddress: z.string().default(""),
+  note: z.string().nullish().transform((v) => v ?? ""),
+  items: z.array(
+    z.object({
+      gear: z.string(),
+      name: z.string(),
+      pricePerDay: z.number(),
+      quantity: z.number(),
+    }),
+  ),
+  startDate: z.string(),
+  endDate: z.string(),
+  days: z.number(),
+  subtotal: z.number(),
+  deliveryCharge: z.number().default(0),
+  total: z.number(),
+  status: bookingStatusSchema,
+  paymentMethod: z.enum(["esewa", "cash"]),
+  paymentStatus: z.enum(["unpaid", "paid", "refunded"]),
+  payment: z
+    .object({
+      transactionUuid: z.string().nullish(),
+      transactionCode: z.string().nullish(),
+      refId: z.string().nullish(),
+      verifiedAt: z.string().nullish(),
+    })
+    .nullish(),
+  ...timestamps,
+})
+export type Booking = z.infer<typeof bookingSchema>
+
+/* ------------------------------------------------------------------ */
 /* Envelope + errors                                                    */
 /* ------------------------------------------------------------------ */
 
