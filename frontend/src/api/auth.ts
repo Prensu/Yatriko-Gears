@@ -33,6 +33,22 @@ export async function loginWithGoogle(credential: string): Promise<LoginResponse
   return data
 }
 
+/** POST /auth/forgot-password — always succeeds, even for unknown emails. */
+export async function requestPasswordReset(email: string): Promise<string> {
+  const { message } = await api.post("/auth/forgot-password", z.null(), { email })
+  return message
+}
+
+/** POST /auth/reset-password — the token arrives by email. */
+export async function resetPassword(input: {
+  resetToken: string
+  password: string
+  confirmPassword: string
+}): Promise<string> {
+  const { message } = await api.post("/auth/reset-password", z.null(), input)
+  return message
+}
+
 export async function fetchMe(): Promise<User> {
   const { data } = await api.get("/auth/me", userSchema)
   return data

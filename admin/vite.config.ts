@@ -32,6 +32,13 @@ export default defineConfig({
   // server proxies /admin here, in production the built files are served
   // from an /admin/ subdirectory. Every asset URL needs that prefix.
   base: "/admin/",
+  build: {
+    // Emit into dist/admin so the deployed paths match the "/admin/" base —
+    // otherwise the HTML asks for /admin/assets/* while the host serves them
+    // from /assets/*.
+    outDir: "dist/admin",
+    emptyOutDir: true,
+  },
   resolve: {
     // tsconfig "paths" only teaches the type-checker — Vite needs this too.
     alias: {

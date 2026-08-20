@@ -9,6 +9,9 @@ import {
   verifyWithEsewa,
 } from "./EsewaService"
 import type { IAuthRequest } from "../auth/AuthContract"
+import { loggerFor } from "../../config/logger"
+
+const log = loggerFor("PaymentController")
 
 class PaymentController {
   /**
@@ -79,7 +82,7 @@ class PaymentController {
       }
 
       if (!callbackSignatureMatches(callback)) {
-        console.warn(`eSewa callback signature mismatch for ${callback.transaction_uuid}`)
+        log.warn(`eSewa callback signature mismatch for ${callback.transaction_uuid}`)
       }
 
       const status = await verifyWithEsewa({

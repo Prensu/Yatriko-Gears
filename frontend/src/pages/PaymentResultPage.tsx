@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom"
 import { verifyEsewa } from "@/api/booking"
 import { ApiRequestError } from "@/lib/api"
 import type { Booking } from "@/types"
+import { usePageMeta } from "@/hooks/usePageMeta"
 
 type State = "verifying" | "paid" | "failed"
 
@@ -12,6 +13,12 @@ type State = "verifying" | "paid" | "failed"
  * server-to-server before marking anything paid.
  */
 export default function PaymentResultPage({ outcome }: { outcome: "success" | "failure" }) {
+  usePageMeta({
+    title: "Payment",
+    description: "Payment result for your Yatriko Gears booking.",
+    noIndex: true,
+  })
+
   const [params] = useSearchParams()
   const [state, setState] = useState<State>(outcome === "success" ? "verifying" : "failed")
   const [booking, setBooking] = useState<Booking | null>(null)

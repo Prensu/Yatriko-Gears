@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express"
+import { loggerFor } from "../config/logger"
 
 export type AppError = { code?: number; message?: string; detail?: unknown }
 
@@ -30,6 +31,26 @@ const ErrorHandlingMiddleware = (
     code = statusCode === 404 ? "NOT_FOUND" : statusCode >= 500 ? "INTERNAL_ERROR" : "BAD_REQUEST"
     message = error.message ?? "Internal Server Error"
     detail = error.detail ?? null
+  }
+
+  /**
+   * Log before responding. 5xx means we broke something and it carries a
+   * stack; 4xx is usually the caller's problem so it stays at warn and
+   * doesn't page anyone.
+   */
+  const log = loggerFor("error-handler")
+  const context = {
+    reqId: (req as Request & { id?: string }).id,
+    method: req.method,
+    url: req.originalUrl,
+    statusCode,
+    code,
+  }
+
+  if (statusCode >= 500) {
+    log.error({ ...context, err: error instanceof Error ? error : undefined, detail }, message)
+  } else {
+    log.warn(context, message)
   }
 
   res.status(statusCode).json({ code, message, detail })

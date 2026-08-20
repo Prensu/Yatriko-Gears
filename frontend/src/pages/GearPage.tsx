@@ -3,6 +3,7 @@ import { fetchGear } from "@/api/gear"
 import type { Gear } from "@/types"
 import GearCard from "@/components/gear/GearCard"
 import SectionHeading from "@/components/common/SectionHeading"
+import { usePageMeta } from "@/hooks/usePageMeta"
 
 type Filter = "all" | "rent" | "sale" | "new"
 
@@ -14,6 +15,12 @@ const FILTERS: { key: Filter; label: string }[] = [
 ]
 
 export default function GearPage() {
+  usePageMeta({
+    title: "All Camping Gear on Rent",
+    description: "Browse our full camping gear catalogue — tents, sleeping bags, stoves, chairs and lighting — with daily rental rates and valley-wide delivery.",
+    path: "/gear",
+  })
+
   const [gear, setGear] = useState<Gear[]>([])
   const [filter, setFilter] = useState<Filter>("all")
   const [query, setQuery] = useState("")

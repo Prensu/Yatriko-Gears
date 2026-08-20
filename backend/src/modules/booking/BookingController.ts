@@ -1,27 +1,23 @@
 import type { NextFunction, Response } from "express"
 import BookingModel from "./BookingModel"
 import GearModel from "../gear/GearModel"
+import { assertAvailable, getAvailability } from "./AvailabilityService"
+import { DELIVERY_CHARGE, calculateSubtotal, calculateTotal, countDays } from "./BookingPricing"
 import EmailService from "../../services/EmailService"
 import { smtpConfig } from "../../config/AppConfig"
 import { getPagination } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
+import { loggerFor } from "../../config/logger"
+
+const log = loggerFor("BookingController")
 
 const emailService = new EmailService()
-
-/** Delivery is free inside the valley; kept as a field so it can change later. */
-const DELIVERY_CHARGE = 0
 
 /** YG-250819-4F2A — short enough to read out on the phone. */
 function makeBookingCode(): string {
   const stamp = new Date().toISOString().slice(2, 10).replace(/-/g, "")
   const random = Math.random().toString(36).slice(2, 6).toUpperCase()
   return `YG-${stamp}-${random}`
-}
-
-/** Inclusive day count: picking up and returning the same day is 1 day. */
-function countDays(start: Date, end: Date): number {
-  const ms = end.getTime() - start.getTime()
-  return Math.max(1, Math.round(ms / 86400000) + 1)
 }
 
 class BookingController {
@@ -64,12 +60,19 @@ class BookingController {
         }
       })
 
-      const subtotal = items.reduce(
-        (sum: number, item: { pricePerDay: number; quantity: number }) =>
-          sum + item.pricePerDay * item.quantity * days,
-        0,
+      // Stock gate: refuse before we create anything, so two customers can't
+      // both walk away thinking they have the same tent.
+      await assertAvailable(
+        items.map((item: { gear: unknown; quantity: number }) => ({
+          gear: String(item.gear),
+          quantity: item.quantity,
+        })),
+        startDate,
+        endDate,
       )
-      const total = subtotal + DELIVERY_CHARGE
+
+      const subtotal = calculateSubtotal(items, days)
+      const total = calculateTotal(subtotal)
 
       const booking = new BookingModel({
         code: makeBookingCode(),
@@ -92,18 +95,74 @@ class BookingController {
       })
       await booking.save()
 
-      // Non-critical: the booking stands even if SMTP is down.
+      const itemLines = items
+        .map(
+          (item: { name: string; quantity: number; pricePerDay: number }) =>
+            `<li>${item.name} &times; ${item.quantity} — Rs. ${item.pricePerDay}/day</li>`,
+        )
+        .join("")
+      const dateRange = `${body.startDate} to ${body.endDate}`
+
+      // Both emails are non-critical: the booking stands even if SMTP is down.
       try {
         await emailService.sendEmail({
           to: smtpConfig.fromAddress,
           sub: `New booking ${booking.code}`,
-          message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) booked ${items.length} item(s) for ${days} day(s).</p><p>Total: Rs. ${total}</p>`,
+          message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) booked ${items.length} item(s) for ${days} day(s).</p><ul>${itemLines}</ul><p>Deliver to: ${booking.deliveryAddress}</p><p>Total: Rs. ${total}</p>`,
         })
       } catch {
-        console.error("Booking notification email could not be sent")
+        log.error("Booking notification email could not be sent")
+      }
+
+      // The customer gets a receipt too — previously only the shop was told.
+      try {
+        await emailService.sendEmail({
+          to: booking.customerEmail,
+          sub: `Your Yatriko Gears booking ${booking.code}`,
+          message: `<h2>Namaste ${booking.customerName}!</h2>
+            <p>We have your booking <b>${booking.code}</b>. Our team will call you on
+            ${booking.customerPhone} to confirm delivery.</p>
+            <ul>${itemLines}</ul>
+            <p><b>Rental dates:</b> ${dateRange} (${days} day${days > 1 ? "s" : ""})<br/>
+            <b>Deliver to:</b> ${booking.deliveryAddress}<br/>
+            <b>Total:</b> Rs. ${total} — ${
+              body.paymentMethod === "cash" ? "payable on delivery" : "pay online with eSewa"
+            }</p>
+            <p>Gear up. Head out. Make memories. \u26fa</p>`,
+        })
+      } catch {
+        log.error("Booking receipt email could not be sent")
       }
 
       res.json({ data: booking, message: "Booking created successfully", meta: null })
+    } catch (exception) {
+      next(exception)
+    }
+  }
+
+  /**
+   * GET /api/v1/booking/availability?gear=<id>&startDate=&endDate=
+   * Public: lets the booking form show "3 available" before anyone commits.
+   */
+  checkAvailability = async (req: IAuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const gearId = String(req.query.gear ?? "")
+      const startDate = new Date(String(req.query.startDate ?? ""))
+      const endDate = new Date(String(req.query.endDate ?? ""))
+
+      if (!gearId) throw { code: 400, message: "gear is compulsory" }
+      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+        throw { code: 400, message: "Valid startDate and endDate are compulsory" }
+      }
+      if (endDate < startDate) {
+        throw { code: 400, message: "Return date cannot be before the pickup date" }
+      }
+
+      const availability = await getAvailability([gearId], startDate, endDate)
+      const info = availability.get(gearId)
+      if (!info) throw { code: 404, message: "Gear not found" }
+
+      res.json({ data: info, message: "Availability", meta: null })
     } catch (exception) {
       next(exception)
     }
@@ -138,6 +197,54 @@ class BookingController {
       }
 
       res.json({ data: booking, message: "Booking detail", meta: null })
+    } catch (exception) {
+      next(exception)
+    }
+  }
+
+  /**
+   * PATCH /api/v1/booking/:id/cancel — the customer calls off their own booking.
+   *
+   * Deliberately narrow: only the owner, only while it is still pending, and
+   * only if they haven't paid. Anything already paid or already out for
+   * delivery goes through the shop, so refunds stay a human decision.
+   */
+  cancelOwnBooking = async (req: IAuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const booking = await BookingModel.findById(req.params.id)
+      if (!booking) throw { code: 404, message: "Booking not found" }
+
+      if (String(booking.user) !== String(req.loggedInUser?._id)) {
+        throw { code: 403, message: "Permission denied" }
+      }
+      if (booking.status === "cancelled") {
+        throw { code: 422, message: "This booking is already cancelled" }
+      }
+      if (booking.paymentStatus === "paid") {
+        throw {
+          code: 422,
+          message: "This booking is already paid — please call us and we'll sort out the refund.",
+        }
+      }
+      if (booking.status !== "pending") {
+        throw { code: 422, message: "This booking is already being prepared — please call us." }
+      }
+
+      booking.status = "cancelled"
+      await booking.save()
+
+      // Cancelling frees the stock, so tell the shop it's back on the shelf.
+      try {
+        await emailService.sendEmail({
+          to: smtpConfig.fromAddress,
+          sub: `Booking cancelled: ${booking.code}`,
+          message: `<p>${booking.customerName} cancelled booking <b>${booking.code}</b>. The gear is available again.</p>`,
+        })
+      } catch {
+        log.error("Cancellation notice could not be sent")
+      }
+
+      res.json({ data: booking, message: "Booking cancelled", meta: null })
     } catch (exception) {
       next(exception)
     }

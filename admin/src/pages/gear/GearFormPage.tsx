@@ -64,6 +64,7 @@ export default function GearFormPage() {
           colors: gear.colors,
           specs: gear.specs,
           category: gear.category?._id ?? "",
+          quantityTotal: String(gear.quantityTotal ?? 1),
           isNew: gear.isNew,
           status: gear.status,
         })
@@ -290,6 +291,25 @@ export default function GearFormPage() {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
+            </FormField>
+
+            <FormField
+              label="Units in stock"
+              htmlFor="quantityTotal"
+              required
+              error={errors.quantityTotal}
+              hint="How many you own. Bookings that would exceed this are refused."
+            >
+              <input
+                id="quantityTotal"
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                className={`input ${errors.quantityTotal ? "input-error" : ""}`}
+                value={form.quantityTotal}
+                onChange={(event) => set("quantityTotal", event.target.value)}
+              />
             </FormField>
 
             <Toggle

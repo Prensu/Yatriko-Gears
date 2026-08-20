@@ -14,7 +14,7 @@ import type { Package } from "@/types"
 export default function PackageListPage() {
   usePageMeta("Packages")
 
-  const list = useListResource<Package>(fetchPackageList, { limit: 10 })
+  const list = useListResource<Package>(fetchPackageList, { limit: 10, initialFilters: { status: "all" } })
   const [selected, setSelected] = useState<string[]>([])
 
   const slugById = useMemo(() => {
@@ -120,6 +120,18 @@ export default function PackageListPage() {
           onChange: list.setSearch,
           placeholder: "Search packages…",
         }}
+        filters={
+            <select
+              className="input w-auto min-w-[9rem]"
+              value={list.filters.status ?? "all"}
+              onChange={(event) => list.setFilter("status", event.target.value)}
+              aria-label="Filter by status"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+        }
         selectable
         selectedIds={selected}
         onSelectionChange={setSelected}
@@ -148,10 +160,6 @@ export default function PackageListPage() {
         }
       />
 
-      <p className="mt-3 text-xs text-ink-400">
-        Note: <code className="rounded bg-ink-100 px-1">GET /package</code> only returns{" "}
-        <strong>active</strong> packages, so inactive ones drop out of this list.
-      </p>
 
       <ConfirmModal {...deletion.modalProps} />
     </div>

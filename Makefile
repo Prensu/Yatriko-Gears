@@ -46,10 +46,10 @@ help: ## Show this help menu (default when you just type "make")
 	@grep -E '^(dev|dev-all|dev-backend|dev-frontend|dev-admin):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo -e "$(YELLOW)── Build & Run (production) ──────────────────────$(RESET)"
-	@grep -E '^(build|build-backend|build-frontend|build-admin|start|preview):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
+	@grep -E '^(build|build-backend|build-frontend|build-admin|start|preview|deploy-check):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo -e "$(YELLOW)── Quality Checks ─────────────────────────────────$(RESET)"
-	@grep -E '^(check|typecheck|typecheck-admin|lint):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
+	@grep -E '^(check|typecheck|typecheck-admin|lint|test):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo -e "$(YELLOW)── Database ───────────────────────────────────────$(RESET)"
 	@grep -E '^(seed):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
@@ -113,7 +113,7 @@ admin-dev: dev-admin   # alias
 # │  🏗️   BUILD & RUN — production builds                              │
 # └──────────────────────────────────────────────────────────────────┘
 
-.PHONY: build build-backend build-frontend build-admin start preview
+.PHONY: build build-backend build-frontend build-admin start preview deploy-check
 
 build: build-backend build-frontend build-admin ## Build backend + frontend + admin for production
 
@@ -132,20 +132,30 @@ start: ## Start the COMPILED backend (run build-backend first)
 preview: ## Preview the built frontend locally
 	cd $(FRONTEND_DIR) && $(PM) run preview
 
+deploy-check: ## Dry-run what CI/hosts will do: install, check, build all three
+	$(MAKE) check
+	$(MAKE) build
+	@echo ""
+	@echo "All three apps build. See DEPLOYMENT.md for Render + Vercel setup." 
+
 
 # ┌──────────────────────────────────────────────────────────────────┐
 # │  ✅  QUALITY CHECKS                                                │
 # └──────────────────────────────────────────────────────────────────┘
 
-.PHONY: check typecheck typecheck-admin lint
+.PHONY: check typecheck typecheck-admin lint test
 
-check: typecheck typecheck-admin lint ## Run every check (typecheck + lint)
+check: typecheck typecheck-admin lint test ## Run every check (typecheck + lint + tests)
 
 typecheck: ## Typecheck backend without emitting files
 	cd $(BACKEND_DIR) && $(PM) run typecheck
 
 typecheck-admin: ## Typecheck the admin panel without emitting files
 	cd $(ADMIN_DIR) && $(PM) run typecheck
+
+test: ## Run all unit tests (backend + frontend)
+	cd $(BACKEND_DIR) && $(PM) run test
+	cd $(FRONTEND_DIR) && $(PM) run test
 
 lint: ## Lint frontend source with ESLint
 	cd $(FRONTEND_DIR) && $(PM) run lint

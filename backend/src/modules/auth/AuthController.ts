@@ -8,6 +8,9 @@ import EmailService from "../../services/EmailService"
 import { mapImage } from "../../utilities/helpers"
 import { verifyGoogleIdToken } from "./GoogleVerifier"
 import type { IAuthRequest } from "./AuthContract"
+import { loggerFor } from "../../config/logger"
+
+const log = loggerFor("AuthController")
 
 const emailService = new EmailService()
 
@@ -34,7 +37,7 @@ class AuthController {
           message: `<h2>Namaste ${user.name}!</h2><p>Your account is ready. Gear up. Head out. Make memories.</p>`,
         })
       } catch {
-        console.error("Welcome email could not be sent")
+        log.error("Welcome email could not be sent")
       }
 
       const data = user.toObject() as Record<string, unknown>
@@ -251,7 +254,7 @@ class AuthController {
             message: `<p>Use this token within 15 minutes to reset your password:</p><p><code>${resetToken}</code></p>`,
           })
         } catch {
-          console.error("Reset email could not be sent")
+          log.error("Reset email could not be sent")
         }
       }
 

@@ -2,6 +2,7 @@ import { Router } from "express"
 import Auth from "../../middlewares/AuthMiddleware"
 import bodyValidator from "../../middlewares/BodyValidationMiddleware"
 import uploader from "../../middlewares/UploaderMiddleware"
+import { optimizeImage } from "../../middlewares/ImageOptimizeMiddleware"
 import DestinationController from "./DestinationController"
 import { DestinationCreateDTO, DestinationUpdateDTO } from "./DestinationDto"
 
@@ -12,6 +13,7 @@ destinationRouter.post(
   "/",
   Auth(["admin"]),
   uploader("/destination").single("image"),
+  optimizeImage(1600),
   bodyValidator(DestinationCreateDTO),
   destCtrl.createDestination,
 )
@@ -21,6 +23,7 @@ destinationRouter.put(
   "/:slug",
   Auth(["admin"]),
   uploader("/destination").single("image"),
+  optimizeImage(1600),
   bodyValidator(DestinationUpdateDTO),
   destCtrl.updateDestination,
 )

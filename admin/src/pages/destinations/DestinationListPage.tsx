@@ -14,7 +14,7 @@ import type { Destination } from "@/types"
 export default function DestinationListPage() {
   usePageMeta("Destinations")
 
-  const list = useListResource<Destination>(fetchDestinationList, { limit: 10 })
+  const list = useListResource<Destination>(fetchDestinationList, { limit: 10, initialFilters: { status: "all" } })
   const [selected, setSelected] = useState<string[]>([])
 
   const slugById = useMemo(() => {
@@ -118,6 +118,18 @@ export default function DestinationListPage() {
           onChange: list.setSearch,
           placeholder: "Search destinations…",
         }}
+        filters={
+            <select
+              className="input w-auto min-w-[9rem]"
+              value={list.filters.status ?? "all"}
+              onChange={(event) => list.setFilter("status", event.target.value)}
+              aria-label="Filter by status"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+        }
         selectable
         selectedIds={selected}
         onSelectionChange={setSelected}
@@ -146,10 +158,6 @@ export default function DestinationListPage() {
         }
       />
 
-      <p className="mt-3 text-xs text-ink-400">
-        Note: <code className="rounded bg-ink-100 px-1">GET /destination</code> only returns{" "}
-        <strong>active</strong> destinations, so inactive ones drop out of this list.
-      </p>
 
       <ConfirmModal {...deletion.modalProps} />
     </div>

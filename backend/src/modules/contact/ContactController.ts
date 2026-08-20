@@ -4,6 +4,9 @@ import EmailService from "../../services/EmailService"
 import { smtpConfig } from "../../config/AppConfig"
 import { getPagination } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
+import { loggerFor } from "../../config/logger"
+
+const log = loggerFor("ContactController")
 
 const emailService = new EmailService()
 
@@ -22,7 +25,7 @@ class ContactController {
           message: `<p><b>${contact.name}</b> (${contact.email}, ${contact.phone})</p><p>${contact.message}</p>`,
         })
       } catch {
-        console.error("Contact notification email could not be sent")
+        log.error("Contact notification email could not be sent")
       }
 
       res.json({ data: { _id: contact._id }, message: "Message sent successfully. We will reach out soon!", meta: null })

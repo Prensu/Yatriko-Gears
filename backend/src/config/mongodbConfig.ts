@@ -1,5 +1,8 @@
 import mongoose from "mongoose"
 import { mongoConfig } from "./AppConfig"
+import { loggerFor } from "../config/logger"
+
+const log = loggerFor("mongodbConfig")
 
 // Side-effect import: connects at boot.
 // If the DB is unavailable the server still starts — endpoints that
@@ -11,10 +14,10 @@ import { mongoConfig } from "./AppConfig"
       autoCreate: true,
       autoIndex: true,
     })
-    console.log("***** MongoDB Connected Successfully *****")
+    log.info("***** MongoDB Connected Successfully *****")
   } catch (exception) {
-    console.error("***** MongoDB connection failed — server running WITHOUT a database *****")
-    console.error(exception)
+    log.error("***** MongoDB connection failed — server running WITHOUT a database *****")
+    log.error(exception)
     // NOTE: NOT calling process.exit(1) so the server can still serve
     // requests that don't need DB (health checks, static files, etc.).
   }

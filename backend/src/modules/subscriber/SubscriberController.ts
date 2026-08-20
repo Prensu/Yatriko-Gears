@@ -3,6 +3,9 @@ import SubscriberModel from "./SubscriberModel"
 import EmailService from "../../services/EmailService"
 import { getPagination } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
+import { loggerFor } from "../../config/logger"
+
+const log = loggerFor("SubscriberController")
 
 const emailService = new EmailService()
 
@@ -31,7 +34,7 @@ class SubscriberController {
             "<h2>Namaste!</h2><p>Show this email to claim <b>15% off</b> your first rental. Gear up. Head out. Make memories.</p>",
         })
       } catch {
-        console.error("Subscriber offer email could not be sent")
+        log.error("Subscriber offer email could not be sent")
       }
 
       res.json({ data: { _id: subscriber._id }, message: "Offer claimed! Check your inbox.", meta: null })

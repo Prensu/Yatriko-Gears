@@ -40,7 +40,13 @@ class DestinationController {
     try {
       const { page, limit, skip } = getPagination(req.query as Record<string, unknown>)
 
-      const filter: Record<string, unknown> = { status: "active" }
+      /**
+       * Public callers get the live catalogue. The CMS passes ?status=inactive
+       * or ?status=all so unpublished items don't vanish from its own tables.
+       */
+      const requestedStatus = String(req.query.status ?? "active")
+      const filter: Record<string, unknown> = {}
+      if (requestedStatus !== "all") filter.status = requestedStatus
       if (req.query.search) filter.name = { $regex: String(req.query.search), $options: "i" }
 
       const [items, total] = await Promise.all([

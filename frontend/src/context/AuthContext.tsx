@@ -37,10 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Re-validate the stored token once on load — it expires after an hour.
   useEffect(() => {
-    if (!hasToken()) {
-      setStatus("guest")
-      return
-    }
+    // status already initialises to "guest" when there is no token, so there
+    // is nothing to set here.
+    if (!hasToken()) return
     fetchMe()
       .then((me) => {
         setUser(me)
