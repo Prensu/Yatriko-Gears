@@ -11,6 +11,12 @@ const bookingCtrl = new BookingController()
 bookingRouter.post("/", Auth(), bodyValidator(BookingCreateDTO), bookingCtrl.createBooking)
 bookingRouter.get("/my", Auth(), bookingCtrl.myBookings)
 
+// Public: the booking form checks stock before the customer commits.
+bookingRouter.get("/availability", bookingCtrl.checkAvailability)
+
+// Customers can call off their own unpaid, not-yet-prepared booking.
+bookingRouter.patch("/:id/cancel", Auth(), bookingCtrl.cancelOwnBooking)
+
 // Admin inbox. Declared before "/:id" so "my" never looks like an id.
 bookingRouter.get("/", Auth(["admin"]), bookingCtrl.listAllBookings)
 bookingRouter.patch(

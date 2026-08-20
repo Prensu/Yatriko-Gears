@@ -99,6 +99,7 @@ export const gearSchema = z.object({
   specs: specsSchema,
   image: imageUrlSchema.optional().default(""),
   category: categoryRefSchema,
+  quantityTotal: z.number().default(1),
   isNew: z.boolean().default(false),
   status: statusSchema.default("active"),
   ...timestamps,

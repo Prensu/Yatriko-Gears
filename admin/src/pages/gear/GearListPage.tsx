@@ -16,7 +16,7 @@ import type { Category, Gear } from "@/types"
 export default function GearListPage() {
   usePageMeta("Gear")
 
-  const list = useListResource<Gear>(fetchGearList, { limit: 10 })
+  const list = useListResource<Gear>(fetchGearList, { limit: 10, initialFilters: { status: "all" } })
   const [categories, setCategories] = useState<Category[]>([])
   const [selected, setSelected] = useState<string[]>([])
 
@@ -101,6 +101,16 @@ export default function GearListPage() {
       ),
     },
     {
+      key: "stock",
+      header: "Stock",
+      className: "hidden lg:table-cell",
+      render: (gear) => (
+        <span className={gear.quantityTotal > 0 ? "text-ink-700" : "font-medium text-red-600"}>
+          {gear.quantityTotal > 0 ? `${gear.quantityTotal} unit${gear.quantityTotal > 1 ? "s" : ""}` : "out of stock"}
+        </span>
+      ),
+    },
+    {
       key: "status",
       header: "Status",
       render: (gear) => (
@@ -159,7 +169,18 @@ export default function GearListPage() {
           placeholder: "Search gear by name…",
         }}
         filters={
-          <select
+          <>
+            <select
+              className="input w-auto min-w-[9rem]"
+              value={list.filters.status ?? "all"}
+              onChange={(event) => list.setFilter("status", event.target.value)}
+              aria-label="Filter by status"
+            >
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <select
             className="input w-auto min-w-[10rem]"
             value={list.filters.category ?? ""}
             onChange={(event) => list.setFilter("category", event.target.value)}
@@ -172,6 +193,7 @@ export default function GearListPage() {
               </option>
             ))}
           </select>
+          </>
         }
         selectable
         selectedIds={selected}
@@ -201,11 +223,6 @@ export default function GearListPage() {
         }
       />
 
-      <p className="mt-3 text-xs text-ink-400">
-        Note: <code className="rounded bg-ink-100 px-1">GET /gear</code> is the public catalogue
-        endpoint and only returns <strong>active</strong> items, so anything set to inactive drops
-        out of this list.
-      </p>
 
       <ConfirmModal {...deletion.modalProps} />
     </div>

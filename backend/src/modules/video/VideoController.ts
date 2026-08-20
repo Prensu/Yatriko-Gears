@@ -4,6 +4,9 @@ import { cloudinaryConfig } from "../../config/AppConfig"
 import VideoModel from "./VideoModel"
 import { getPagination } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
+import { loggerFor } from "../../config/logger"
+
+const log = loggerFor("VideoController")
 
 class VideoController {
   /**
@@ -59,7 +62,13 @@ class VideoController {
     try {
       const { page, limit, skip } = getPagination({ ...req.query, limit: req.query.limit ?? 50 })
 
-      const filter: Record<string, unknown> = { status: "active" }
+      /**
+       * Public callers get the live catalogue. The CMS passes ?status=inactive
+       * or ?status=all so unpublished items don't vanish from its own tables.
+       */
+      const requestedStatus = String(req.query.status ?? "active")
+      const filter: Record<string, unknown> = {}
+      if (requestedStatus !== "all") filter.status = requestedStatus
       if (req.query.category && req.query.category !== "All") filter.category = req.query.category
 
       const [items, total] = await Promise.all([
@@ -98,7 +107,7 @@ class VideoController {
       try {
         await cloudinary.uploader.destroy(video.publicId, { resource_type: "video" })
       } catch {
-        console.error(`Cloudinary asset could not be destroyed: ${video.publicId}`)
+        log.error(`Cloudinary asset could not be destroyed: ${video.publicId}`)
       }
 
       res.json({ data: null, message: "Video deleted successfully", meta: null })

@@ -28,6 +28,7 @@ function gearFormData(values: GearFormValues, file: File | null): FormData {
       colors: values.colors,
       specs: values.specs,
       category: values.category,
+      quantityTotal: values.quantityTotal,
       isNew: values.isNew,
       status: values.status,
     },

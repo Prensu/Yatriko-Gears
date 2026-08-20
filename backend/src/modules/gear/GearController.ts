@@ -10,7 +10,9 @@ import type { IAuthRequest } from "../auth/AuthContract"
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toPublicGear(doc: any) {
-  const obj = typeof doc.toObject === "function" ? doc.toObject() : doc
+  // flattenMaps: without it the `specs` Map serializes to {} and the CMS
+  // editor looks like it never saved anything.
+  const obj = typeof doc.toObject === "function" ? doc.toObject({ flattenMaps: true }) : doc
   return {
     ...obj,
     image: obj.image?.url ?? "",
@@ -56,7 +58,13 @@ class GearController {
     try {
       const { page, limit, skip } = getPagination(req.query as Record<string, unknown>)
 
-      const filter: Record<string, unknown> = { status: "active" }
+      /**
+       * Public callers get the live catalogue. The CMS passes ?status=inactive
+       * or ?status=all so unpublished items don't vanish from its own tables.
+       */
+      const requestedStatus = String(req.query.status ?? "active")
+      const filter: Record<string, unknown> = {}
+      if (requestedStatus !== "all") filter.status = requestedStatus
       if (req.query.search) filter.name = { $regex: String(req.query.search), $options: "i" }
       if (req.query.category) {
         const category = await CategoryModel.findOne({ slug: String(req.query.category) })

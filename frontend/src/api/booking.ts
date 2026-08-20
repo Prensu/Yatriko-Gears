@@ -1,6 +1,13 @@
 import { z } from "zod"
 import { api } from "@/lib/api"
-import { bookingSchema, esewaFormSchema, type Booking, type EsewaForm } from "@/types"
+import {
+  availabilitySchema,
+  bookingSchema,
+  esewaFormSchema,
+  type Availability,
+  type Booking,
+  type EsewaForm,
+} from "@/types"
 
 export type BookingInput = {
   items: { gear: string; quantity: number }[]
@@ -18,9 +25,26 @@ export async function createBooking(input: BookingInput): Promise<Booking> {
   return data
 }
 
+/** GET /booking/availability — how many units are free across these dates. */
+export async function fetchAvailability(
+  gearId: string,
+  startDate: string,
+  endDate: string,
+): Promise<Availability> {
+  const qs = new URLSearchParams({ gear: gearId, startDate, endDate })
+  const { data } = await api.get(`/booking/availability?${qs}`, availabilitySchema)
+  return data
+}
+
 /** GET /booking/my */
 export async function fetchMyBookings(): Promise<Booking[]> {
   const { data } = await api.get("/booking/my?limit=50", z.array(bookingSchema))
+  return data
+}
+
+/** PATCH /booking/:id/cancel — only works while pending and unpaid. */
+export async function cancelBooking(bookingId: string): Promise<Booking> {
+  const { data } = await api.patch(`/booking/${encodeURIComponent(bookingId)}/cancel`, bookingSchema, {})
   return data
 }
 

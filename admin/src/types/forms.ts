@@ -43,6 +43,7 @@ export const gearFormSchema = z
     category: z
       .string()
       .transform((value) => (value.trim() === "" ? null : value)),
+    quantityTotal: numberField("Stock"),
     isNew: z.boolean(),
     status: statusSchema,
   })
@@ -62,6 +63,7 @@ export type GearFormState = {
   colors: string[]
   specs: Record<string, string>
   category: string
+  quantityTotal: string
   isNew: boolean
   status: Status
 }
@@ -75,6 +77,7 @@ export const emptyGearForm: GearFormState = {
   colors: [],
   specs: {},
   category: "",
+  quantityTotal: "1",
   isNew: false,
   status: "active",
 }

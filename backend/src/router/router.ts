@@ -22,6 +22,13 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { data: null, message: "Too many attempts, try again later", meta: null },
+  /**
+   * Both the site and the CMS call GET /auth/me on every page load (twice in
+   * React StrictMode), so counting it against a 20-request budget logged
+   * people out after a handful of refreshes. The credential endpoints below
+   * are what this limiter is actually for.
+   */
+  skip: (req) => req.method === "GET" && (req.path === "/me" || req.path === "/auth/me"),
 })
 
 // Public forms get their own modest limiter (spam protection)

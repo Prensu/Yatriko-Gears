@@ -1,7 +1,11 @@
 import { GoogleGenAI, ThinkingLevel } from "@google/genai"
 import type { NextFunction, Response } from "express"
+import ChatModel from "./ChatModel"
 import type { IAuthRequest } from "../auth/AuthContract"
 import { geminiConfig } from "../../config/AppConfig"
+import { loggerFor } from "../../config/logger"
+
+const log = loggerFor("ChatController")
 
 /**
  * System prompt that gives Gemini full context about Yatriko Gears.
@@ -120,14 +124,8 @@ function formatAsHtml(text: string): string {
   return html
 }
 
-// In-memory session store (per conversation history)
-// Key = sessionId, Value = array of {role, parts}
-const sessions = new Map<string, Array<{ role: string; parts: Array<{ text: string }> }>>()
-
-// Clean up old sessions every 30 minutes
-setInterval(() => {
-  sessions.clear()
-}, 30 * 60 * 1000)
+/** Keep the prompt bounded: the last 20 exchanges. */
+const MAX_HISTORY = 40
 
 /**
  * Tried in order. Deliberately NOT newest-first: gemini-3.7-flash is the
@@ -159,9 +157,9 @@ class ChatController {
   constructor() {
     if (geminiConfig.apiKey) {
       this.ai = new GoogleGenAI({ apiKey: geminiConfig.apiKey })
-      console.log("✓ Gemini AI chatbot initialized")
+      log.info("✓ Gemini AI chatbot initialized")
     } else {
-      console.warn("⚠ GEMINI_API_KEY not set — chatbot will be disabled")
+      log.warn("⚠ GEMINI_API_KEY not set — chatbot will be disabled")
     }
   }
 
@@ -194,7 +192,7 @@ class ChatController {
       } catch (err: unknown) {
         const status = (err as { status?: number })?.status
         if (shouldTryNextModel(status)) {
-          console.warn(`Model "${model}" unavailable (${status}), trying next candidate...`)
+          log.warn(`Model "${model}" unavailable (${status}), trying next candidate...`)
           // Don't keep preferring a model that just failed.
           if (this.workingModel === model) this.workingModel = null
           lastError = err
@@ -223,18 +221,20 @@ class ChatController {
 
       const sid = typeof sessionId === "string" && sessionId ? sessionId : crypto.randomUUID()
 
-      // Get or create conversation history
-      if (!sessions.has(sid)) {
-        sessions.set(sid, [])
-      }
-      const history = sessions.get(sid)!
+      // Load this conversation from Mongo (survives restarts; expires on its
+      // own two hours after the last message).
+      const session =
+        (await ChatModel.findOne({ sessionId: sid })) ??
+        new ChatModel({ sessionId: sid, messages: [] })
 
-      // Add user message to history
+      const history = session.messages.map((entry) => ({
+        role: entry.role as string,
+        parts: [{ text: entry.text as string }],
+      }))
+
       history.push({ role: "user", parts: [{ text: message.trim() }] })
-
-      // Keep history manageable (last 20 exchanges = 40 messages)
-      if (history.length > 40) {
-        history.splice(0, history.length - 40)
+      if (history.length > MAX_HISTORY) {
+        history.splice(0, history.length - MAX_HISTORY)
       }
 
       // Call Gemini (with automatic model fallback)
@@ -243,9 +243,10 @@ class ChatController {
         const response = await this.generateWithFallback(history)
         rawReply = response.text ?? "Sorry, I couldn't generate a response. Please try again!"
       } catch (geminiError: unknown) {
-        // Log full error details for debugging
-        console.error("Gemini API error:", geminiError)
-        // Remove the failed user message from history so retry works
+        // pino takes (context, message) — the error object goes first.
+        log.error({ err: geminiError }, "Gemini API call failed")
+        // Drop the unanswered user turn so a retry starts clean. Nothing has
+        // been written to Mongo yet, so there is nothing to roll back.
         history.pop()
         const status = (geminiError as { status?: number })?.status
         // Every candidate was busy — say so in plain language.
@@ -263,8 +264,15 @@ class ChatController {
       // Format response as clean HTML
       const htmlReply = formatAsHtml(rawReply)
 
-      // Add assistant response to history
       history.push({ role: "model", parts: [{ text: htmlReply }] })
+
+      // Persist the exchange. `updatedAt` moving forward also resets this
+      // conversation's TTL, so an active chat stays alive.
+      session.set(
+        "messages",
+        history.map((entry) => ({ role: entry.role, text: entry.parts[0]?.text ?? "" })),
+      )
+      await session.save()
 
       res.json({
         data: { reply: htmlReply, sessionId: sid },

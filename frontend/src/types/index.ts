@@ -27,6 +27,9 @@ export const gearSchema = z.object({
   // would reject it and take the whole list down with it.
   category: z.union([z.string(), gearCategorySchema]).nullish(),
   isNew: z.boolean().optional().default(false),
+  // Optional on purpose: the bundled fallback list predates stock tracking,
+  // and the booking form reads live availability from the API instead.
+  quantityTotal: z.number().optional(),
 })
 export type Gear = z.infer<typeof gearSchema>
 
@@ -96,6 +99,16 @@ export const bookingSchema = z.object({
   createdAt: z.string().optional(),
 })
 export type Booking = z.infer<typeof bookingSchema>
+
+/** GET /booking/availability — how many units are free for a date range. */
+export const availabilitySchema = z.object({
+  gearId: z.string(),
+  name: z.string(),
+  quantityTotal: z.number(),
+  quantityBooked: z.number(),
+  quantityAvailable: z.number(),
+})
+export type Availability = z.infer<typeof availabilitySchema>
 
 /** Signed form payload from POST /payment/esewa/initiate. */
 export const esewaFormSchema = z.object({

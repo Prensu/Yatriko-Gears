@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { fetchMyBookings, initiateEsewa, redirectToEsewa } from "@/api/booking"
+import { cancelBooking, fetchMyBookings, initiateEsewa, redirectToEsewa } from "@/api/booking"
 import { ApiRequestError } from "@/lib/api"
 import type { Booking } from "@/types"
+import { usePageMeta } from "@/hooks/usePageMeta"
 
 const STATUS_TONE: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700",
@@ -26,10 +27,18 @@ function formatDate(value: string): string {
 }
 
 export default function MyBookingsPage() {
+  usePageMeta({
+    title: "My Bookings",
+    description: "Your Yatriko Gears rentals, their status and payment.",
+    path: "/bookings",
+    noIndex: true,
+  })
+
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [payingId, setPayingId] = useState<string | null>(null)
+  const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [params] = useSearchParams()
   const justBooked = params.get("new")
 
@@ -41,6 +50,20 @@ export default function MyBookingsPage() {
       )
       .finally(() => setLoading(false))
   }, [])
+
+  const cancel = async (booking: Booking) => {
+    if (!window.confirm(`Cancel booking ${booking.code}? This frees the gear for someone else.`)) return
+    setCancellingId(booking._id)
+    setError("")
+    try {
+      const updated = await cancelBooking(booking._id)
+      setBookings((current) => current.map((b) => (b._id === updated._id ? updated : b)))
+    } catch (cause) {
+      setError(cause instanceof ApiRequestError ? cause.message : "Could not cancel this booking")
+    } finally {
+      setCancellingId(null)
+    }
+  }
 
   const payNow = async (booking: Booking) => {
     setPayingId(booking._id)
@@ -149,6 +172,16 @@ export default function MyBookingsPage() {
                         disabled={payingId === booking._id}
                       >
                         {payingId === booking._id ? "Starting…" : "Pay with eSewa"}
+                      </button>
+                    ) : null}
+                    {booking.status === "pending" && booking.paymentStatus === "unpaid" ? (
+                      <button
+                        type="button"
+                        onClick={() => void cancel(booking)}
+                        className="text-sm font-semibold text-slate-400 transition hover:text-red-600"
+                        disabled={cancellingId === booking._id}
+                      >
+                        {cancellingId === booking._id ? "Cancelling…" : "Cancel"}
                       </button>
                     ) : null}
                   </div>

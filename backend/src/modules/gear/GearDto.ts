@@ -14,6 +14,7 @@ export const GearCreateDTO = z.object({
   colors: z.preprocess(parseMaybeJson, z.array(z.string()).default([])),
   specs: z.preprocess(parseMaybeJson, z.record(z.string()).default({})),
   category: z.preprocess(parseMaybeJson, z.string().nullable().optional()),
+  quantityTotal: z.coerce.number().int().min(0, "Stock cannot be negative").default(1),
   isNew: z.coerce.boolean().default(false),
   status: z.enum(["active", "inactive"]).default("active"),
 })

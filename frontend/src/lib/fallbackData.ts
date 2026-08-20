@@ -15,8 +15,8 @@ export const FALLBACK_GEAR: Gear[] = [
   { _id: "8", name: "Portable Super Stove", slug: "portable-super-stove", realPrice: 250, discountedPrice: 200, availableFor: ["rent"], colors: [], specs: {}, image: "portable-super-stove.jpg", description: "", isNew: false },
   { _id: "9", name: "Max Gas", slug: "max-gas", realPrice: 850, discountedPrice: 750, availableFor: ["rent"], colors: [], specs: {}, image: "max-gas.jpg", description: "", isNew: false },
   { _id: "10", name: "Hammock", slug: "hammock", realPrice: 300, discountedPrice: 250, availableFor: ["rent"], colors: [], specs: {}, image: "hammock.jpg", description: "Find your escape.", isNew: false },
-  { _id: "11", name: "Tent Light", slug: "tent-light", realPrice: 200, discountedPrice: 150, availableFor: ["rent"], colors: [], specs: {}, image: "tent-light.png", description: "", isNew: false },
-  { _id: "12", name: "Trekking Bag", slug: "trekking-bag", realPrice: 250, discountedPrice: 200, availableFor: ["rent"], colors: [], specs: {}, image: "trekking-bag.png", description: "", isNew: false },
+  { _id: "11", name: "Tent Light", slug: "tent-light", realPrice: 200, discountedPrice: 150, availableFor: ["rent"], colors: [], specs: {}, image: "tent-light.jpg", description: "", isNew: false },
+  { _id: "12", name: "Trekking Bag", slug: "trekking-bag", realPrice: 250, discountedPrice: 200, availableFor: ["rent"], colors: [], specs: {}, image: "trekking-bag.jpg", description: "", isNew: false },
   { _id: "13", name: "Mattress", slug: "mattress", realPrice: 70, discountedPrice: 50, availableFor: ["rent"], colors: [], specs: {}, image: "mattress.jpg", description: "", isNew: false },
   { _id: "14", name: "Camp Cookware Set (5 items)", slug: "camp-cookware", realPrice: 300, discountedPrice: 250, availableFor: ["rent"], colors: [], specs: {}, image: "camp-cookware.jpg", description: "", isNew: false },
   { _id: "15", name: "Foldable Chair", slug: "foldable-chair", realPrice: 300, discountedPrice: 200, availableFor: ["rent", "sale"], colors: ["Forest Green", "Navy", "Black", "Red"], specs: {}, image: "foldable-chair.jpg", description: "", isNew: false },
@@ -29,10 +29,10 @@ export const FALLBACK_GEAR: Gear[] = [
 ]
 
 export const SPOTS = [
-  { name: "Jati Pokhari", blurb: "Alpine pond camp above the valley", image: "jati-pokhari.png" },
+  { name: "Jati Pokhari", blurb: "Alpine pond camp above the valley", image: "jati-pokhari.jpg" },
   { name: "Hattiban", blurb: "Pine forest ridge, sunrise views", image: "hattiban.jpg" },
   { name: "Champadevi", blurb: "Classic day-hike & overnight camp", image: "champadevi.jpg" },
-  { name: "Bhundole", blurb: "Quiet lakeside escape", image: "bhundole.png" },
+  { name: "Bhundole", blurb: "Quiet lakeside escape", image: "bhundole.jpg" },
   { name: "Pharping", blurb: "Culture + camping combo", image: "pharping.jpg" },
 ]
 

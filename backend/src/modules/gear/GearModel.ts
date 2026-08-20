@@ -18,6 +18,8 @@ const GearSchema = new mongoose.Schema(
     specs: { type: Map, of: String, default: {} },
     image: ImageSchema,
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", default: null },
+    /** Units the shop physically owns — the ceiling for overlapping rentals. */
+    quantityTotal: { type: Number, default: 1, min: 0 },
     isNewArrival: { type: Boolean, default: false },
     status: StatusSchema,
     createdBy: UserRefSchema,

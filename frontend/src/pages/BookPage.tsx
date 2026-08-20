@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { fetchGearBySlug } from "@/api/gear"
-import { createBooking, initiateEsewa, redirectToEsewa } from "@/api/booking"
+import { createBooking, fetchAvailability, initiateEsewa, redirectToEsewa } from "@/api/booking"
 import { useAuth } from "@/context/AuthContext"
 import { ApiRequestError } from "@/lib/api"
 import { resolveGearImage } from "@/lib/gearImages"
-import type { Gear } from "@/types"
+import type { Availability, Gear } from "@/types"
+import { usePageMeta } from "@/hooks/usePageMeta"
 
 /** Local YYYY-MM-DD — toISOString() would shift the date in Nepal's timezone. */
 function toInputDate(date: Date): string {
@@ -16,6 +17,12 @@ function toInputDate(date: Date): string {
 const today = toInputDate(new Date())
 
 export default function BookPage() {
+  usePageMeta({
+    title: "Book gear",
+    description: "Reserve your camping gear online.",
+    noIndex: true,
+  })
+
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -33,6 +40,8 @@ export default function BookPage() {
 
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [availability, setAvailability] = useState<Availability | null>(null)
+  const [checkingStock, setCheckingStock] = useState(false)
 
   useEffect(() => {
     if (!slug) return
@@ -40,6 +49,29 @@ export default function BookPage() {
       .then((found) => setGear(found ?? null))
       .finally(() => setLoading(false))
   }, [slug])
+
+  // Live stock for the chosen dates. The server re-checks on submit; this is
+  // so the customer finds out before filling the whole form in.
+  useEffect(() => {
+    if (!gear || !startDate || !endDate || endDate < startDate) return
+    let cancelled = false
+    setCheckingStock(true)
+
+    fetchAvailability(gear._id, startDate, endDate)
+      .then((result) => {
+        if (!cancelled) setAvailability(result)
+      })
+      .catch(() => {
+        if (!cancelled) setAvailability(null)
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingStock(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [gear, startDate, endDate])
 
   // Preview only — the server recomputes this and its number is the one that counts.
   const days = useMemo(() => {
@@ -178,6 +210,28 @@ export default function BookPage() {
                   value={quantity}
                   onChange={(event) => setQuantity(Math.max(1, Number(event.target.value) || 1))}
                 />
+                {checkingStock ? (
+                  <p className="mt-1 text-xs text-slate-400">Checking availability…</p>
+                ) : availability ? (
+                  availability.quantityAvailable === 0 ? (
+                    <p className="mt-1 text-xs font-semibold text-red-600">
+                      Fully booked for these dates — try different dates.
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs text-slate-500">
+                      <span className="font-semibold text-forest-700">
+                        {availability.quantityAvailable} available
+                      </span>{" "}
+                      for these dates
+                      {quantity > availability.quantityAvailable ? (
+                        <span className="font-semibold text-red-600">
+                          {" "}
+                          — you asked for {quantity}
+                        </span>
+                      ) : null}
+                    </p>
+                  )
+                ) : null}
               </div>
             </div>
 
@@ -298,7 +352,15 @@ export default function BookPage() {
               </p>
             ) : null}
 
-            <button type="submit" className="btn-primary mt-5 w-full" disabled={submitting || days < 1}>
+            <button
+              type="submit"
+              className="btn-primary mt-5 w-full"
+              disabled={
+                submitting ||
+                days < 1 ||
+                (availability !== null && quantity > availability.quantityAvailable)
+              }
+            >
               {submitting
                 ? "Please wait…"
                 : paymentMethod === "esewa"
