@@ -28,8 +28,30 @@ app.use(
   pinoHttp({
     logger,
     genReqId: (req) => (req.headers["x-request-id"] as string) ?? crypto.randomUUID(),
-    // Health checks would otherwise drown the log stream.
-    autoLogging: { ignore: (req) => req.url === "/health" },
+
+    /**
+     * Health checks and static images would otherwise drown the stream — one
+     * page load pulls a dozen images and says nothing useful about the app.
+     */
+    autoLogging: {
+      ignore: (req) => req.url === "/health" || (req.url ?? "").startsWith("/images/"),
+    },
+
+    /**
+     * One readable line per request. pino-http's defaults serialize the whole
+     * req/res objects — every header, both directions — which is unreadable in
+     * a terminal and expensive in a hosted log stream. Failures still get full
+     * context from the error handler, including the stack.
+     */
+    serializers: {
+      req: (req) => ({ id: req.id, method: req.method, url: req.url }),
+      res: (res) => ({ statusCode: res.statusCode }),
+    },
+    customSuccessMessage: (req, res, responseTime) =>
+      `${req.method} ${req.url} ${res.statusCode} (${responseTime}ms)`,
+    customErrorMessage: (req, res, err) =>
+      `${req.method} ${req.url} ${res.statusCode} — ${err.message}`,
+
     customLogLevel: (_req, res, err) => {
       if (err || res.statusCode >= 500) return "error"
       if (res.statusCode >= 400) return "warn"
