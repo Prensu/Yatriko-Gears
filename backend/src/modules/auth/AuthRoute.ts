@@ -2,6 +2,7 @@ import { Router } from "express"
 import Auth from "../../middlewares/AuthMiddleware"
 import bodyValidator from "../../middlewares/BodyValidationMiddleware"
 import uploader from "../../middlewares/UploaderMiddleware"
+import { optimizeImage } from "../../middlewares/ImageOptimizeMiddleware"
 import AuthController from "./AuthController"
 import {
   UserRegisterDTO,
@@ -24,6 +25,7 @@ authRouter.patch(
   "/me",
   Auth(),
   uploader("/user").single("image"), // uploader BEFORE bodyValidator
+  optimizeImage(400),
   bodyValidator(UpdateProfileDTO),
   authCtrl.updateProfile,
 )

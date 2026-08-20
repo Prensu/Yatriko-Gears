@@ -1,0 +1,26 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "comment": "The app is built with base '/admin/', so every deep link resolves to that index.html.",
+      "source": "/admin/:path*",
+      "destination": "/admin/index.html"
+    },
+    { "source": "/", "destination": "/admin/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/admin/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "comment": "The CMS must never be indexed.",
+      "source": "/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    }
+  ]
+}

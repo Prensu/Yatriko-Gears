@@ -6,10 +6,18 @@ import { registerFormSchema } from "@/types/auth"
 import { validateForm } from "@/types/forms"
 import { ApiRequestError } from "@/lib/api"
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton"
+import { usePageMeta } from "@/hooks/usePageMeta"
 
 const EMPTY = { name: "", email: "", phone: "", address: "", password: "", confirmPassword: "" }
 
 export default function RegisterPage() {
+  usePageMeta({
+    title: "Create an account",
+    description: "Create a Yatriko Gears account to book camping gear online.",
+    path: "/register",
+    noIndex: true,
+  })
+
   const { status, signIn, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
 

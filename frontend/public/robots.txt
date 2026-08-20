@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# The CMS and customer account pages have nothing to index.
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /bookings
+Disallow: /book/
+Disallow: /payment/
+
+Sitemap: https://yatrikogears.com/sitemap.xml

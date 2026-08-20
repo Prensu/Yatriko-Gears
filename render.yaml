@@ -1,0 +1,77 @@
+# Render blueprint — deploys the Express API.
+# The two React apps go to Vercel; see DEPLOYMENT.md.
+services:
+  - type: web
+    name: yatriko-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    region: singapore # closest Render region to Nepal
+    branch: main
+
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /health
+
+    # Uploaded gear/category images are written to public/uploads. Render's
+    # filesystem is EPHEMERAL — without this disk every image an admin uploads
+    # disappears on the next deploy or restart.
+    disk:
+      name: uploads
+      mountPath: /opt/render/project/src/backend/public/uploads
+      sizeGB: 1
+
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PORT
+        value: "9005"
+
+      # Secrets: set these in the Render dashboard, never in this file.
+      - key: MONGODB_URL
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: SMTP_SERVICE
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: FROM_ADDRESS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: ADMIN_NAME
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+
+      # Set these to your real Vercel URLs once the frontend is deployed.
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: PUBLIC_SITE_URL
+        sync: false
+      - key: IMAGE_BASE_PATH
+        sync: false
+
+      # eSewa stays on the sandbox gateway until merchant onboarding is done;
+      # AppConfig already defaults to the public test credentials.

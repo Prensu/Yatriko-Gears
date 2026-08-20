@@ -5,6 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_CLOUDINARY_CLOUD_NAME?: string
   readonly VITE_WHATSAPP_NUMBER?: string
   readonly VITE_GOOGLE_CLIENT_ID?: string
+  readonly VITE_SITE_URL?: string
 }
 
 interface ImportMeta {

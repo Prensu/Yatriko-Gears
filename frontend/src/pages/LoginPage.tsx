@@ -5,8 +5,16 @@ import { loginFormSchema } from "@/types/auth"
 import { validateForm } from "@/types/forms"
 import { ApiRequestError } from "@/lib/api"
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton"
+import { usePageMeta } from "@/hooks/usePageMeta"
 
 export default function LoginPage() {
+  usePageMeta({
+    title: "Sign in",
+    description: "Sign in to book gear and track your rentals.",
+    path: "/login",
+    noIndex: true,
+  })
+
   const { status, signIn, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -111,7 +119,13 @@ export default function LoginPage() {
             <GoogleSignInButton onCredential={(c) => void onGoogleCredential(c)} disabled={submitting} />
           </div>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-4 text-center text-sm">
+            <Link to="/forgot-password" className="text-slate-500 hover:text-forest-700 hover:underline">
+              Forgot your password?
+            </Link>
+          </p>
+
+          <p className="mt-3 text-center text-sm text-slate-500">
             New here?{" "}
             <Link to="/register" className="font-semibold text-forest-700 hover:underline">
               Create an account

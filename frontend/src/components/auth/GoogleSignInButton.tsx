@@ -63,8 +63,12 @@ export default function GoogleSignInButton({ onCredential, disabled = false }: P
   const [failed, setFailed] = useState(false)
 
   // Keep the latest callback without re-initialising Google on every render.
+  // Assigned in an effect, not during render — mutating a ref while rendering
+  // is unsafe once React can pause or replay a render.
   const callbackRef = useRef(onCredential)
-  callbackRef.current = onCredential
+  useEffect(() => {
+    callbackRef.current = onCredential
+  }, [onCredential])
 
   useEffect(() => {
     if (!CLIENT_ID) return

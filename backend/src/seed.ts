@@ -17,6 +17,9 @@ import DestinationModel from "./modules/destination/DestinationModel"
 import PackageModel from "./modules/package/PackageModel"
 import { adminSeedConfig } from "./config/AppConfig"
 import { makeSlug } from "./utilities/helpers"
+import { loggerFor } from "./config/logger"
+
+const log = loggerFor("seed")
 
 type SeedGear = {
   name: string
@@ -80,7 +83,7 @@ async function seed() {
     },
     { upsert: true, new: true },
   )
-  console.log(`Admin ready: ${admin.email}`)
+  log.info(`Admin ready: ${admin.email}`)
 
   // 2. Categories
   const categoryIds = new Map<string, mongoose.Types.ObjectId>()
@@ -92,7 +95,7 @@ async function seed() {
     )
     categoryIds.set(name, cat._id)
   }
-  console.log(`Categories ready: ${categoryIds.size}`)
+  log.info(`Categories ready: ${categoryIds.size}`)
 
   // 3. Gear
   for (const item of GEAR) {
@@ -115,7 +118,7 @@ async function seed() {
       { upsert: true, new: true },
     )
   }
-  console.log(`Gear ready: ${GEAR.length}`)
+  log.info(`Gear ready: ${GEAR.length}`)
 
   // 4. Destinations
   for (const d of DESTINATIONS) {
@@ -134,7 +137,7 @@ async function seed() {
       { upsert: true, new: true },
     )
   }
-  console.log(`Destinations ready: ${DESTINATIONS.length}`)
+  log.info(`Destinations ready: ${DESTINATIONS.length}`)
 
   // 5. Combo package
   await PackageModel.findOneAndUpdate(
@@ -162,13 +165,13 @@ async function seed() {
     },
     { upsert: true, new: true },
   )
-  console.log("Package ready: Full Camping Combo")
+  log.info("Package ready: Full Camping Combo")
 
   await mongoose.disconnect()
-  console.log("***** Seed complete *****")
+  log.info("***** Seed complete *****")
 }
 
 seed().catch((error) => {
-  console.error(error)
+  log.error(error)
   process.exit(1)
 })

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { fetchVideos } from "@/api/gear"
 import type { Video } from "@/types"
 import SectionHeading from "@/components/common/SectionHeading"
+import { usePageMeta } from "@/hooks/usePageMeta"
 
 /**
  * Video portfolio. Clips are shot on phones in reel/TikTok format (9:16),
@@ -13,6 +14,12 @@ const LOCAL_VIDEOS: Video[] = [
 ]
 
 export default function PortfolioPage() {
+  usePageMeta({
+    title: "Portfolio — Camps & Treks",
+    description: "Camps, treks and events we have geared up across Nepal, filmed in the field.",
+    path: "/portfolio",
+  })
+
   const [videos, setVideos] = useState<Video[]>(LOCAL_VIDEOS)
   const [category, setCategory] = useState("All")
 

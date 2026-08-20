@@ -2,6 +2,9 @@ import nodemailer, { type Transporter } from "nodemailer"
 import type Mail from "nodemailer/lib/mailer"
 import { transportConfig, fromAddress } from "../config/smtpConfig"
 import type { EmailParams } from "../types/EmailParams"
+import { loggerFor } from "../config/logger"
+
+const log = loggerFor("EmailService")
 
 class EmailService {
   private readonly transport: Transporter
@@ -23,7 +26,7 @@ class EmailService {
       if (attachments) emailBody.attachments = attachments
       return await this.transport.sendMail(emailBody)
     } catch (exception) {
-      console.error(exception)
+      log.error(exception)
       throw { code: 500, message: "Email sending failed..." }
     }
   }

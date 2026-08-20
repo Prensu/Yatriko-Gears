@@ -1,6 +1,13 @@
 import ContactSection from "@/components/home/ContactSection"
+import { usePageMeta } from "@/hooks/usePageMeta"
 
 export default function ContactPage() {
+  usePageMeta({
+    title: "Contact Yatriko Gears",
+    description: "Call, WhatsApp or message Yatriko Gears in Gabu, Khokana, Lalitpur to book camping gear across the Kathmandu valley.",
+    path: "/contact",
+  })
+
   return (
     <div className="bg-white">
       <ContactSection />
