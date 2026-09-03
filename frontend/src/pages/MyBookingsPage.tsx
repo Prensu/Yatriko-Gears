@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { cancelBooking, fetchMyBookings, initiateEsewa, redirectToEsewa } from "@/api/booking"
+import { cancelBooking, fetchMyBookings } from "@/api/booking"
 import { ApiRequestError } from "@/lib/api"
 import type { Booking } from "@/types"
 import { usePageMeta } from "@/hooks/usePageMeta"
@@ -13,11 +13,7 @@ const STATUS_TONE: Record<string, string> = {
   cancelled: "bg-red-50 text-red-700",
 }
 
-const PAYMENT_TONE: Record<string, string> = {
-  paid: "bg-forest-50 text-forest-700",
-  unpaid: "bg-amber-50 text-amber-700",
-  refunded: "bg-slate-100 text-slate-600",
-}
+
 
 function formatDate(value: string): string {
   const date = new Date(value)
@@ -37,7 +33,6 @@ export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [payingId, setPayingId] = useState<string | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const [params] = useSearchParams()
   const justBooked = params.get("new")
@@ -65,22 +60,11 @@ export default function MyBookingsPage() {
     }
   }
 
-  const payNow = async (booking: Booking) => {
-    setPayingId(booking._id)
-    try {
-      const form = await initiateEsewa(booking._id)
-      redirectToEsewa(form)
-    } catch (cause) {
-      setError(cause instanceof ApiRequestError ? cause.message : "Could not start the payment")
-      setPayingId(null)
-    }
-  }
-
   return (
     <section className="section-pad bg-sand">
       <div className="container-site max-w-4xl">
         <h1 className="font-display text-3xl font-extrabold text-navy-900">My bookings</h1>
-        <p className="mt-1 text-slate-500">Your rentals, their status and payment.</p>
+        <p className="mt-1 text-slate-500">Your rentals and their status.</p>
 
         {justBooked ? (
           <p className="mt-6 rounded-2xl border border-forest-200 bg-forest-50 px-4 py-3 text-sm text-forest-800">
@@ -131,13 +115,7 @@ export default function MyBookingsPage() {
                     >
                       {booking.status}
                     </span>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${
-                        PAYMENT_TONE[booking.paymentStatus] ?? "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {booking.paymentStatus}
-                    </span>
+
                   </div>
                 </div>
 
@@ -152,6 +130,12 @@ export default function MyBookingsPage() {
                   ))}
                 </ul>
 
+                {booking.status !== "cancelled" && (
+                  <p className="mt-3 text-xs text-slate-400">
+                    Payment is collected in cash on delivery.
+                  </p>
+                )}
+
                 <div className="mt-4 flex flex-wrap items-end justify-between gap-4 border-t border-slate-100 pt-4">
                   <div className="text-sm text-slate-500">
                     {formatDate(booking.startDate)} → {formatDate(booking.endDate)}
@@ -164,17 +148,7 @@ export default function MyBookingsPage() {
                     <span className="font-display text-xl font-extrabold text-forest-700">
                       Rs. {booking.total.toLocaleString("en-IN")}
                     </span>
-                    {booking.paymentStatus === "unpaid" && booking.status !== "cancelled" ? (
-                      <button
-                        type="button"
-                        onClick={() => void payNow(booking)}
-                        className="btn-primary !px-5 !py-2 text-sm"
-                        disabled={payingId === booking._id}
-                      >
-                        {payingId === booking._id ? "Starting…" : "Pay with eSewa"}
-                      </button>
-                    ) : null}
-                    {booking.status === "pending" && booking.paymentStatus === "unpaid" ? (
+                    {booking.status === "pending" ? (
                       <button
                         type="button"
                         onClick={() => void cancel(booking)}

@@ -85,11 +85,9 @@ app.use(
   }),
 )
 
-// 3.5 Money endpoints get a tighter budget than the 300/15min global limit.
-// /payment/esewa/verify in particular is public (eSewa redirects the customer
-// back through the browser), and each call makes us hit eSewa's API.
+// 3.5 Booking endpoints get a tighter budget than the 300/15min global limit.
 app.use(
-  ["/api/v1/booking", "/api/v1/payment"],
+  "/api/v1/booking",
   rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 60,

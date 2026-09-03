@@ -53,7 +53,6 @@ Copy from your local `backend/.env`, with these changed for production:
 | Variable | Production value |
 |---|---|
 | `ALLOWED_ORIGINS` | `https://your-site.vercel.app,https://your-admin.vercel.app` (comma-separated, no spaces) |
-| `PUBLIC_SITE_URL` | `https://your-site.vercel.app` — eSewa redirects customers back here |
 | `IMAGE_BASE_PATH` | `https://your-api.onrender.com/images/` — **must end with a slash** |
 | `JWT_SECRET`, `JWT_REFRESH_SECRET` | fresh values, not the local ones |
 | `MONGODB_URL` | Atlas connection string |
@@ -61,15 +60,11 @@ Copy from your local `backend/.env`, with these changed for production:
 **Atlas:** add `0.0.0.0/0` to Network Access, or Render's outbound IPs. Render's
 IPs are not static on the free plan.
 
-**eSewa stays on the sandbox gateway.** `AppConfig` defaults to eSewa's public
-test credentials, so leave the `ESEWA_*` variables unset until merchant
-onboarding is complete. Check `esewaConfig.isSandbox` before you accept real money.
-
 ### Free-plan caveat
 
 Render free services sleep after ~15 minutes idle and take ~50s to wake. The
-first customer of the day will hit that delay — including mid-checkout, on the
-eSewa return trip. Use a paid instance once you take real payments.
+first customer of the day will hit that delay. Use a paid instance once you
+take real payments.
 
 ---
 
@@ -134,8 +129,7 @@ users** can sign in. Publish it to open sign-in to everyone.
 [ ] Public site loads and shows live gear (not the bundled fallback list —
     check the browser console for the "rendering fallback data" warning)
 [ ] Register a customer, then sign in with Google
-[ ] Make a booking, pay through the eSewa sandbox, confirm it returns to
-    /payment/success and the booking flips to confirmed/paid
+[ ] Make a booking and confirm it appears in /admin with status pending/unpaid
 [ ] Sign in to /admin, upload a gear image, confirm it renders on the public site
 [ ] Redeploy the backend, then check that image STILL renders (proves the disk works)
 [ ] Run the seeder once: Render Shell -> pnpm seed

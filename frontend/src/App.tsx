@@ -17,9 +17,8 @@ const LoginPage = lazy(() => import("@/pages/LoginPage"))
 const RegisterPage = lazy(() => import("@/pages/RegisterPage"))
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"))
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"))
-const BookPage = lazy(() => import("@/pages/BookPage"))
+const CartPage = lazy(() => import("@/pages/CartPage"))
 const MyBookingsPage = lazy(() => import("@/pages/MyBookingsPage"))
-const PaymentResultPage = lazy(() => import("@/pages/PaymentResultPage"))
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
 
 function RouteFallback() {
@@ -52,13 +51,11 @@ export default function App() {
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />
 
-            {/* eSewa returns the customer to these two. */}
-            <Route path="payment/success" element={<PaymentResultPage outcome="success" />} />
-            <Route path="payment/failure" element={<PaymentResultPage outcome="failure" />} />
+            {/* Cart is public — sign-in is required only at checkout submit. */}
+            <Route path="cart" element={<CartPage />} />
 
-            {/* Booking screens need a signed-in customer. */}
+            {/* Booking history needs a signed-in customer. */}
             <Route element={<RequireAuth />}>
-              <Route path="book/:slug" element={<BookPage />} />
               <Route path="bookings" element={<MyBookingsPage />} />
             </Route>
 

@@ -60,25 +60,6 @@ export const googleConfig = {
   },
 }
 
-/**
- * eSewa ePay v2.
- * The defaults are eSewa's own PUBLIC sandbox credentials, published at
- * developer.esewa.com.np/pages/Test-credentials — they are not secrets, and
- * they only ever talk to the rc- (test) gateway. Production values must be
- * supplied through .env; check esewaConfig.isSandbox before going live.
- */
-export const esewaConfig = {
-  productCode: process.env.ESEWA_PRODUCT_CODE ?? "EPAYTEST",
-  secretKey: process.env.ESEWA_SECRET_KEY ?? "8gBm/:&EnhH.1/q",
-  formUrl: process.env.ESEWA_FORM_URL ?? "https://rc-epay.esewa.com.np/api/epay/main/v2/form",
-  statusUrl:
-    process.env.ESEWA_STATUS_URL ?? "https://rc.esewa.com.np/api/epay/transaction/status/",
-  /** Where eSewa sends the customer back to — pages on the public site. */
-  siteUrl: process.env.PUBLIC_SITE_URL ?? "http://localhost:5173",
-  get isSandbox() {
-    return this.productCode === "EPAYTEST"
-  },
-}
 
 export const adminSeedConfig = {
   name: process.env.ADMIN_NAME ?? "Yatriko Admin",

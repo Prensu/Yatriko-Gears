@@ -3,28 +3,55 @@ import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "framer-motion"
 import { subscriberFormSchema, validateForm } from "@/types/forms"
 import { subscribe } from "@/api/forms"
+import { fetchSettings } from "@/api/settings"
+import type { SiteSettings } from "@/types"
 import offerImage from "@/assets/offer-15-off.jpg"
 
 const STORAGE_KEY = "yatriko.leadModal.dismissedAt"
-const SHOW_DELAY_MS = 5000
-const COOLDOWN_DAYS = 7
 
 /**
  * Harvest Hosts-style two-panel lead-capture modal.
- * Left: Grand Opening 15%-off creative. Right: email capture → POST /api/v1/subscriber.
+ * Left: promotional creative. Right: email capture → POST /api/v1/subscriber.
+ *
+ * Configuration (image, copy, timing, enabled state) is fetched from
+ * GET /api/v1/settings; if the API is unreachable the bundled defaults
+ * are used instead.
  */
 export default function LeadCaptureModal() {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<"idle" | "sending" | "done">("idle")
+  const [settings, setSettings] = useState<SiteSettings | null>(null)
 
+  // 1. Fetch settings, then decide whether/when to show.
   useEffect(() => {
-    const dismissedAt = Number(localStorage.getItem(STORAGE_KEY) ?? 0)
-    const coolingDown = Date.now() - dismissedAt < COOLDOWN_DAYS * 86_400_000
-    if (coolingDown) return
-    const t = setTimeout(() => setOpen(true), SHOW_DELAY_MS)
-    return () => clearTimeout(t)
+    let cancelled = false
+
+    fetchSettings().then((s) => {
+      if (cancelled) return
+      setSettings(s)
+
+      // If the admin disabled the popup, skip everything.
+      if (!s.leadModalEnabled) return
+
+      const dismissedAt = Number(localStorage.getItem(STORAGE_KEY) ?? 0)
+      const coolingDown = Date.now() - dismissedAt < s.leadModalCooldownDays * 86_400_000
+      if (coolingDown) return
+
+      const t = setTimeout(() => {
+        if (!cancelled) setOpen(true)
+      }, s.leadModalShowDelayMs)
+
+      // Store cleanup for the timeout.
+      cleanupRef = () => clearTimeout(t)
+    })
+
+    let cleanupRef: (() => void) | undefined
+    return () => {
+      cancelled = true
+      cleanupRef?.()
+    }
   }, [])
 
   function dismiss() {
@@ -53,6 +80,13 @@ export default function LeadCaptureModal() {
   const root = document.getElementById("modal-root")
   if (!root) return null
 
+  // Derive display values from settings, falling back to hardcoded originals.
+  const displayImage = settings?.leadModalImage || offerImage
+  const displayHeadline = settings?.leadModalHeadline || "Grand Opening Offer"
+  const displayBody =
+    settings?.leadModalBody ||
+    "on every rental gear — 21 to 31 Shrawan. Drop your email and claim the deal."
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -64,7 +98,7 @@ export default function LeadCaptureModal() {
           onClick={dismiss}
           role="dialog"
           aria-modal="true"
-          aria-label="Grand opening offer"
+          aria-label="Promotional offer"
         >
           <motion.div
             className="grid w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl md:grid-cols-2"
@@ -74,8 +108,8 @@ export default function LeadCaptureModal() {
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={offerImage}
-              alt="Yatriko Gears grand opening — 15% off all rental gear"
+              src={displayImage}
+              alt="Yatriko Gears promotional offer"
               className="hidden h-full w-full object-cover md:block"
             />
             <div className="relative p-8">
@@ -90,17 +124,15 @@ export default function LeadCaptureModal() {
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <p className="text-4xl">🎉</p>
                   <h3 className="mt-3 font-display text-xl font-bold">You're in!</h3>
-                  <p className="mt-2 text-sm text-slate-500">We'll DM your 15% off details soon.</p>
+                  <p className="mt-2 text-sm text-slate-500">We'll DM your details soon.</p>
                 </div>
               ) : (
                 <>
-                  <p className="font-script text-2xl text-forest-600">Grand Opening Offer</p>
+                  <p className="font-script text-2xl text-forest-600">{displayHeadline}</p>
                   <h3 className="mt-1 font-display text-3xl font-extrabold text-navy-900">
                     Get <span className="text-forest-600">15% OFF</span>
                   </h3>
-                  <p className="mt-2 text-sm text-slate-500">
-                    on every rental gear — 21 to 31 Shrawan. Drop your email and claim the deal.
-                  </p>
+                  <p className="mt-2 text-sm text-slate-500">{displayBody}</p>
                   <form onSubmit={onSubmit} className="mt-6" noValidate>
                     <input
                       type="email"

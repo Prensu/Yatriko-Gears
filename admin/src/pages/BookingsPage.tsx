@@ -91,10 +91,7 @@ export default function BookingsPage() {
       key: "total",
       header: "Total",
       render: (booking) => (
-        <div className="whitespace-nowrap">
-          <span className="font-medium text-ink-900">{formatPrice(booking.total)}</span>
-          <span className="ml-1.5 text-xs uppercase text-ink-400">{booking.paymentMethod}</span>
-        </div>
+        <span className="whitespace-nowrap font-medium text-ink-900">{formatPrice(booking.total)}</span>
       ),
     },
     {
@@ -202,7 +199,6 @@ export default function BookingsPage() {
                 <p className="mt-1 flex items-center gap-2 text-xs text-ink-500">
                   <StatusBadge value={open.status} />
                   <StatusBadge value={open.paymentStatus} />
-                  <span className="uppercase">{open.paymentMethod}</span>
                 </p>
               </div>
               <button type="button" className="btn-ghost px-2" onClick={() => setOpen(null)} aria-label="Close">
@@ -233,12 +229,7 @@ export default function BookingsPage() {
                     {formatDate(open.startDate)} → {formatDate(open.endDate)} ({open.days} days)
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-wide text-ink-500">eSewa reference</dt>
-                  <dd className="break-all text-ink-900">
-                    {open.payment?.transactionCode || open.payment?.refId || "—"}
-                  </dd>
-                </div>
+
               </dl>
 
               <div>

@@ -68,10 +68,5 @@ services:
       # Set these to your real Vercel URLs once the frontend is deployed.
       - key: ALLOWED_ORIGINS
         sync: false
-      - key: PUBLIC_SITE_URL
-        sync: false
       - key: IMAGE_BASE_PATH
         sync: false
-
-      # eSewa stays on the sandbox gateway until merchant onboarding is done;
-      # AppConfig already defaults to the public test credentials.

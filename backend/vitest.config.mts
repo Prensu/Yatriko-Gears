@@ -15,8 +15,6 @@ export default defineConfig({
       JWT_REFRESH_SECRET: "test-jwt-refresh-secret",
       MONGODB_URL: "mongodb://localhost:27017/",
       DB_NAME: "yatriko-test",
-      ESEWA_PRODUCT_CODE: "EPAYTEST",
-      ESEWA_SECRET_KEY: "8gBm/:&EnhH.1/q",
     },
   },
 })

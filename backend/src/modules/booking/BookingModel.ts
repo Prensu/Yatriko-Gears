@@ -44,18 +44,8 @@ const BookingSchema = new mongoose.Schema(
       default: "pending",
     },
 
-    paymentMethod: { type: String, enum: ["esewa", "cash"], default: "esewa" },
+    paymentMethod: { type: String, enum: ["cash"], default: "cash" },
     paymentStatus: { type: String, enum: ["unpaid", "paid", "refunded"], default: "unpaid" },
-
-    payment: {
-      // Our id for the eSewa transaction; also what we check status against.
-      transactionUuid: { type: String, default: null },
-      // eSewa's own references, filled in after verification.
-      transactionCode: { type: String, default: null },
-      refId: { type: String, default: null },
-      amount: { type: Number, default: null },
-      verifiedAt: { type: Date, default: null },
-    },
   },
   { autoCreate: true, autoIndex: true, timestamps: true },
 )

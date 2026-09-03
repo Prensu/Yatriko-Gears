@@ -89,7 +89,7 @@ class BookingController {
         subtotal,
         deliveryCharge: DELIVERY_CHARGE,
         total,
-        paymentMethod: body.paymentMethod,
+        paymentMethod: "cash",
         // Cash bookings are unpaid until the gear changes hands.
         paymentStatus: "unpaid",
       })
@@ -125,9 +125,7 @@ class BookingController {
             <ul>${itemLines}</ul>
             <p><b>Rental dates:</b> ${dateRange} (${days} day${days > 1 ? "s" : ""})<br/>
             <b>Deliver to:</b> ${booking.deliveryAddress}<br/>
-            <b>Total:</b> Rs. ${total} — ${
-              body.paymentMethod === "cash" ? "payable on delivery" : "pay online with eSewa"
-            }</p>
+            <b>Total:</b> Rs. ${total} — payable on delivery</p>
             <p>Gear up. Head out. Make memories. \u26fa</p>`,
         })
       } catch {

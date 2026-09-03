@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Link, NavLink, useNavigate } from "react-router-dom"
 import logoImg from "@/assets/logo.png"
 import { useAuth } from "@/context/AuthContext"
+import { useCart } from "@/context/CartContext"
 import AccountMenu, { Avatar } from "@/components/layout/AccountMenu"
 
 const navItems = [
@@ -11,9 +12,39 @@ const navItems = [
   { to: "/contact", label: "Contact" },
 ]
 
+function CartIcon({ count }: { count: number }) {
+  return (
+    <Link
+      to="/cart"
+      className="relative flex items-center justify-center rounded-full p-2 text-navy-800 transition hover:bg-forest-50 hover:text-forest-700"
+      aria-label={`Cart — ${count} item${count !== 1 ? "s" : ""}`}
+    >
+      <svg
+        className="h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="9" cy="21" r="1" />
+        <circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+      </svg>
+      {count > 0 && (
+        <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-[1.125rem] items-center justify-center rounded-full bg-forest-600 px-1 text-[10px] font-bold text-white">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </Link>
+  )
+}
+
 export default function Header() {
   const [open, setOpen] = useState(false)
   const { user, status, signOut } = useAuth()
+  const { itemCount } = useCart()
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
@@ -42,6 +73,9 @@ export default function Header() {
               {item.label}
             </NavLink>
           ))}
+
+          <CartIcon count={itemCount} />
+
           {status === "authenticated" ? (
             <AccountMenu />
           ) : (
@@ -58,14 +92,18 @@ export default function Header() {
           </Link>
         </nav>
 
-        <button
-          className="md:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Toggle menu"
-          aria-expanded={open}
-        >
-          <span className="text-2xl">{open ? "✕" : "☰"}</span>
-        </button>
+        {/* Mobile: cart icon + hamburger */}
+        <div className="flex items-center gap-2 md:hidden">
+          <CartIcon count={itemCount} />
+          <button
+            className="md:hidden"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Toggle menu"
+            aria-expanded={open}
+          >
+            <span className="text-2xl">{open ? "✕" : "☰"}</span>
+          </button>
+        </div>
       </div>
 
       {open && (

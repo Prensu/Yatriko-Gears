@@ -242,19 +242,24 @@ export const bookingSchema = z.object({
   deliveryCharge: z.number().default(0),
   total: z.number(),
   status: bookingStatusSchema,
-  paymentMethod: z.enum(["esewa", "cash"]),
   paymentStatus: z.enum(["unpaid", "paid", "refunded"]),
-  payment: z
-    .object({
-      transactionUuid: z.string().nullish(),
-      transactionCode: z.string().nullish(),
-      refId: z.string().nullish(),
-      verifiedAt: z.string().nullish(),
-    })
-    .nullish(),
   ...timestamps,
 })
 export type Booking = z.infer<typeof bookingSchema>
+
+/* ------------------------------------------------------------------ */
+/* Site settings (singleton)                                            */
+/* ------------------------------------------------------------------ */
+
+export const settingsSchema = z.object({
+  leadModalEnabled: z.boolean(),
+  leadModalImage: z.string().default(""),
+  leadModalHeadline: z.string(),
+  leadModalBody: z.string(),
+  leadModalShowDelayMs: z.number(),
+  leadModalCooldownDays: z.number(),
+})
+export type SiteSettings = z.infer<typeof settingsSchema>
 
 /* ------------------------------------------------------------------ */
 /* Envelope + errors                                                    */

@@ -34,9 +34,14 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        "toast-in": {
+          "0%": { opacity: "0", transform: "translateY(-0.5rem)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         marquee: "marquee 50s linear infinite",
+        "toast-in": "toast-in 0.25s ease-out",
       },
     },
   },

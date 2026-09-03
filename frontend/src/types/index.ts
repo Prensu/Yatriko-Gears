@@ -91,7 +91,6 @@ export const bookingSchema = z.object({
   deliveryCharge: z.number().default(0),
   total: z.number(),
   status: bookingStatusSchema,
-  paymentMethod: z.enum(["esewa", "cash"]),
   paymentStatus: z.enum(["unpaid", "paid", "refunded"]),
   deliveryAddress: z.string().default(""),
   customerPhone: z.string().default(""),
@@ -110,12 +109,20 @@ export const availabilitySchema = z.object({
 })
 export type Availability = z.infer<typeof availabilitySchema>
 
-/** Signed form payload from POST /payment/esewa/initiate. */
-export const esewaFormSchema = z.object({
-  formUrl: z.string().url(),
-  fields: z.record(z.string()),
+
+/* ------------------------------------------------------------------ */
+/* Site settings (singleton — lead popup config)                        */
+/* ------------------------------------------------------------------ */
+
+export const settingsSchema = z.object({
+  leadModalEnabled: z.boolean(),
+  leadModalImage: z.string().default(""),
+  leadModalHeadline: z.string(),
+  leadModalBody: z.string(),
+  leadModalShowDelayMs: z.number(),
+  leadModalCooldownDays: z.number(),
 })
-export type EsewaForm = z.infer<typeof esewaFormSchema>
+export type SiteSettings = z.infer<typeof settingsSchema>
 
 /** Envelope: every backend response is { data, message, meta } */
 export const envelopeSchema = <T extends z.ZodTypeAny>(data: T) =>

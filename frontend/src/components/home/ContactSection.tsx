@@ -75,16 +75,16 @@ export default function ContactSection() {
         <form onSubmit={onSubmit} noValidate className="lg:col-span-3">
           <h2 className="font-display text-2xl font-extrabold text-navy-900">Send Us a Message</h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
-            {field("name", "Full Name *")}
-            {field("email", "Email *", "email")}
-            {field("phone", "Phone (98XXXXXXXX) *", "tel")}
-            {field("subject", "Subject *")}
+            {field("name", "Full Name * (e.g. Prensu Dangol)")}
+            {field("email", "Email * (e.g. prensu@gmail.com)", "email")}
+            {field("phone", "Phone * (e.g. 98XXXXXXXX)", "tel")}
+            {field("subject", "Subject * (e.g. Gear Rental Inquiry)")}
           </div>
           <div className="mt-6">
             <textarea
               value={values.message}
               onChange={(e) => set("message", e.target.value)}
-              placeholder="Your Message *"
+              placeholder="Your Message * (e.g. I'd like to rent a 4-person tent for next weekend)"
               rows={4}
               className="input-underline resize-none"
               aria-label="Your message"

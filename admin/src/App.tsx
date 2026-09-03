@@ -17,6 +17,7 @@ import LeadsPage from "@/pages/LeadsPage"
 import SubscribersPage from "@/pages/SubscribersPage"
 import CustomersPage from "@/pages/CustomersPage"
 import SettingsPage from "@/pages/SettingsPage"
+import PromotionsPage from "@/pages/PromotionsPage"
 import NotFoundPage from "@/pages/NotFoundPage"
 
 export default function App() {
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="leads" element={<LeadsPage />} />
           <Route path="subscribers" element={<SubscribersPage />} />
           <Route path="customers" element={<CustomersPage />} />
+          <Route path="promotions" element={<PromotionsPage />} />
           <Route path="settings" element={<SettingsPage />} />
 
           <Route path="*" element={<NotFoundPage />} />

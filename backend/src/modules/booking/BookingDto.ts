@@ -21,7 +21,6 @@ export const BookingCreateDTO = z
     deliveryAddress: z.string().min(4, "Where should we deliver?").max(200),
     phone: z.string().regex(/^(\+977[- ]?)?9\d{9}$/, "Enter a valid Nepali mobile number"),
     note: z.string().max(500).optional().default(""),
-    paymentMethod: z.enum(["esewa", "cash"]).default("esewa"),
   })
   .refine((v) => new Date(v.endDate) >= new Date(v.startDate), {
     path: ["endDate"],

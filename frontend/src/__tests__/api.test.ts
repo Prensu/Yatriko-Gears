@@ -42,7 +42,7 @@ describe("bookingSchema", () => {
       items: [{ gear: "g1", name: "Tent", pricePerDay: 700, quantity: 2 }],
       startDate: "2026-09-01T00:00:00.000Z", endDate: "2026-09-03T00:00:00.000Z",
       days: 3, subtotal: 4200, deliveryCharge: 0, total: 4200,
-      status: "pending", paymentMethod: "esewa", paymentStatus: "unpaid",
+      status: "pending", paymentStatus: "unpaid",
       deliveryAddress: "Khokana", customerPhone: "9841234567", note: null,
     })
     expect(parsed.success).toBe(true)
