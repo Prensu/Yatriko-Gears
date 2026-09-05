@@ -52,6 +52,5 @@ describe("calculateSubtotal", () => {
 describe("calculateTotal", () => {
   it("adds delivery on top of the subtotal", () => {
     expect(calculateTotal(4200)).toBe(4200)
-    expect(calculateTotal(4200, 200)).toBe(4400)
   })
 })

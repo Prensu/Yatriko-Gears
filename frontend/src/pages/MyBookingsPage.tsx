@@ -132,7 +132,7 @@ export default function MyBookingsPage() {
 
                 {booking.status !== "cancelled" && (
                   <p className="mt-3 text-xs text-slate-400">
-                    Payment is collected in cash on delivery.
+                    Delivery charge: Discuss on WhatsApp · Payment is collected in cash on delivery.
                   </p>
                 )}
 

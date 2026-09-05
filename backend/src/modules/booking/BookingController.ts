@@ -2,7 +2,7 @@ import type { NextFunction, Response } from "express"
 import BookingModel from "./BookingModel"
 import GearModel from "../gear/GearModel"
 import { assertAvailable, getAvailability } from "./AvailabilityService"
-import { DELIVERY_CHARGE, calculateSubtotal, calculateTotal, countDays } from "./BookingPricing"
+import { calculateSubtotal, calculateTotal, countDays } from "./BookingPricing"
 import EmailService from "../../services/EmailService"
 import { smtpConfig } from "../../config/AppConfig"
 import { getPagination } from "../../utilities/helpers"
@@ -13,11 +13,21 @@ const log = loggerFor("BookingController")
 
 const emailService = new EmailService()
 
-/** YG-250819-4F2A — short enough to read out on the phone. */
-function makeBookingCode(): string {
+/** PRASHNA-260905-4F2A — first name + date + random, short enough to read out on the phone. */
+function makeBookingCode(customerName: string): string {
+  const namePart = customerName
+    .trim()
+    .split(/\s+/)[0]
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z]/g, "")
+    .toUpperCase()
+    .slice(0, 10)
+
+  const prefix = namePart.length > 0 ? namePart : "GUEST"
   const stamp = new Date().toISOString().slice(2, 10).replace(/-/g, "")
   const random = Math.random().toString(36).slice(2, 6).toUpperCase()
-  return `YG-${stamp}-${random}`
+  return `${prefix}-${stamp}-${random}`
 }
 
 class BookingController {
@@ -75,7 +85,7 @@ class BookingController {
       const total = calculateTotal(subtotal)
 
       const booking = new BookingModel({
-        code: makeBookingCode(),
+        code: makeBookingCode(user.name ?? ""),
         user: user._id,
         customerName: user.name,
         customerEmail: user.email,
@@ -87,7 +97,7 @@ class BookingController {
         endDate,
         days,
         subtotal,
-        deliveryCharge: DELIVERY_CHARGE,
+        deliveryCharge: 0,
         total,
         paymentMethod: "cash",
         // Cash bookings are unpaid until the gear changes hands.
@@ -108,7 +118,7 @@ class BookingController {
         await emailService.sendEmail({
           to: smtpConfig.fromAddress,
           sub: `New booking ${booking.code}`,
-          message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) booked ${items.length} item(s) for ${days} day(s).</p><ul>${itemLines}</ul><p>Deliver to: ${booking.deliveryAddress}</p><p>Total: Rs. ${total}</p>`,
+          message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) booked ${items.length} item(s) for ${days} day(s).</p><ul>${itemLines}</ul><p>Deliver to: ${booking.deliveryAddress}</p><p>Delivery charge: To be discussed on WhatsApp.</p><p>Gear total: Rs. ${total}</p>`,
         })
       } catch {
         log.error("Booking notification email could not be sent")
@@ -125,7 +135,9 @@ class BookingController {
             <ul>${itemLines}</ul>
             <p><b>Rental dates:</b> ${dateRange} (${days} day${days > 1 ? "s" : ""})<br/>
             <b>Deliver to:</b> ${booking.deliveryAddress}<br/>
-            <b>Total:</b> Rs. ${total} — payable on delivery</p>
+            <b>Delivery charge:</b> To be discussed on WhatsApp<br/>
+            <b>Gear total:</b> Rs. ${total}<br/>
+            Delivery charge will be discussed on WhatsApp and is payable on delivery.</p>
             <p>Gear up. Head out. Make memories. \u26fa</p>`,
         })
       } catch {

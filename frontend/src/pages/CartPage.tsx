@@ -17,6 +17,7 @@ function toInputDate(date: Date): string {
 }
 
 const today = toInputDate(new Date())
+const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "9779747672039"
 
 export default function CartPage() {
   usePageMeta({
@@ -438,7 +439,16 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between">
                 <dt className="text-slate-500">Delivery</dt>
-                <dd className="font-medium text-forest-700">Free</dd>
+                <dd>
+                  <a
+                    href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi Yatriko Gears! I want to discuss delivery for my booking.")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium text-forest-700 hover:underline"
+                  >
+                    Discuss on WhatsApp
+                  </a>
+                </dd>
               </div>
             </dl>
 
@@ -473,7 +483,7 @@ export default function CartPage() {
             )}
 
             <p className="mt-3 text-center text-xs text-slate-400">
-              Final price is confirmed by our team before delivery.
+              Delivery charge will be discussed and confirmed on WhatsApp.
             </p>
           </aside>
         </form>

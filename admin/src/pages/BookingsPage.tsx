@@ -222,6 +222,9 @@ export default function BookingsPage() {
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-ink-500">Deliver to</dt>
                   <dd className="text-ink-900">{open.deliveryAddress || "—"}</dd>
+                  <dd className="text-ink-600">
+                    Delivery charge: Discuss on WhatsApp
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-ink-500">Rental period</dt>

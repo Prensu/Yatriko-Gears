@@ -4,9 +4,6 @@
  * charged comes from here.
  */
 
-/** Delivery is free inside the valley; a field so it can change later. */
-export const DELIVERY_CHARGE = 0
-
 export type PricedItem = {
   pricePerDay: number
   quantity: number
@@ -31,6 +28,7 @@ export function calculateSubtotal(items: PricedItem[], days: number): number {
   return items.reduce((sum, item) => sum + item.pricePerDay * item.quantity * days, 0)
 }
 
-export function calculateTotal(subtotal: number, deliveryCharge = DELIVERY_CHARGE): number {
-  return subtotal + deliveryCharge
+/** Delivery is quoted separately over WhatsApp. */
+export function calculateTotal(subtotal: number): number {
+  return subtotal
 }
