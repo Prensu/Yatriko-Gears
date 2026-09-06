@@ -4,12 +4,22 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/admin/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    },
     {
       "source": "/admin/:path*",
       "destination": "/admin/index.html"
-    },
-    { "source": "/", "destination": "/admin/index.html" }
+    }
   ],
   "headers": [
     {

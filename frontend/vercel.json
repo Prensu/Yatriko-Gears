@@ -6,12 +6,15 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "comment": "Point this at the admin Vercel deployment to keep the CMS on /admin. Replace the host, then redeploy.",
+      "source": "/admin",
+      "destination": "https://yatriko-admin.vercel.app/admin"
+    },
+    {
       "source": "/admin/:path*",
       "destination": "https://yatriko-admin.vercel.app/admin/:path*"
     },
     {
-      "comment": "SPA fallback — must be last so real files and /admin win first.",
+      
       "source": "/(.*)",
       "destination": "/index.html"
     }

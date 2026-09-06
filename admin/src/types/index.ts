@@ -225,11 +225,18 @@ export const bookingSchema = z.object({
   customerName: z.string(),
   customerEmail: z.string(),
   customerPhone: z.string(),
-  deliveryAddress: z.string().default(""),
+  deliveryAddress: z
+    .string()
+    .nullish()
+    .transform((v) => v ?? "")
+    .default(""),
   note: z.string().nullish().transform((v) => v ?? ""),
   items: z.array(
     z.object({
-      gear: z.string(),
+      gear: z.preprocess(
+        (v) => (typeof v === "object" && v && "_id" in v ? String((v as { _id: unknown })._id) : String(v ?? "")),
+        z.string(),
+      ),
       name: z.string(),
       pricePerDay: z.number(),
       quantity: z.number(),
@@ -253,7 +260,7 @@ export type Booking = z.infer<typeof bookingSchema>
 
 export const settingsSchema = z.object({
   leadModalEnabled: z.boolean(),
-  leadModalImage: z.string().default(""),
+  leadModalImage: imageUrlSchema.default(""),
   leadModalHeadline: z.string(),
   leadModalBody: z.string(),
   leadModalShowDelayMs: z.number(),

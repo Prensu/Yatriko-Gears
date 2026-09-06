@@ -2,20 +2,29 @@ import { z } from "zod"
 import { imageUrlSchema } from "@/types"
 
 /** Users as returned by /auth/login (full document) and /auth/me (trimmed). */
-export const adminUserSchema = z.object({
-  _id: z.string(),
-  name: z.string(),
-  email: z.string(),
-  role: z.enum(["admin", "customer"]),
-  phone: z.string().optional(),
-  address: z
-    .string()
-    .nullish()
-    .transform((value) => value ?? ""),
-  image: imageUrlSchema.optional().default(""),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
-})
+export const adminUserSchema = z
+  .object({
+    _id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    role: z.enum(["admin", "customer"]),
+    phone: z.string().optional(),
+    address: z
+      .string()
+      .nullish()
+      .transform((value) => value ?? ""),
+    image: imageUrlSchema.optional().default(""),
+    avatarUrl: z
+      .string()
+      .nullish()
+      .transform((value) => value ?? ""),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .transform((user) => ({
+    ...user,
+    image: user.image || user.avatarUrl || "",
+  }))
 export type AdminUser = z.infer<typeof adminUserSchema>
 
 /** POST /auth/login → { accessToken, refreshToken, user } */

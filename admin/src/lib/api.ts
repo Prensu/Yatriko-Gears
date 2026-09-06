@@ -19,7 +19,7 @@ import {
  * VITE_API_BASE_URL must include the /api/v1 suffix. Left empty (dev) it falls
  * back to the relative "/api/v1", which the Vite proxy forwards to :9005.
  */
-const BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1"
+const BASE = (import.meta.env.VITE_API_BASE_URL?.trim() || "/api/v1").replace(/\/+$/, "")
 
 export class ApiRequestError extends Error {
   code: string
