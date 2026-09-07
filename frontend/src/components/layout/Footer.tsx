@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa6";
 import { CONTACTS } from "@/lib/fallbackData";
 import logoImg from "@/assets/logo.png";
 
@@ -33,30 +34,33 @@ export default function Footer() {
             Rent the Best, Trek with Confidence. Camping gear rental & sales —
             delivery across Kathmandu, Lalitpur & Bhaktapur.
           </p>
-          <div className="mt-4 flex gap-4 text-xl">
+          <div className="mt-4 flex items-center gap-3">
             <a
               href={CONTACTS.facebook}
               target="_blank"
               rel="noreferrer"
               aria-label="Facebook"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-slate-300 transition-all duration-200 hover:bg-[#1877F2] hover:text-white hover:scale-110"
             >
-              📘
+              <FaFacebookF className="h-4 w-4" />
             </a>
             <a
               href={CONTACTS.instagram}
               target="_blank"
               rel="noreferrer"
               aria-label="Instagram"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-slate-300 transition-all duration-200 hover:bg-gradient-to-tr hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:text-white hover:scale-110"
             >
-              📷
+              <FaInstagram className="h-4.5 w-4.5" />
             </a>
             <a
               href={CONTACTS.tiktok}
               target="_blank"
               rel="noreferrer"
               aria-label="TikTok"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-slate-300 transition-all duration-200 hover:bg-black hover:text-white hover:scale-110 hover:ring-1 hover:ring-white/20"
             >
-              🎵
+              <FaTiktok className="h-4 w-4" />
             </a>
           </div>
         </div>

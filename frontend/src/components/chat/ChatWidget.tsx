@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { FaPaperPlane, FaXmark } from "react-icons/fa6"
+import { TbMessageChatbot } from "react-icons/tb"
 import { sendChatMessage } from "@/api/chat"
 
 type Message = {
@@ -126,9 +128,9 @@ export default function ChatWidget() {
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
               exit={{ rotate: 90, opacity: 0 }}
-              className="text-2xl text-white"
+              className="text-white"
             >
-              ✕
+              <FaXmark className="h-6 w-6" />
             </motion.span>
           ) : (
             <motion.span
@@ -136,9 +138,9 @@ export default function ChatWidget() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="text-2xl"
+              className="text-white"
             >
-              🤖
+              <TbMessageChatbot className="h-7 w-7" />
             </motion.span>
           )}
         </AnimatePresence>
@@ -168,8 +170,8 @@ export default function ChatWidget() {
                 background: "linear-gradient(135deg, #1e412a 0%, #2d653e 50%, #3e7f50 100%)",
               }}
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-xl">
-                🏕️
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white">
+                <TbMessageChatbot className="h-6 w-6" />
               </div>
               <div className="flex-1">
                 <h3 className="font-display text-sm font-bold text-white">Yatriko Assistant</h3>
@@ -181,9 +183,9 @@ export default function ChatWidget() {
               <button
                 onClick={toggleOpen}
                 aria-label="Close chat"
-                className="text-lg text-white/60 transition hover:text-white"
+                className="rounded-lg p-1 text-white/70 transition hover:bg-white/10 hover:text-white"
               >
-                ✕
+                <FaXmark className="h-4 w-4" />
               </button>
             </div>
 
@@ -271,14 +273,7 @@ export default function ChatWidget() {
                 className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-forest-600 text-white transition hover:bg-forest-700 disabled:opacity-40"
                 aria-label="Send message"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="h-5 w-5"
-                >
-                  <path d="M3.105 2.288a.75.75 0 0 0-.826.95l1.414 4.926A1.5 1.5 0 0 0 5.135 9.25h6.115a.75.75 0 0 1 0 1.5H5.135a1.5 1.5 0 0 0-1.442 1.086l-1.414 4.926a.75.75 0 0 0 .826.95l14.095-5.156a.75.75 0 0 0 0-1.412L3.105 2.288Z" />
-                </svg>
+                <FaPaperPlane className="h-4 w-4 -translate-y-px -translate-x-px" />
               </button>
             </form>
 
