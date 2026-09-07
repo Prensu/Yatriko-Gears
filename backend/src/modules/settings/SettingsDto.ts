@@ -22,6 +22,8 @@ export const SettingsUpdateDTO = z.object({
   leadModalBody: z.string().max(500).default(""),
   leadModalShowDelayMs: z.coerce.number().int().min(0).default(5000),
   leadModalCooldownDays: z.coerce.number().int().min(0).default(7),
+  imageUrl: z.string().url().nullish().or(z.literal("")).optional(),
+  imagePublicId: z.string().nullish().or(z.literal("")).optional(),
 })
 
 export type SettingsUpdateInput = z.infer<typeof SettingsUpdateDTO>

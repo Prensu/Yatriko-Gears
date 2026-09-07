@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { createCategory, fetchCategoryBySlug, updateCategory } from "@/api/category"
+import { uploadImage } from "@/api/uploads"
 import { ApiRequestError, errorMessage, isCanceled } from "@/lib/api"
 import { usePageMeta } from "@/hooks/usePageMeta"
 import { useToast } from "@/context/ToastContext"
@@ -68,8 +69,22 @@ export default function CategoryFormPage() {
     setErrors({})
     setSubmitting(true)
     try {
-      if (slug) await updateCategory(slug, parsed.data, file)
-      else await createCategory(parsed.data, file)
+      let imageUrl: string | undefined
+      let imagePublicId: string | undefined
+      if (file) {
+        const uploaded = await uploadImage("category", file)
+        imageUrl = uploaded.imageUrl
+        imagePublicId = uploaded.imagePublicId
+      }
+
+      const payload = {
+        ...parsed.data,
+        imageUrl,
+        imagePublicId,
+      }
+
+      if (slug) await updateCategory(slug, payload)
+      else await createCategory(payload)
 
       toast.success(slug ? "Category updated successfully" : "Category created successfully")
       navigate("/categories")

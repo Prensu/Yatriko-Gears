@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { api } from "@/lib/api"
-import { buildFormData } from "@/lib/formData"
 import { destinationSchema, type Destination } from "@/types"
 import type { DestinationFormValues } from "@/types/forms"
 import type { ListParams, Paged } from "@/api/shared"
@@ -20,37 +19,20 @@ export async function fetchDestinationBySlug(slug: string, signal?: AbortSignal)
   return res.data
 }
 
-function destinationFormData(values: DestinationFormValues, file: File | null): FormData {
-  return buildFormData(
-    {
-      name: values.name,
-      blurb: values.blurb,
-      status: values.status,
-    },
-    file,
-  )
+export type DestinationInput = DestinationFormValues & {
+  imageUrl?: string
+  imagePublicId?: string
 }
 
-/** POST /destination — multipart, file field "image". */
-export async function createDestination(
-  values: DestinationFormValues,
-  file: File | null,
-): Promise<Destination> {
-  const res = await api.post("/destination", destinationSchema, destinationFormData(values, file))
+/** POST /destination (JSON). */
+export async function createDestination(input: DestinationInput): Promise<Destination> {
+  const res = await api.post("/destination", destinationSchema, input)
   return res.data
 }
 
-/** PUT /destination/:slug */
-export async function updateDestination(
-  slug: string,
-  values: DestinationFormValues,
-  file: File | null,
-): Promise<Destination> {
-  const res = await api.put(
-    `/destination/${encodeURIComponent(slug)}`,
-    destinationSchema,
-    destinationFormData(values, file),
-  )
+/** PUT /destination/:slug (JSON). */
+export async function updateDestination(slug: string, input: DestinationInput): Promise<Destination> {
+  const res = await api.put(`/destination/${encodeURIComponent(slug)}`, destinationSchema, input)
   return res.data
 }
 

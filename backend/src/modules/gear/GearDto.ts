@@ -17,6 +17,8 @@ export const GearCreateDTO = z.object({
   quantityTotal: z.coerce.number().int().min(0, "Stock cannot be negative").default(1),
   isNew: z.coerce.boolean().default(false),
   status: z.enum(["active", "inactive"]).default("active"),
+  imageUrl: z.string().url().nullish().or(z.literal("")).optional(),
+  imagePublicId: z.string().nullish().or(z.literal("")).optional(),
 })
 
 export const GearUpdateDTO = GearCreateDTO.partial()

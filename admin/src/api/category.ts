@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { api } from "@/lib/api"
-import { buildFormData } from "@/lib/formData"
 import { categorySchema, type Category } from "@/types"
 import type { CategoryFormValues } from "@/types/forms"
 import type { ListParams, Paged } from "@/api/shared"
@@ -26,34 +25,20 @@ export async function fetchCategoryBySlug(slug: string, signal?: AbortSignal): P
   return res.data
 }
 
-function categoryFormData(values: CategoryFormValues, file: File | null): FormData {
-  return buildFormData(
-    {
-      name: values.name,
-      description: values.description,
-      status: values.status,
-    },
-    file,
-  )
+export type CategoryInput = CategoryFormValues & {
+  imageUrl?: string
+  imagePublicId?: string
 }
 
-/** POST /category — multipart, file field "image". */
-export async function createCategory(values: CategoryFormValues, file: File | null): Promise<Category> {
-  const res = await api.post("/category", categorySchema, categoryFormData(values, file))
+/** POST /category (JSON). */
+export async function createCategory(input: CategoryInput): Promise<Category> {
+  const res = await api.post("/category", categorySchema, input)
   return res.data
 }
 
-/** PUT /category/:slug */
-export async function updateCategory(
-  slug: string,
-  values: CategoryFormValues,
-  file: File | null,
-): Promise<Category> {
-  const res = await api.put(
-    `/category/${encodeURIComponent(slug)}`,
-    categorySchema,
-    categoryFormData(values, file),
-  )
+/** PUT /category/:slug (JSON). */
+export async function updateCategory(slug: string, input: CategoryInput): Promise<Category> {
+  const res = await api.put(`/category/${encodeURIComponent(slug)}`, categorySchema, input)
   return res.data
 }
 

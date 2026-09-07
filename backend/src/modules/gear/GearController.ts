@@ -1,7 +1,7 @@
 import type { NextFunction, Response } from "express"
 import GearModel from "./GearModel"
 import CategoryModel from "../category/CategoryModel"
-import { getPagination, makeSlug, mapImage } from "../../utilities/helpers"
+import { destroyCloudinaryImage, getPagination, makeSlug, mapCloudinaryImage } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
 
 /**
@@ -22,7 +22,7 @@ export function toPublicGear(doc: any) {
 }
 
 class GearController {
-  /** POST /api/v1/gear — admin (multipart, field name: image) */
+  /** POST /api/v1/gear — admin (JSON, accepts imageUrl + imagePublicId) */
   createGear = async (req: IAuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = req.body
@@ -32,7 +32,11 @@ class GearController {
         data.slug = `${data.slug}-${Date.now()}`
       }
 
-      if (req.file) data.image = mapImage(req.file as Express.Multer.File, "gear/")
+      if (data.imageUrl && data.imagePublicId) {
+        data.image = mapCloudinaryImage({ url: data.imageUrl, publicId: data.imagePublicId })
+      }
+      delete data.imageUrl
+      delete data.imagePublicId
 
       // multipart forms send "null" as a literal string — normalize FKs
       if (!data.category || data.category === "null") data.category = null
@@ -103,7 +107,18 @@ class GearController {
       const data = req.body
       delete data.slug // slug stays stable
 
-      if (req.file) data.image = mapImage(req.file as Express.Multer.File, "gear/")
+      const existing = await GearModel.findOne({ slug: req.params.slug })
+      if (!existing) throw { code: 404, message: "Gear not found" }
+
+      if (data.imageUrl && data.imagePublicId) {
+        if (existing.image?.path && existing.image.path !== data.imagePublicId) {
+          await destroyCloudinaryImage(existing.image.path)
+        }
+        data.image = mapCloudinaryImage({ url: data.imageUrl, publicId: data.imagePublicId })
+      }
+      delete data.imageUrl
+      delete data.imagePublicId
+
       if (data.category === "null") data.category = null
 
       if ("isNew" in data) {
@@ -127,6 +142,11 @@ class GearController {
     try {
       const gear = await GearModel.findOneAndDelete({ slug: req.params.slug })
       if (!gear) throw { code: 404, message: "Gear not found" }
+
+      if (gear.image?.path) {
+        await destroyCloudinaryImage(gear.image.path)
+      }
+
       res.json({ data: null, message: "Gear deleted successfully", meta: null })
     } catch (exception) {
       next(exception)

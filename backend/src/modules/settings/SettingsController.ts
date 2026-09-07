@@ -1,6 +1,6 @@
 import type { NextFunction, Response } from "express"
 import SettingsModel from "./SettingsModel"
-import { mapImage } from "../../utilities/helpers"
+import { destroyCloudinaryImage, mapCloudinaryImage } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
 
 /** Sane defaults matching the current hardcoded values in LeadCaptureModal. */
@@ -39,14 +39,26 @@ class SettingsController {
     }
   }
 
-  /** PUT /api/v1/settings — admin-only, multipart. Upserts the singleton. */
+  /** PUT /api/v1/settings — admin-only, JSON. Upserts the singleton. */
   updateSettings = async (req: IAuthRequest, res: Response, next: NextFunction) => {
     try {
       const body = req.body
 
-      if (req.file) {
-        body.leadModalImage = mapImage(req.file as Express.Multer.File, "settings/")
+      if (body.imageUrl && body.imagePublicId) {
+        const existing = await SettingsModel.findOne()
+        const oldPath =
+          existing?.leadModalImage &&
+          typeof existing.leadModalImage === "object" &&
+          "path" in existing.leadModalImage
+            ? (existing.leadModalImage as { path?: string }).path
+            : undefined
+        if (oldPath && oldPath !== body.imagePublicId) {
+          await destroyCloudinaryImage(oldPath)
+        }
+        body.leadModalImage = mapCloudinaryImage({ url: body.imageUrl, publicId: body.imagePublicId })
       }
+      delete body.imageUrl
+      delete body.imagePublicId
 
       const doc = await SettingsModel.findOneAndUpdate({}, body, {
         new: true,

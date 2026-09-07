@@ -1,6 +1,5 @@
 import { z } from "zod"
 import { api } from "@/lib/api"
-import { buildFormData } from "@/lib/formData"
 import { gearSchema, type Gear } from "@/types"
 import type { GearFormValues } from "@/types/forms"
 import type { ListParams, Paged } from "@/api/shared"
@@ -17,34 +16,20 @@ export async function fetchGearBySlug(slug: string, signal?: AbortSignal): Promi
   return res.data
 }
 
-function gearFormData(values: GearFormValues, file: File | null): FormData {
-  return buildFormData(
-    {
-      name: values.name,
-      description: values.description,
-      realPrice: values.realPrice,
-      discountedPrice: values.discountedPrice,
-      availableFor: values.availableFor,
-      colors: values.colors,
-      specs: values.specs,
-      category: values.category,
-      quantityTotal: values.quantityTotal,
-      isNew: values.isNew,
-      status: values.status,
-    },
-    file,
-  )
+export type GearInput = GearFormValues & {
+  imageUrl?: string
+  imagePublicId?: string
 }
 
-/** POST /gear — multipart, file field "image". */
-export async function createGear(values: GearFormValues, file: File | null): Promise<Gear> {
-  const res = await api.post("/gear", gearSchema, gearFormData(values, file))
+/** POST /gear (JSON). */
+export async function createGear(input: GearInput): Promise<Gear> {
+  const res = await api.post("/gear", gearSchema, input)
   return res.data
 }
 
-/** PUT /gear/:slug — multipart; the image is only replaced when a file is picked. */
-export async function updateGear(slug: string, values: GearFormValues, file: File | null): Promise<Gear> {
-  const res = await api.put(`/gear/${encodeURIComponent(slug)}`, gearSchema, gearFormData(values, file))
+/** PUT /gear/:slug (JSON). */
+export async function updateGear(slug: string, input: GearInput): Promise<Gear> {
+  const res = await api.put(`/gear/${encodeURIComponent(slug)}`, gearSchema, input)
   return res.data
 }
 

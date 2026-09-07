@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { updateProfile } from "@/api/auth"
+import { uploadImage } from "@/api/uploads"
 import { useAuth } from "@/context/AuthContext"
 import { useToast } from "@/context/ToastContext"
 import { ApiRequestError, errorMessage } from "@/lib/api"
@@ -56,7 +57,19 @@ export default function SettingsPage() {
     setErrors({})
     setSaving(true)
     try {
-      const updated = await updateProfile(parsed.data, photo)
+      let imageUrl: string | undefined
+      let imagePublicId: string | undefined
+      if (photo) {
+        const uploaded = await uploadImage("user", photo)
+        imageUrl = uploaded.imageUrl
+        imagePublicId = uploaded.imagePublicId
+      }
+
+      const updated = await updateProfile({
+        ...parsed.data,
+        imageUrl,
+        imagePublicId,
+      })
       applyProfile(updated)
       setPhoto(null)
       toast.success("Profile updated successfully")

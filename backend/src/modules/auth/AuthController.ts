@@ -5,7 +5,7 @@ import { appConfig } from "../../config/AppConfig"
 import AuthModel from "./AuthModel"
 import UserModel from "../user/UserModel"
 import EmailService from "../../services/EmailService"
-import { mapImage } from "../../utilities/helpers"
+import { destroyCloudinaryImage, mapCloudinaryImage } from "../../utilities/helpers"
 import { verifyGoogleIdToken } from "./GoogleVerifier"
 import type { IAuthRequest } from "./AuthContract"
 import { loggerFor } from "../../config/logger"
@@ -155,7 +155,7 @@ class AuthController {
   }
 
   /**
-   * PATCH /api/v1/auth/me — update your own profile (multipart, field: image).
+   * PATCH /api/v1/auth/me — update your own profile (JSON, accepts imageUrl + imagePublicId).
    * email, password and role can never be changed through this route.
    */
   updateProfile = async (req: IAuthRequest, res: Response, next: NextFunction) => {
@@ -167,7 +167,18 @@ class AuthController {
       delete data.password
       delete data.role
 
-      if (req.file) data.image = mapImage(req.file as Express.Multer.File, "user/")
+      if (data.imageUrl && data.imagePublicId) {
+        const existing = await UserModel.findById(req.loggedInUser?._id)
+        if (existing?.image?.path && existing.image.path !== data.imagePublicId) {
+          await destroyCloudinaryImage(existing.image.path)
+        }
+        data.image = mapCloudinaryImage({
+          url: String(data.imageUrl),
+          publicId: String(data.imagePublicId),
+        })
+      }
+      delete data.imageUrl
+      delete data.imagePublicId
 
       const user = await UserModel.findByIdAndUpdate(req.loggedInUser?._id, data, {
         new: true,

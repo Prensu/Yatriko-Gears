@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { createGear, fetchGearBySlug, updateGear } from "@/api/gear"
+import { uploadImage } from "@/api/uploads"
 import { fetchCategoryOptions } from "@/api/category"
 import { ApiRequestError, errorMessage, isCanceled } from "@/lib/api"
 import { usePageMeta } from "@/hooks/usePageMeta"
@@ -93,8 +94,22 @@ export default function GearFormPage() {
     setErrors({})
     setSubmitting(true)
     try {
-      if (slug) await updateGear(slug, parsed.data, file)
-      else await createGear(parsed.data, file)
+      let imageUrl: string | undefined
+      let imagePublicId: string | undefined
+      if (file) {
+        const uploaded = await uploadImage("gear", file)
+        imageUrl = uploaded.imageUrl
+        imagePublicId = uploaded.imagePublicId
+      }
+
+      const payload = {
+        ...parsed.data,
+        imageUrl,
+        imagePublicId,
+      }
+
+      if (slug) await updateGear(slug, payload)
+      else await createGear(payload)
 
       toast.success(slug ? "Gear updated successfully" : "Gear created successfully")
       navigate("/gear")

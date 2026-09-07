@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { createDestination, fetchDestinationBySlug, updateDestination } from "@/api/destination"
+import { uploadImage } from "@/api/uploads"
 import { ApiRequestError, errorMessage, isCanceled } from "@/lib/api"
 import { usePageMeta } from "@/hooks/usePageMeta"
 import { useToast } from "@/context/ToastContext"
@@ -73,8 +74,22 @@ export default function DestinationFormPage() {
     setErrors({})
     setSubmitting(true)
     try {
-      if (slug) await updateDestination(slug, parsed.data, file)
-      else await createDestination(parsed.data, file)
+      let imageUrl: string | undefined
+      let imagePublicId: string | undefined
+      if (file) {
+        const uploaded = await uploadImage("destination", file)
+        imageUrl = uploaded.imageUrl
+        imagePublicId = uploaded.imagePublicId
+      }
+
+      const payload = {
+        ...parsed.data,
+        imageUrl,
+        imagePublicId,
+      }
+
+      if (slug) await updateDestination(slug, payload)
+      else await createDestination(payload)
 
       toast.success(slug ? "Destination updated successfully" : "Destination created successfully")
       navigate("/destinations")

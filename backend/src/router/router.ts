@@ -13,6 +13,7 @@ import bookingRouter from "../modules/booking/BookingRoute"
 
 import chatRouter from "../modules/chat/ChatRouter"
 import settingsRouter from "../modules/settings/SettingsRoute"
+import uploadRouter from "../modules/uploads/UploadRoute"
 
 const router = Router()
 
@@ -54,5 +55,7 @@ router.use("/contact", formLimiter, contactRouter)
 router.use("/subscriber", formLimiter, subscriberRouter)
 router.use("/chat",chatRouter)
 router.use("/settings", settingsRouter)
+router.use("/uploads", uploadRouter)
+router.use("/upload", uploadRouter)
 
 export default router

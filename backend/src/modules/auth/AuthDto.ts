@@ -36,6 +36,8 @@ export const UpdateProfileDTO = z.object({
     .regex(/^(\+977[- ]?)?9\d{9}$/, "Enter a valid Nepali mobile number")
     .optional(),
   address: z.string().max(200).nullable().optional(),
+  imageUrl: z.string().url().nullish().or(z.literal("")).optional(),
+  imagePublicId: z.string().nullish().or(z.literal("")).optional(),
 })
 export type UpdateProfileDTOType = z.infer<typeof UpdateProfileDTO>
 

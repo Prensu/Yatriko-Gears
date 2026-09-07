@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react"
 import { fetchSettings, updateSettings } from "@/api/settings"
+import { uploadImage } from "@/api/uploads"
 import { useToast } from "@/context/ToastContext"
 import { ApiRequestError, errorMessage, isCanceled } from "@/lib/api"
 import { usePageMeta } from "@/hooks/usePageMeta"
@@ -68,16 +69,23 @@ export default function PromotionsPage() {
     setErrors({})
     setSaving(true)
     try {
-      const updated = await updateSettings(
-        {
-          leadModalEnabled: enabled,
-          leadModalHeadline: headline.trim(),
-          leadModalBody: body,
-          leadModalShowDelayMs: delayNum,
-          leadModalCooldownDays: cooldownNum,
-        },
-        photo,
-      )
+      let imageUrl: string | undefined
+      let imagePublicId: string | undefined
+      if (photo) {
+        const uploaded = await uploadImage("settings", photo)
+        imageUrl = uploaded.imageUrl
+        imagePublicId = uploaded.imagePublicId
+      }
+
+      const updated = await updateSettings({
+        leadModalEnabled: enabled,
+        leadModalHeadline: headline.trim(),
+        leadModalBody: body,
+        leadModalShowDelayMs: delayNum,
+        leadModalCooldownDays: cooldownNum,
+        imageUrl,
+        imagePublicId,
+      })
       setExistingImage(updated.leadModalImage)
       setPhoto(null)
       toast.success("Popup settings saved")

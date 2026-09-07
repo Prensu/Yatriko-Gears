@@ -1,6 +1,6 @@
 import type { NextFunction, Response } from "express"
 import DestinationModel from "./DestinationModel"
-import { getPagination, makeSlug, mapImage } from "../../utilities/helpers"
+import { destroyCloudinaryImage, getPagination, makeSlug, mapCloudinaryImage } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
 
 /** Serialize: image sub-doc → plain URL string (frontend destinationSchema). */
@@ -11,7 +11,7 @@ function toPublicDestination(doc: any) {
 }
 
 class DestinationController {
-  /** POST /api/v1/destination — admin (multipart, field name: image) */
+  /** POST /api/v1/destination — admin (JSON, accepts imageUrl + imagePublicId) */
   createDestination = async (req: IAuthRequest, res: Response, next: NextFunction) => {
     try {
       const data = req.body
@@ -21,7 +21,11 @@ class DestinationController {
         data.slug = `${data.slug}-${Date.now()}`
       }
 
-      if (req.file) data.image = mapImage(req.file as Express.Multer.File, "destination/")
+      if (data.imageUrl && data.imagePublicId) {
+        data.image = mapCloudinaryImage({ url: data.imageUrl, publicId: data.imagePublicId })
+      }
+      delete data.imageUrl
+      delete data.imagePublicId
 
       data.createdBy = req.loggedInUser?._id
       data.updatedBy = req.loggedInUser?._id
@@ -81,7 +85,18 @@ class DestinationController {
       const data = req.body
       delete data.slug
 
-      if (req.file) data.image = mapImage(req.file as Express.Multer.File, "destination/")
+      const existing = await DestinationModel.findOne({ slug: req.params.slug })
+      if (!existing) throw { code: 404, message: "Destination not found" }
+
+      if (data.imageUrl && data.imagePublicId) {
+        if (existing.image?.path && existing.image.path !== data.imagePublicId) {
+          await destroyCloudinaryImage(existing.image.path)
+        }
+        data.image = mapCloudinaryImage({ url: data.imageUrl, publicId: data.imagePublicId })
+      }
+      delete data.imageUrl
+      delete data.imagePublicId
+
       data.updatedBy = req.loggedInUser?._id
 
       const destination = await DestinationModel.findOneAndUpdate({ slug: req.params.slug }, data, { new: true })
@@ -98,6 +113,11 @@ class DestinationController {
     try {
       const destination = await DestinationModel.findOneAndDelete({ slug: req.params.slug })
       if (!destination) throw { code: 404, message: "Destination not found" }
+
+      if (destination.image?.path) {
+        await destroyCloudinaryImage(destination.image.path)
+      }
+
       res.json({ data: null, message: "Destination deleted successfully", meta: null })
     } catch (exception) {
       next(exception)

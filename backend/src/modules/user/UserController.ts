@@ -1,7 +1,7 @@
 import type { NextFunction, Response } from "express"
 import UserModel from "./UserModel"
 import AuthModel from "../auth/AuthModel"
-import { getPagination } from "../../utilities/helpers"
+import { destroyCloudinaryImage, getPagination } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
 
 class UserController {
@@ -43,6 +43,10 @@ class UserController {
       if (!user) throw { code: 404, message: "User not found" }
 
       await AuthModel.updateMany({ userId: user._id, status: "active" }, { status: "revoked" })
+
+      if (user.image?.path) {
+        await destroyCloudinaryImage(user.image.path)
+      }
 
       res.json({ data: null, message: "User deleted successfully", meta: null })
     } catch (exception) {
