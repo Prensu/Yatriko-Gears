@@ -1,5 +1,5 @@
-import { Suspense, lazy } from "react"
-import { Outlet, Routes, Route } from "react-router-dom"
+import { Suspense, lazy, useEffect } from "react"
+import { Outlet, Routes, Route, useLocation } from "react-router-dom"
 import Layout from "@/components/layout/Layout"
 import RequireAuth from "@/components/layout/RequireAuth"
 import HomePage from "@/pages/HomePage"
@@ -29,9 +29,22 @@ function RouteFallback() {
   )
 }
 
+function ScrollToTop() {
+  const { pathname, search, hash } = useLocation()
+
+  useEffect(() => {
+    // Hash navigation has its own smooth-scroll behavior in HomePage.
+    if (hash) return
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+  }, [pathname, search, hash])
+
+  return null
+}
+
 export default function App() {
   return (
     <>
+      <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
           <Route

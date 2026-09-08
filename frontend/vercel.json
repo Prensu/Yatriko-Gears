@@ -11,7 +11,7 @@
     },
     {
       "source": "/admin/:path*",
-      "destination": "https://yatriko-admin.vercel.app/admin/:path*"
+      "destination": "https://yatriko-gears-admin.vercel.app/admin/:path*"
     },
     {
       

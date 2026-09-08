@@ -5,7 +5,7 @@ import { resolveSpotImage } from "@/lib/spotImages"
 /** "Season Highlights" style row of popular camping spots near Kathmandu. */
 export default function SpotsSection() {
   return (
-    <section className="section-pad">
+    <section id="popular-spots" className="section-pad scroll-mt-20">
       <div className="container-site">
         <SectionHeading
           eyebrow="Season Highlights"

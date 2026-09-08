@@ -4,6 +4,7 @@ import logoImg from "@/assets/logo.png"
 import { useAuth } from "@/context/AuthContext"
 import { useCart } from "@/context/CartContext"
 import AccountMenu, { Avatar } from "@/components/layout/AccountMenu"
+import { scrollToTop } from "@/lib/scroll"
 
 const navItems = [
   { to: "/", label: "Home" },
@@ -55,7 +56,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
       <div className="container-site flex h-20 items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 font-display text-xl font-extrabold text-forest-700">
+        <Link to="/" onClick={scrollToTop} className="flex items-center gap-3 font-display text-xl font-extrabold text-forest-700">
           <img src={logoImg} alt="Yatriko Gears Logo" className="h-20 w-auto object-contain sm:h-28 md:h-16" />
         </Link>
 
@@ -64,6 +65,7 @@ export default function Header() {
             <NavLink
               key={item.to}
               to={item.to}
+              onClick={scrollToTop}
               className={({ isActive }) =>
                 `font-display text-sm font-semibold transition hover:text-forest-600 ${
                   isActive ? "text-forest-700" : "text-navy-800"
@@ -112,7 +114,10 @@ export default function Header() {
             <NavLink
               key={item.to}
               to={item.to}
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                scrollToTop()
+                setOpen(false)
+              }}
               className="block py-3 font-display font-semibold text-navy-800"
             >
               {item.label}
