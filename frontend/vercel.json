@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/admin",
-      "destination": "https://yatriko-admin.vercel.app/admin"
+      "destination": "https://yatriko-gears-admin.vercel.app/admin"
     },
     {
       "source": "/admin/:path*",
