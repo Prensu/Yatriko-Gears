@@ -5,6 +5,9 @@ import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa6";
 import { CONTACTS } from "@/lib/fallbackData";
 import logoImg from "@/assets/logo.png";
 
+const HIKER_SCENE_URL =
+  "https://res.cloudinary.com/dothc374l/image/upload/v1789070750/footer-scene_4_wkf45k.svg";
+
 const socialLinks = [
   {
     href: CONTACTS.facebook,
@@ -57,20 +60,22 @@ function FooterLink({ to, children }: { to: string; children: ReactNode }) {
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-navy-900 text-slate-300">
-      {/* Mountain silhouette divider */}
-      <svg
-        viewBox="0 0 1440 90"
-        className="block w-full bg-white"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,90 L120,40 L240,75 L380,20 L520,70 L660,10 L800,65 L940,25 L1080,70 L1220,35 L1340,60 L1440,15 L1440,90 Z"
-          fill="#141d29"
-        />
-      </svg>
+    <footer className="relative overflow-hidden bg-[#1f2e60] text-slate-300">
+      {/* Mountain + trekkers scene, served from Cloudinary.
+          Its bottom band is #1f2e60, which matches the footer background above. */}
+    <img
+      src={HIKER_SCENE_URL}
+      alt=""
+      aria-hidden="true"
+      width={1440}
+      height={256}
+      className="-mb-px block h-auto w-full select-none"
+      loading="lazy"
+      decoding="async"
+      draggable={false}
+    />
 
-      <div className="container-site grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="container-site grid gap-10 py-6 sm:grid-cols-2 lg:grid-cols-4">
         {/* Brand + socials */}
         <motion.div
           custom={0}
@@ -92,7 +97,6 @@ export default function Footer() {
             Rent the Best, Trek with Confidence. Camping gear rental & sales —
             delivery across Kathmandu, Lalitpur & Bhaktapur.
           </p>
-
           <div className="mt-5 flex gap-3 text-lg">
             {socialLinks.map(({ href, icon: Icon, label, hoverBg }) => (
               <motion.a
