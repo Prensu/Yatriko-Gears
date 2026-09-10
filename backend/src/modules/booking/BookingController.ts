@@ -105,6 +105,11 @@ class BookingController {
       })
       await booking.save()
 
+      // Respond right away — the booking is already committed, and the
+      // browser shouldn't sit waiting on SMTP (which can hang or fail
+      // silently). Emails are fired in the background below.
+      res.json({ data: booking, message: "Booking created successfully", meta: null })
+
       const itemLines = items
         .map(
           (item: { name: string; quantity: number; pricePerDay: number }) =>
@@ -114,19 +119,20 @@ class BookingController {
       const dateRange = `${body.startDate} to ${body.endDate}`
 
       // Both emails are non-critical: the booking stands even if SMTP is down.
-      try {
-        await emailService.sendEmail({
+      // Fire-and-forget — do NOT await these, the response has already gone out.
+      emailService
+        .sendEmail({
           to: smtpConfig.fromAddress,
           sub: `New booking ${booking.code}`,
           message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) booked ${items.length} item(s) for ${days} day(s).</p><ul>${itemLines}</ul><p>Deliver to: ${booking.deliveryAddress}</p><p>Delivery charge: To be discussed on WhatsApp.</p><p>Gear total: Rs. ${total}</p>`,
         })
-      } catch {
-        log.error("Booking notification email could not be sent")
-      }
+        .catch(() => {
+          log.error("Booking notification email could not be sent")
+        })
 
       // The customer gets a receipt too — previously only the shop was told.
-      try {
-        await emailService.sendEmail({
+      emailService
+        .sendEmail({
           to: booking.customerEmail,
           sub: `Your Yatriko Gears booking ${booking.code}`,
           message: `<h2>Namaste ${booking.customerName}!</h2>
@@ -140,11 +146,9 @@ class BookingController {
             Delivery charge will be discussed on WhatsApp and is payable on delivery.</p>
             <p>Gear up. Head out. Make memories. \u26fa</p>`,
         })
-      } catch {
-        log.error("Booking receipt email could not be sent")
-      }
-
-      res.json({ data: booking, message: "Booking created successfully", meta: null })
+        .catch(() => {
+          log.error("Booking receipt email could not be sent")
+        })
     } catch (exception) {
       next(exception)
     }
