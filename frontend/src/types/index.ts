@@ -38,8 +38,9 @@ export const packageSchema = z.object({
   name: z.string(),
   slug: z.string(),
   price: z.number(),
-  items: z.array(z.string()),
-  description: z.string().optional().default(""),
+  items: z.array(z.string()).nullish().transform((v) => v ?? []),
+  description: z.string().nullish().transform((v) => v ?? ""),
+  status: z.enum(["active", "inactive"]).optional().default("active"),
 })
 export type Package = z.infer<typeof packageSchema>
 

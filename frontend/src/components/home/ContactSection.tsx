@@ -76,7 +76,7 @@ export default function ContactSection() {
           <h2 className="font-display text-2xl font-extrabold text-navy-900">Send Us a Message</h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
             {field("name", "Full Name * (e.g. Prensu Dangol)")}
-            {field("email", "Email * (e.g. prensu@gmail.com)", "email")}
+            {field("email", "Email * (e.g. yatri.prensu@gmail.com)", "email")}
             {field("phone", "Phone * (e.g. 98XXXXXXXX)", "tel")}
             {field("subject", "Subject * (e.g. Gear Rental Inquiry)")}
           </div>

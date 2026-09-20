@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { ApiRequestError } from "@/lib/api"
-import { bookingSchema, gearSchema } from "@/types"
+import { bookingSchema, gearSchema, packageSchema } from "@/types"
 
 describe("ApiRequestError", () => {
   it("carries the status and code the UI branches on", () => {
@@ -56,3 +56,42 @@ describe("bookingSchema", () => {
     expect(bookingSchema.safeParse({ status: "exploded" }).success).toBe(false)
   })
 })
+
+describe("packageSchema", () => {
+  it("parses a package as the API returns it", () => {
+    const parsed = packageSchema.safeParse({
+      _id: "pkg1",
+      name: "Full Camping Combo",
+      slug: "full-camping-combo",
+      price: 4300,
+      items: ["Tent", "Sleeping Bag"],
+      description: "Everything you need",
+      status: "active",
+    })
+    expect(parsed.success).toBe(true)
+    if (parsed.success) {
+      expect(parsed.data.name).toBe("Full Camping Combo")
+      expect(parsed.data.price).toBe(4300)
+      expect(parsed.data.items).toHaveLength(2)
+      expect(parsed.data.status).toBe("active")
+    }
+  })
+
+  it("handles nullish items and description gracefully", () => {
+    const parsed = packageSchema.safeParse({
+      _id: "pkg2",
+      name: "Minimal Package",
+      slug: "minimal-package",
+      price: 1500,
+      items: null,
+      description: null,
+    })
+    expect(parsed.success).toBe(true)
+    if (parsed.success) {
+      expect(parsed.data.items).toEqual([])
+      expect(parsed.data.description).toBe("")
+      expect(parsed.data.status).toBe("active")
+    }
+  })
+})
+

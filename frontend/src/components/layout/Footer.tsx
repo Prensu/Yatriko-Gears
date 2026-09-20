@@ -94,8 +94,8 @@ export default function Footer() {
             </div>
           </Link>
           <p className="mt-3 text-sm leading-relaxed">
-            Rent the Best, Trek with Confidence. Camping gear rental & sales —
-            delivery across Kathmandu, Lalitpur & Bhaktapur.
+            Camping gear rental & sales —
+            delivery all over Nepal.
           </p>
           <div className="mt-5 flex gap-3 text-lg">
             {socialLinks.map(({ href, icon: Icon, label, hoverBg }) => (

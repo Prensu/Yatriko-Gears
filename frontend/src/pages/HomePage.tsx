@@ -4,7 +4,7 @@ import Hero from "@/components/home/Hero"
 import GearGrid from "@/components/home/GearGrid"
 import PackageBand from "@/components/home/PackageBand"
 import SpotsSection from "@/components/home/SpotsSection"
-import BrandMarquee from "@/components/home/BrandMarquee"
+
 import InstaFeed from "@/components/home/InstaFeed"
 import ContactSection from "@/components/home/ContactSection"
 import { usePageMeta } from "@/hooks/usePageMeta"
@@ -41,7 +41,6 @@ export default function HomePage() {
       <GearGrid />
       <PackageBand />
       <SpotsSection />
-      <BrandMarquee />
       <InstaFeed />
       <ContactSection />
     </>
