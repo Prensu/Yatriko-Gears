@@ -63,7 +63,15 @@ export default function GearListPage() {
           )}
           <div className="min-w-0">
             <p className="truncate font-medium text-ink-900">{gear.name}</p>
-            <p className="truncate text-xs text-ink-500">{gear.slug}</p>
+            <a
+              href={`/gear/${encodeURIComponent(gear.slug)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="block truncate text-xs text-ink-500 hover:text-emerald-700 hover:underline"
+              title="View on live site"
+            >
+              /{gear.slug} ↗
+            </a>
           </div>
         </div>
       ),

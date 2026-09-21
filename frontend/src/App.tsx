@@ -11,6 +11,7 @@ import LeadCaptureModal from "@/components/modal/LeadCaptureModal"
  * kilobyte of first paint counts.
  */
 const GearPage = lazy(() => import("@/pages/GearPage"))
+const GearDetailPage = lazy(() => import("@/pages/GearDetailPage"))
 const PortfolioPage = lazy(() => import("@/pages/PortfolioPage"))
 const ContactPage = lazy(() => import("@/pages/ContactPage"))
 const LoginPage = lazy(() => import("@/pages/LoginPage"))
@@ -56,6 +57,7 @@ export default function App() {
           >
             <Route index element={<HomePage />} />
             <Route path="gear" element={<GearPage />} />
+            <Route path="gear/:slug" element={<GearDetailPage />} />
             <Route path="portfolio" element={<PortfolioPage />} />
             <Route path="contact" element={<ContactPage />} />
 

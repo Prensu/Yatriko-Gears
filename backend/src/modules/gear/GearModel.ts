@@ -11,6 +11,7 @@ const GearSchema = new mongoose.Schema(
     name: { type: String, required: true, minlength: 2, maxlength: 120 },
     slug: { type: String, required: true, unique: true },
     description: { type: String, default: "" },
+    longDescription: { type: String, default: "" },
     realPrice: { type: Number, required: true, min: 0 },
     discountedPrice: { type: Number, required: true, min: 0 },
     availableFor: { type: [String], enum: ["rent", "sale"], default: ["rent"] },

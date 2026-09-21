@@ -8,6 +8,7 @@ import { parseMaybeJson } from "../../utilities/helpers"
 export const GearCreateDTO = z.object({
   name: z.string().min(2, "Name must have atleast 2 character").max(120),
   description: z.string().max(2000).optional().default(""),
+  longDescription: z.string().max(50000).optional().default(""),
   realPrice: z.coerce.number().min(0),
   discountedPrice: z.coerce.number().min(0),
   availableFor: z.preprocess(parseMaybeJson, z.array(z.enum(["rent", "sale"])).default(["rent"])),

@@ -32,6 +32,7 @@ export const gearFormSchema = z
   .object({
     name: z.string().trim().min(2, "Name must have atleast 2 character").max(120, "Name is too long"),
     description: z.string().max(2000, "Description is too long"),
+    longDescription: z.string().max(50000, "Description is too long").optional().default(""),
     realPrice: numberField("Real price"),
     discountedPrice: numberField("Discounted price"),
     availableFor: z
@@ -57,6 +58,7 @@ export type GearFormValues = z.infer<typeof gearFormSchema>
 export type GearFormState = {
   name: string
   description: string
+  longDescription: string
   realPrice: string
   discountedPrice: string
   availableFor: Array<"rent" | "sale">
@@ -71,6 +73,7 @@ export type GearFormState = {
 export const emptyGearForm: GearFormState = {
   name: "",
   description: "",
+  longDescription: "",
   realPrice: "",
   discountedPrice: "",
   availableFor: ["rent"],

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa6";
 import { CONTACTS } from "@/lib/fallbackData";
 import logoImg from "@/assets/logo.png";
+import { scrollToTop } from "@/lib/scroll";
 
 const HIKER_SCENE_URL =
   "https://res.cloudinary.com/dothc374l/image/upload/v1789070750/footer-scene_4_wkf45k.svg";
@@ -63,17 +64,17 @@ export default function Footer() {
     <footer className="relative overflow-hidden bg-[#1f2e60] text-slate-300">
       {/* Mountain + trekkers scene, served from Cloudinary.
           Its bottom band is #1f2e60, which matches the footer background above. */}
-    <img
-      src={HIKER_SCENE_URL}
-      alt=""
-      aria-hidden="true"
-      width={1440}
-      height={256}
-      className="-mb-px block h-auto w-full select-none"
-      loading="lazy"
-      decoding="async"
-      draggable={false}
-    />
+      <img
+        src={HIKER_SCENE_URL}
+        alt=""
+        aria-hidden="true"
+        width={1440}
+        height={256}
+        className="-mb-px block h-auto w-full select-none"
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+      />
 
       <div className="container-site grid gap-10 py-6 sm:grid-cols-2 lg:grid-cols-4">
         {/* Brand + socials */}
@@ -84,7 +85,11 @@ export default function Footer() {
           viewport={{ once: true, amount: 0.3 }}
           variants={columnReveal}
         >
-          <Link to="/" className="flex items-center gap-3">
+          <Link
+            to="/"
+            onClick={scrollToTop}
+            className="flex items-center gap-3"
+          >
             <div className="rounded-xl bg-white p-2">
               <img
                 src={logoImg}
@@ -94,8 +99,7 @@ export default function Footer() {
             </div>
           </Link>
           <p className="mt-3 text-sm leading-relaxed">
-            Camping gear rental & sales —
-            delivery all over Nepal.
+            Camping gear rental & sales — delivery all over Nepal.
           </p>
           <div className="mt-5 flex gap-3 text-lg">
             {socialLinks.map(({ href, icon: Icon, label, hoverBg }) => (
@@ -156,13 +160,17 @@ export default function Footer() {
         >
           <p className="font-display font-semibold text-white">Popular Spots</p>
           <ul className="mt-4 space-y-2">
-            {["Jati Pokhari", "Hattiban", "Champadevi", "Bhundole", "Pharping"].map(
-              (spot) => (
-                <li key={spot}>
-                  <FooterLink to="/#popular-spots">{spot}</FooterLink>
-                </li>
-              )
-            )}
+            {[
+              "Jati Pokhari",
+              "Hattiban",
+              "Champadevi",
+              "Bhundole",
+              "Pharping",
+            ].map((spot) => (
+              <li key={spot}>
+                <FooterLink to="/#popular-spots">{spot}</FooterLink>
+              </li>
+            ))}
           </ul>
         </motion.div>
 

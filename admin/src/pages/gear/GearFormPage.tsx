@@ -16,6 +16,8 @@ import ImageDropzone from "@/components/form/ImageDropzone"
 import Toggle from "@/components/form/Toggle"
 import CheckboxGroup from "@/components/form/CheckboxGroup"
 import type { Category, Status } from "@/types"
+import ReactQuill from "react-quill"
+import "react-quill/dist/quill.snow.css"
 
 export default function GearFormPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -59,6 +61,7 @@ export default function GearFormPage() {
         setForm({
           name: gear.name,
           description: gear.description,
+          longDescription: gear.longDescription ?? "",
           realPrice: String(gear.realPrice),
           discountedPrice: String(gear.discountedPrice),
           availableFor: gear.availableFor.length > 0 ? gear.availableFor : ["rent"],
@@ -163,6 +166,16 @@ export default function GearFormPage() {
         }
         actions={
           <>
+            {isEdit && slug ? (
+              <a
+                href={`/gear/${encodeURIComponent(slug)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary"
+              >
+                View live ↗
+              </a>
+            ) : null}
             <Link to="/gear" className="btn-secondary">
               Cancel
             </Link>
@@ -190,12 +203,23 @@ export default function GearFormPage() {
             <FormField label="Description" htmlFor="description" error={errors.description}>
               <textarea
                 id="description"
-                rows={4}
+                rows={2}
                 className={`input ${errors.description ? "input-error" : ""}`}
                 value={form.description}
                 onChange={(event) => set("description", event.target.value)}
-                placeholder="What makes this item worth renting?"
+                placeholder="Short description for gear cards"
               />
+            </FormField>
+
+            <FormField label="Long Description (Rich Text)" htmlFor="longDescription" error={errors.longDescription}>
+              <div className="bg-white [&_.ql-container]:min-h-[200px] [&_.ql-container]:text-sm [&_.ql-editor]:font-body [&_.ql-editor]:text-navy-900 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:rounded-b-lg">
+                <ReactQuill
+                  theme="snow"
+                  value={form.longDescription}
+                  onChange={(value) => set("longDescription", value)}
+                  placeholder="Full product details, features, etc."
+                />
+              </div>
             </FormField>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -338,6 +362,16 @@ export default function GearFormPage() {
       </div>
 
       <div className="mt-5 flex justify-end gap-2 lg:hidden">
+        {isEdit && slug ? (
+          <a
+            href={`/gear/${encodeURIComponent(slug)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-secondary"
+          >
+            View live ↗
+          </a>
+        ) : null}
         <Link to="/gear" className="btn-secondary">
           Cancel
         </Link>
