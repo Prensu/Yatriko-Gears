@@ -18,7 +18,7 @@ export default function GearDetailPage() {
   const [quantity, setQuantity] = useState(1)
 
   const loading = !state || state.slug !== slug
-  const gear = state?.slug === slug ? state.gear : null
+  const gear = state && state.slug === slug ? state.gear : null
 
   const { addItem } = useCart()
   const toast = useToast()
