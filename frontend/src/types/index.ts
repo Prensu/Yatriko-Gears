@@ -7,8 +7,8 @@ import { z } from "zod"
 
 export const gearCategorySchema = z.object({
   _id: z.string(),
-  name: z.string(),
-  slug: z.string(),
+  name: z.string().optional(),
+  slug: z.string().optional(),
 })
 export type GearCategory = z.infer<typeof gearCategorySchema>
 
@@ -16,14 +16,15 @@ export const gearSchema = z.object({
   _id: z.string(),
   name: z.string(),
   slug: z.string(),
-  description: z.string().optional().default(""),
-  longDescription: z.string().optional(),
+  description: z.string().nullish().transform((v) => v ?? ""),
+  longDescription: z.string().nullish().transform((v) => v ?? ""),
   realPrice: z.number(),
   discountedPrice: z.number(),
   availableFor: z.array(z.enum(["rent", "sale"])).default(["rent"]),
-  colors: z.array(z.string()).optional().default([]),
-  specs: z.record(z.string()).optional().default({}),
-  image: z.string().optional().default(""),
+  colors: z.array(z.string()).nullish().transform((v) => v ?? []),
+  specs: z.record(z.string()).nullish().transform((v) => v ?? {}),
+  image: z.string().nullish().transform((v) => v ?? ""),
+  images: z.array(z.string()).nullish().transform((v) => v ?? []),
   // Uncategorised gear comes back as null, not undefined — .optional() alone
   // would reject it and take the whole list down with it.
   category: z.union([z.string(), gearCategorySchema]).nullish(),

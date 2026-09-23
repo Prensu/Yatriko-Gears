@@ -19,6 +19,7 @@ export async function fetchGearBySlug(slug: string, signal?: AbortSignal): Promi
 export type GearInput = GearFormValues & {
   imageUrl?: string
   imagePublicId?: string
+  imagesData?: Array<{ imageUrl: string; imagePublicId: string }>
 }
 
 /** POST /gear (JSON). */

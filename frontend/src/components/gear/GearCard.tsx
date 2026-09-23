@@ -6,7 +6,6 @@ import { useToast } from "@/context/ToastContext"
 
 export default function GearCard({ gear }: { gear: Gear }) {
   const imageSrc = resolveGearImage(gear.image)
-  const hasDiscount = gear.discountedPrice > 0 && gear.discountedPrice < gear.realPrice
   const priceOnRequest = gear.realPrice === 0
   const { addItem } = useCart()
   const toast = useToast()
@@ -52,10 +51,7 @@ export default function GearCard({ gear }: { gear: Gear }) {
           {priceOnRequest ? (
             <span className="text-sm font-semibold text-forest-700">Price on request</span>
           ) : (
-            <>
-              <span className="font-display text-lg font-bold text-forest-700">Rs. {gear.discountedPrice}</span>
-              {hasDiscount && <span className="text-sm text-slate-400 line-through">Rs. {gear.realPrice}</span>}
-            </>
+            <span className="font-display text-lg font-bold text-forest-700">Rs. {gear.discountedPrice}</span>
           )}
         </div>
         {gear.colors.length > 0 && (

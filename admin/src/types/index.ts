@@ -99,6 +99,9 @@ export const gearSchema = z.object({
   colors: z.array(z.string()).default([]),
   specs: specsSchema,
   image: imageUrlSchema.optional().default(""),
+  images: z.array(z.string()).optional().default([]),
+  /** Full image objects with publicId — used by the CMS for reorder + delete. */
+  imagesRaw: z.array(z.object({ url: z.string(), publicId: z.string() })).optional().default([]),
   category: categoryRefSchema,
   quantityTotal: z.number().default(1),
   isNew: z.boolean().default(false),

@@ -25,11 +25,18 @@ export function mapImage(image: Express.Multer.File, dir: string): StoredImage {
 }
 
 /** Normalize a Cloudinary upload result into the stored image sub-document. */
-export function mapCloudinaryImage(params: { url: string; publicId: string }): StoredImage {
+export function mapCloudinaryImage(params: {
+  url?: string
+  imageUrl?: string
+  publicId?: string
+  imagePublicId?: string
+}): StoredImage {
+  const url = params.url ?? params.imageUrl ?? ""
+  const publicId = params.publicId ?? params.imagePublicId ?? ""
   return {
-    url: params.url,
-    path: params.publicId,
-    filename: params.publicId.split("/").pop() ?? params.publicId,
+    url,
+    path: publicId,
+    filename: publicId ? (publicId.split("/").pop() ?? publicId) : "",
     size: undefined,
     mimeType: undefined,
   }

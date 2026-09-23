@@ -68,6 +68,8 @@ export type GearFormState = {
   quantityTotal: string
   isNew: boolean
   status: Status
+  /** Already-uploaded images from the server (Cloudinary URL + publicId). */
+  existingImages: Array<{ url: string; publicId: string }>
 }
 
 export const emptyGearForm: GearFormState = {
@@ -83,6 +85,7 @@ export const emptyGearForm: GearFormState = {
   quantityTotal: "1",
   isNew: false,
   status: "active",
+  existingImages: [],
 }
 
 /* ------------------------------------------------------------------ */

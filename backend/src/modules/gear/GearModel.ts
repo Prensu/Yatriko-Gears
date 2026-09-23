@@ -18,6 +18,11 @@ const GearSchema = new mongoose.Schema(
     colors: { type: [String], default: [] },
     specs: { type: Map, of: String, default: {} },
     image: ImageSchema,
+    /** Ordered array of product images; first entry is the primary/thumbnail. */
+    images: {
+      type: [{ url: { type: String, required: true }, publicId: { type: String, required: true } }],
+      default: [],
+    },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", default: null },
     /** Units the shop physically owns — the ceiling for overlapping rentals. */
     quantityTotal: { type: Number, default: 1, min: 0 },

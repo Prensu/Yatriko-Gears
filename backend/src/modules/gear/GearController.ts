@@ -6,18 +6,48 @@ import type { IAuthRequest } from "../auth/AuthContract"
 
 /**
  * Serialize a gear document into the shape the frontend's gearSchema expects:
- * image → plain URL string, isNewArrival → isNew.
+ * image → plain URL string (primary/thumbnail), images → array of all URLs,
+ * isNewArrival → isNew.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toPublicGear(doc: any) {
   // flattenMaps: without it the `specs` Map serializes to {} and the CMS
   // editor looks like it never saved anything.
   const obj = typeof doc.toObject === "function" ? doc.toObject({ flattenMaps: true }) : doc
+
+  // Build raw images data (url + publicId) for the CMS, and a flat URL array
+  // for the public frontend.
+  const rawImages: Array<{ url: string; publicId: string }> =
+    Array.isArray(obj.images) && obj.images.length > 0
+      ? obj.images
+          .map((img: { url?: string; publicId?: string; imageUrl?: string; imagePublicId?: string }) => ({
+            url: img.url ?? img.imageUrl ?? "",
+            publicId: img.publicId ?? img.imagePublicId ?? "",
+          }))
+          .filter((img: { url: string; publicId: string }) => Boolean(img.url))
+      : obj.image?.url
+        ? [{ url: obj.image.url, publicId: obj.image.path ?? "" }]
+        : []
+
+  const imagesArray = rawImages.map((img) => img.url)
+
   return {
     ...obj,
-    image: obj.image?.url ?? "",
+    image: imagesArray[0] ?? obj.image?.url ?? "",
+    images: imagesArray,
+    imagesRaw: rawImages,
     isNew: Boolean(obj.isNewArrival),
     specs: obj.specs ?? {},
+  }
+}
+
+/**
+ * Map an imagesData entry (from the DTO) into the stored sub-document shape.
+ */
+function mapImageEntry(entry: { imageUrl?: string; url?: string; imagePublicId?: string; publicId?: string }) {
+  return {
+    url: entry.imageUrl ?? entry.url ?? "",
+    publicId: entry.imagePublicId ?? entry.publicId ?? "",
   }
 }
 
@@ -32,11 +62,22 @@ class GearController {
         data.slug = `${data.slug}-${Date.now()}`
       }
 
-      if (data.imageUrl && data.imagePublicId) {
+      // Multi-image: prefer imagesData array, fall back to legacy single fields.
+      if (Array.isArray(data.imagesData) && data.imagesData.length > 0) {
+        data.images = data.imagesData.map(mapImageEntry)
+        // Also populate legacy `image` with the primary for backward compat.
+        const primary = data.imagesData[0]
+        data.image = mapCloudinaryImage({
+          url: primary.imageUrl ?? primary.url ?? "",
+          publicId: primary.imagePublicId ?? primary.publicId ?? "",
+        })
+      } else if (data.imageUrl && data.imagePublicId) {
         data.image = mapCloudinaryImage({ url: data.imageUrl, publicId: data.imagePublicId })
+        data.images = [{ url: data.imageUrl, publicId: data.imagePublicId }]
       }
       delete data.imageUrl
       delete data.imagePublicId
+      delete data.imagesData
 
       // multipart forms send "null" as a literal string — normalize FKs
       if (!data.category || data.category === "null") data.category = null
@@ -110,14 +151,39 @@ class GearController {
       const existing = await GearModel.findOne({ slug: req.params.slug })
       if (!existing) throw { code: 404, message: "Gear not found" }
 
-      if (data.imageUrl && data.imagePublicId) {
+      // Multi-image update: prefer imagesData array, fall back to legacy.
+      if (Array.isArray(data.imagesData) && data.imagesData.length > 0) {
+        const newImages = data.imagesData.map(mapImageEntry)
+
+        // Destroy Cloudinary assets that were removed.
+        const newPublicIds = new Set(newImages.map((img: { publicId: string }) => img.publicId).filter(Boolean))
+        const oldImages = Array.isArray(existing.images) ? existing.images : []
+        for (const old of oldImages) {
+          if (old.publicId && !newPublicIds.has(old.publicId)) {
+            await destroyCloudinaryImage(old.publicId)
+          }
+        }
+        if (existing.image?.path && !newPublicIds.has(existing.image.path)) {
+          await destroyCloudinaryImage(existing.image.path)
+        }
+
+        data.images = newImages
+        const primary = data.imagesData[0]
+        data.image = mapCloudinaryImage({
+          url: primary.imageUrl ?? primary.url ?? "",
+          publicId: primary.imagePublicId ?? primary.publicId ?? "",
+        })
+      } else if (data.imageUrl && data.imagePublicId) {
+        // Legacy single-image path
         if (existing.image?.path && existing.image.path !== data.imagePublicId) {
           await destroyCloudinaryImage(existing.image.path)
         }
         data.image = mapCloudinaryImage({ url: data.imageUrl, publicId: data.imagePublicId })
+        data.images = [{ url: data.imageUrl, publicId: data.imagePublicId }]
       }
       delete data.imageUrl
       delete data.imagePublicId
+      delete data.imagesData
 
       if (data.category === "null") data.category = null
 
@@ -143,6 +209,13 @@ class GearController {
       const gear = await GearModel.findOneAndDelete({ slug: req.params.slug })
       if (!gear) throw { code: 404, message: "Gear not found" }
 
+      // Destroy all images from the images array.
+      if (Array.isArray(gear.images)) {
+        for (const img of gear.images) {
+          if (img.publicId) await destroyCloudinaryImage(img.publicId)
+        }
+      }
+      // Also clean up the legacy image field if present and not already covered.
       if (gear.image?.path) {
         await destroyCloudinaryImage(gear.image.path)
       }

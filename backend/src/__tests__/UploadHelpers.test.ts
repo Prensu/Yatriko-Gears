@@ -21,6 +21,31 @@ describe("mapCloudinaryImage", () => {
       mimeType: undefined,
     })
   })
+
+  it("correctly maps { imageUrl, imagePublicId } from DTOs without throwing", () => {
+    const mapped = mapCloudinaryImage({
+      imageUrl: "https://res.cloudinary.com/demo/image/upload/v12345/yatriko/images/gear/tent-2.jpg",
+      imagePublicId: "yatriko/images/gear/tent-2",
+    })
+
+    expect(mapped).toEqual({
+      url: "https://res.cloudinary.com/demo/image/upload/v12345/yatriko/images/gear/tent-2.jpg",
+      path: "yatriko/images/gear/tent-2",
+      filename: "tent-2",
+      size: undefined,
+      mimeType: undefined,
+    })
+  })
+
+  it("safely handles missing or empty publicId", () => {
+    const mapped = mapCloudinaryImage({
+      url: "https://res.cloudinary.com/demo/image/upload/v12345/yatriko/images/gear/tent-3.jpg",
+    })
+
+    expect(mapped.url).toBe("https://res.cloudinary.com/demo/image/upload/v12345/yatriko/images/gear/tent-3.jpg")
+    expect(mapped.path).toBe("")
+    expect(mapped.filename).toBe("")
+  })
 })
 
 describe("Cloudinary DTOs image fields acceptance", () => {

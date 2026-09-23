@@ -20,6 +20,28 @@ export const GearCreateDTO = z.object({
   status: z.enum(["active", "inactive"]).default("active"),
   imageUrl: z.string().url().nullish().or(z.literal("")).optional(),
   imagePublicId: z.string().nullish().or(z.literal("")).optional(),
+  /** Array of Cloudinary-uploaded images: [{ imageUrl, imagePublicId }] */
+  imagesData: z.preprocess(
+    parseMaybeJson,
+    z
+      .array(
+        z
+          .object({
+            imageUrl: z.string().min(1).optional(),
+            url: z.string().min(1).optional(),
+            imagePublicId: z.string().optional().default(""),
+            publicId: z.string().optional().default(""),
+          })
+          .transform((item) => ({
+            imageUrl: item.imageUrl ?? item.url ?? "",
+            imagePublicId: item.imagePublicId ?? item.publicId ?? "",
+          }))
+          .refine((item) => item.imageUrl.length > 0, { message: "Image URL is required" }),
+      )
+      .max(10)
+      .optional()
+      .default([]),
+  ),
 })
 
 export const GearUpdateDTO = GearCreateDTO.partial()

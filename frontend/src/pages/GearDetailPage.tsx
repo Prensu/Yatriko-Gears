@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams, Link } from "react-router-dom"
 import { fetchGear, fetchGearBySlug } from "@/api/gear"
 import type { Gear } from "@/types"
@@ -10,6 +10,126 @@ import GearCard from "@/components/gear/GearCard"
 import RichContent from "@/components/common/RichContent"
 import { FiTruck, FiShield } from "react-icons/fi"
 import { BsStars } from "react-icons/bs"
+
+/* ------------------------------------------------------------------ */
+/* Image Gallery (inline)                                               */
+/* ------------------------------------------------------------------ */
+
+function ImageGallery({ images, name }: { images: string[]; name: string }) {
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  // ── Touch / swipe state ──
+  const touchStartX = useRef(0)
+  const touchDeltaX = useRef(0)
+  const isSwiping = useRef(false)
+
+  const goTo = useCallback(
+    (index: number) => {
+      setActiveIndex(Math.max(0, Math.min(index, images.length - 1)))
+    },
+    [images.length],
+  )
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchDeltaX.current = 0
+    isSwiping.current = true
+  }, [])
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isSwiping.current) return
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current
+  }, [])
+
+  const onTouchEnd = useCallback(() => {
+    if (!isSwiping.current) return
+    isSwiping.current = false
+    const threshold = 50
+    if (touchDeltaX.current < -threshold) {
+      goTo(activeIndex + 1)
+    } else if (touchDeltaX.current > threshold) {
+      goTo(activeIndex - 1)
+    }
+  }, [activeIndex, goTo])
+
+  const hasMultiple = images.length > 1
+  const activeSrc = images[activeIndex] ?? ""
+
+  return (
+    <div className="space-y-3">
+      {/* ── Main image ── */}
+      <div
+        className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-gradient-to-br from-sand via-white to-forest-50/30 shadow-sm"
+        onTouchStart={hasMultiple ? onTouchStart : undefined}
+        onTouchMove={hasMultiple ? onTouchMove : undefined}
+        onTouchEnd={hasMultiple ? onTouchEnd : undefined}
+      >
+        <div className="relative flex aspect-[4/3] lg:aspect-[5/4] items-center justify-center p-4 sm:p-8">
+          {activeSrc ? (
+            <img
+              key={activeSrc}
+              src={activeSrc}
+              alt={`${name} — photo ${activeIndex + 1}`}
+              className="h-full w-full rounded-lg object-contain drop-shadow-lg transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-8xl text-slate-300">
+              ⛺
+            </div>
+          )}
+        </div>
+
+        {/* Mobile dot indicators */}
+        {hasMultiple && (
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 sm:hidden">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => goTo(idx)}
+                aria-label={`View photo ${idx + 1}`}
+                className={`h-2 rounded-full transition-all duration-200 ${
+                  idx === activeIndex
+                    ? "w-5 bg-forest-600"
+                    : "w-2 bg-slate-400/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Thumbnail strip (hidden when only 1 image) ── */}
+      {hasMultiple && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          {images.map((src, idx) => (
+            <button
+              key={`${src}-${idx}`}
+              type="button"
+              onClick={() => goTo(idx)}
+              className={`flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-200 ${
+                idx === activeIndex
+                  ? "border-forest-600 shadow-md ring-2 ring-forest-600/20"
+                  : "border-transparent opacity-70 hover:opacity-100 hover:border-slate-300"
+              }`}
+            >
+              <img
+                src={src}
+                alt={`${name} thumbnail ${idx + 1}`}
+                className="h-16 w-16 object-cover sm:h-20 sm:w-20"
+                loading="lazy"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* Page                                                                 */
+/* ------------------------------------------------------------------ */
 
 export default function GearDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -94,8 +214,17 @@ export default function GearDetailPage() {
     )
   }
 
-  const imageSrc = resolveGearImage(gear.image)
-  const hasDiscount = gear.discountedPrice > 0 && gear.discountedPrice < gear.realPrice
+  // Build the gallery images array: prefer the multi-image `images` field,
+  // fall back to the single `image` field for legacy/fallback data.
+  const galleryImages: string[] = (() => {
+    if (gear.images && gear.images.length > 0) {
+      const resolved = gear.images.map((src) => resolveGearImage(src)).filter(Boolean)
+      if (resolved.length > 0) return resolved
+    }
+    const single = resolveGearImage(gear.image)
+    return single ? [single] : []
+  })()
+
   const priceOnRequest = gear.realPrice === 0 && gear.discountedPrice === 0
   const categoryName =
     typeof gear.category === "object" && gear.category !== null
@@ -103,10 +232,6 @@ export default function GearDetailPage() {
       : typeof gear.category === "string"
         ? gear.category
         : null
-
-  const discountPercent = hasDiscount
-    ? Math.round(((gear.realPrice - gear.discountedPrice) / gear.realPrice) * 100)
-    : 0
 
   const handleAddToCart = () => {
     addItem(gear._id, quantity)
@@ -140,40 +265,23 @@ export default function GearDetailPage() {
         {/* ── Main Product Layout ── */}
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">
 
-          {/* ─── Left: Product Image ─── */}
+          {/* ─── Left: Product Image Gallery ─── */}
           <div className="space-y-5">
-            {/* Image Container */}
-            <div className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-gradient-to-br from-sand via-white to-forest-50/30 shadow-sm">
-              <div className="relative flex aspect-[4/3] lg:aspect-[5/4] items-center justify-center p-4 sm:p-8">
-                {imageSrc ? (
-                  <img
-                    src={imageSrc}
-                    alt={gear.name}
-                    className="h-full w-full rounded-lg object-contain drop-shadow-lg transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-8xl text-slate-300">
-                    ⛺
-                  </div>
-                )}
-              </div>
+            {/* Gallery with overlay badges */}
+            <div className="relative">
+              <ImageGallery key={gear._id} images={galleryImages} name={gear.name} />
 
-              {/* Overlay Badges */}
-              <div className="absolute left-4 top-4 flex flex-col gap-2">
+              {/* Overlay Badges — positioned over the gallery */}
+              <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-col gap-2">
                 {gear.isNew && (
                   <span className="inline-flex items-center gap-1.5 rounded-lg bg-forest-600 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white shadow-md">
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
                     New Arrival
                   </span>
                 )}
-                {hasDiscount && (
-                  <span className="inline-flex items-center rounded-lg bg-red-500 px-3 py-1.5 text-xs font-bold text-white shadow-md">
-                    −{discountPercent}% OFF
-                  </span>
-                )}
               </div>
 
-              <div className="absolute right-4 top-4 flex flex-col gap-1.5">
+              <div className="pointer-events-none absolute right-4 top-4 z-10 flex flex-col gap-1.5">
                 {gear.availableFor.includes("rent") && (
                   <span className="rounded-lg bg-white/95 px-3 py-1.5 text-xs font-bold text-forest-700 shadow-sm backdrop-blur-sm">
                     Rent It
@@ -220,7 +328,7 @@ export default function GearDetailPage() {
               </h1>
             </div>
 
-            {/* Price Card */}
+            {/* Price Card — no discount badge or strikethrough */}
             <div className="mt-5 rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm">
               <div className="flex items-end gap-3">
                 {priceOnRequest ? (
@@ -232,11 +340,6 @@ export default function GearDetailPage() {
                     <span className="font-display text-4xl font-extrabold tracking-tight text-forest-700">
                       Rs. {gear.discountedPrice.toLocaleString()}
                     </span>
-                    {hasDiscount && (
-                      <span className="mb-1 text-lg text-slate-400 line-through">
-                        Rs. {gear.realPrice.toLocaleString()}
-                      </span>
-                    )}
                     <span className="mb-1.5 text-sm font-medium text-slate-400">
                       / day
                     </span>
