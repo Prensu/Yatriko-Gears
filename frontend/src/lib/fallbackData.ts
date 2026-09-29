@@ -4,7 +4,7 @@ import type { Gear } from "@/types"
  * Official Yatriko Gears price list (Rs.) — used as fallback until the
  * backend gear API is live, and as the seed data reference.
  */
-export const FALLBACK_GEAR: Gear[] = [
+const FALLBACK_GEAR_BASE: Array<Omit<Gear, "longDescription" | "images">> = [
   { _id: "1", name: "Tent — 3 Person", slug: "tent-3-person", realPrice: 800, discountedPrice: 650, availableFor: ["rent"], colors: [], specs: { capacity: "3 person" }, image: "tent-3-person.jpg", description: "Roomy 3-person dome tent.", isNew: false },
   { _id: "2", name: "Tent — 4 Person", slug: "tent-4-person", realPrice: 1000, discountedPrice: 800, availableFor: ["rent"], colors: [], specs: { capacity: "4 person" }, image: "tent-4-person.jpg", description: "Spacious 4-person dome tent.", isNew: false },
   { _id: "3", name: "Sleeping Bag", slug: "sleeping-bag", realPrice: 250, discountedPrice: 200, availableFor: ["rent"], colors: [], specs: {}, image: "sleeping-bag-himalaya.jpg", description: "Warm sleeping bag, Himalaya tested.", isNew: false },
@@ -27,6 +27,13 @@ export const FALLBACK_GEAR: Gear[] = [
   { _id: "20", name: "Trekking Poles (Pair)", slug: "trekking-poles", realPrice: 900, discountedPrice: 900, availableFor: ["sale"], colors: ["Red"], specs: { length: 'Retractable 24"–55"' }, image: "trekking-poles.jpg", description: "Uphill strength. Downhill support.", isNew: true },
   { _id: "21", name: "Canopy Tent", slug: "canopy-tent", realPrice: 0, discountedPrice: 0, availableFor: ["rent"], colors: [], specs: {}, image: "canopy-tent.jpg", description: "For events & markets — price on request.", isNew: true },
 ]
+
+/** Keep legacy bundled entries compatible with the current API gear shape. */
+export const FALLBACK_GEAR: Gear[] = FALLBACK_GEAR_BASE.map((gear) => ({
+  ...gear,
+  longDescription: gear.description,
+  images: gear.image ? [gear.image] : [],
+}))
 
 export const SPOTS = [
   { name: "Jati Pokhari", blurb: "Alpine pond camp above the valley", image: "jati-pokhari.jpg" },
