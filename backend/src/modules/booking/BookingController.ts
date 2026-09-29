@@ -4,7 +4,7 @@ import GearModel from "../gear/GearModel"
 import { assertAvailable, getAvailability } from "./AvailabilityService"
 import { calculateSubtotal, calculateTotal, countDays } from "./BookingPricing"
 import EmailService from "../../services/EmailService"
-import { smtpConfig } from "../../config/AppConfig"
+import { notifyEmail } from "../../config/smtpConfig"
 import { getPagination } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
 import { loggerFor } from "../../config/logger"
@@ -122,12 +122,12 @@ class BookingController {
       // Fire-and-forget — do NOT await these, the response has already gone out.
       emailService
         .sendEmail({
-          to: smtpConfig.fromAddress,
+          to: notifyEmail,
           sub: `New booking ${booking.code}`,
           message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) booked ${items.length} item(s) for ${days} day(s).</p><ul>${itemLines}</ul><p>Deliver to: ${booking.deliveryAddress}</p><p>Delivery charge: To be discussed on WhatsApp.</p><p>Gear total: Rs. ${total}</p>`,
         })
-        .catch(() => {
-          log.error("Booking notification email could not be sent")
+        .catch((err) => {
+          log.error({ err, to: notifyEmail, code: booking.code }, "Booking notification email could not be sent — check email env vars")
         })
 
       // The customer gets a receipt too — previously only the shop was told.
@@ -146,8 +146,8 @@ class BookingController {
             Delivery charge will be discussed on WhatsApp and is payable on delivery.</p>
             <p>Gear up. Head out. Make memories. \u26fa</p>`,
         })
-        .catch(() => {
-          log.error("Booking receipt email could not be sent")
+        .catch((err) => {
+          log.error({ err, to: booking.customerEmail, code: booking.code }, "Booking receipt email could not be sent")
         })
     } catch (exception) {
       next(exception)
@@ -248,15 +248,15 @@ class BookingController {
       await booking.save()
 
       // Cancelling frees the stock, so tell the shop it's back on the shelf.
-      try {
-        await emailService.sendEmail({
-          to: smtpConfig.fromAddress,
+      emailService
+        .sendEmail({
+          to: notifyEmail,
           sub: `Booking cancelled: ${booking.code}`,
           message: `<p>${booking.customerName} cancelled booking <b>${booking.code}</b>. The gear is available again.</p>`,
         })
-      } catch {
-        log.error("Cancellation notice could not be sent")
-      }
+        .catch((err) => {
+          log.error({ err, to: notifyEmail }, "Cancellation notice could not be sent")
+        })
 
       res.json({ data: booking, message: "Booking cancelled", meta: null })
     } catch (exception) {

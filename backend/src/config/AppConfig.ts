@@ -35,6 +35,9 @@ export const smtpConfig = {
   user: process.env.SMTP_USER ?? "",
   password: process.env.SMTP_PASSWORD ?? "",
   fromAddress: process.env.FROM_ADDRESS ?? "",
+  adminNotifyEmail: process.env.ADMIN_NOTIFY_EMAIL ?? "",
+  resendApiKey: process.env.RESEND_API_KEY ?? "",
+  resendFrom: process.env.RESEND_FROM ?? "",
 }
 
 export const cloudinaryConfig = {

@@ -1,7 +1,7 @@
 import type { NextFunction, Response } from "express"
 import ContactModel from "./ContactModel"
 import EmailService from "../../services/EmailService"
-import { smtpConfig } from "../../config/AppConfig"
+import { notifyEmail } from "../../config/smtpConfig"
 import { getPagination } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
 import { loggerFor } from "../../config/logger"
@@ -17,18 +17,20 @@ class ContactController {
       const contact = new ContactModel(req.body)
       await contact.save()
 
+      // Respond right away — message is already saved in DB, and the
+      // visitor shouldn't sit waiting on SMTP.
+      res.json({ data: { _id: contact._id }, message: "Message sent successfully. We will reach out soon!", meta: null })
+
       // Notify the shop inbox — non-critical side effect.
-      try {
-        await emailService.sendEmail({
-          to: smtpConfig.fromAddress,
+      emailService
+        .sendEmail({
+          to: notifyEmail,
           sub: `New enquiry: ${contact.subject}`,
           message: `<p><b>${contact.name}</b> (${contact.email}, ${contact.phone})</p><p>${contact.message}</p>`,
         })
-      } catch {
-        log.error("Contact notification email could not be sent")
-      }
-
-      res.json({ data: { _id: contact._id }, message: "Message sent successfully. We will reach out soon!", meta: null })
+        .catch((err) => {
+          log.error({ err, to: notifyEmail }, "Contact notification email could not be sent — check email env vars")
+        })
     } catch (exception) {
       next(exception)
     }
