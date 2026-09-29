@@ -136,6 +136,7 @@ export default function GearDetailPage() {
   const [state, setState] = useState<{ slug: string; gear: Gear | null } | null>(null)
   const [relatedGear, setRelatedGear] = useState<Gear[]>([])
   const [quantity, setQuantity] = useState(1)
+  const [pricingMode, setPricingMode] = useState<"rent" | "sale">("rent")
 
   const loading = !state || state.slug !== slug
   const gear = state && state.slug === slug ? state.gear : null
@@ -160,6 +161,7 @@ export default function GearDetailPage() {
         if (!active) return
         setState({ slug, gear: data ?? null })
         setQuantity(1)
+        setPricingMode(data?.availableFor.includes("rent") ? "rent" : "sale")
       })
       .catch(() => {
         if (!active) return
@@ -225,7 +227,11 @@ export default function GearDetailPage() {
     return single ? [single] : []
   })()
 
-  const priceOnRequest = gear.realPrice === 0 && gear.discountedPrice === 0
+  const canRent = gear.availableFor.includes("rent")
+  const canBuy = gear.availableFor.includes("sale")
+  const showingSale = pricingMode === "sale" && canBuy
+  const displayPrice = showingSale ? (gear.salePrice ?? gear.discountedPrice) : gear.discountedPrice
+  const priceOnRequest = displayPrice === 0
   const categoryName =
     typeof gear.category === "object" && gear.category !== null
       ? gear.category.name
@@ -338,14 +344,39 @@ export default function GearDetailPage() {
                 ) : (
                   <>
                     <span className="font-display text-4xl font-extrabold tracking-tight text-forest-700">
-                      Rs. {gear.discountedPrice.toLocaleString()}
+                      Rs. {displayPrice.toLocaleString()}
                     </span>
-                    <span className="mb-1.5 text-sm font-medium text-slate-400">
-                      / day
-                    </span>
+                    {!showingSale && (
+                      <span className="mb-1.5 text-sm font-medium text-slate-400">
+                        / day
+                      </span>
+                    )}
                   </>
                 )}
               </div>
+
+              {canRent && canBuy && (
+                <div className="mt-5 flex rounded-xl bg-slate-100 p-1" role="group" aria-label="Choose rent or buy">
+                  <button
+                    type="button"
+                    onClick={() => setPricingMode("rent")}
+                    className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
+                      !showingSale ? "bg-forest-600 text-white shadow-sm" : "text-slate-600 hover:bg-white"
+                    }`}
+                  >
+                    Rent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPricingMode("sale")}
+                    className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
+                      showingSale ? "bg-navy-900 text-white shadow-sm" : "text-slate-600 hover:bg-white"
+                    }`}
+                  >
+                    Buy
+                  </button>
+                </div>
+              )}
 
               {typeof gear.quantityTotal === "number" && (
                 <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3">
@@ -474,7 +505,7 @@ export default function GearDetailPage() {
                     <circle cx="20" cy="21" r="1" />
                     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                   </svg>
-                  Add to Cart · Rs. {(gear.discountedPrice * quantity).toLocaleString()}
+                  {showingSale ? "Buy" : "Rent"} · Add to Cart · Rs. {(displayPrice * quantity).toLocaleString()}
                 </button>
               </div>
 

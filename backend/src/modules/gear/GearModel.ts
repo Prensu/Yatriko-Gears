@@ -14,6 +14,8 @@ const GearSchema = new mongoose.Schema(
     longDescription: { type: String, default: "" },
     realPrice: { type: Number, required: true, min: 0 },
     discountedPrice: { type: Number, required: true, min: 0 },
+    /** Fixed selling price. Rental pricing remains realPrice/discountedPrice. */
+    salePrice: { type: Number, min: 0 },
     availableFor: { type: [String], enum: ["rent", "sale"], default: ["rent"] },
     colors: { type: [String], default: [] },
     specs: { type: Map, of: String, default: {} },

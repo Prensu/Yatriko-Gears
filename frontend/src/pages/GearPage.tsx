@@ -77,7 +77,7 @@ export default function GearPage() {
 
         <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {visible.map((g) => (
-            <GearCard key={g._id} gear={g} />
+            <GearCard key={g._id} gear={g} mode={filter === "sale" ? "sale" : "rent"} />
           ))}
         </div>
         {visible.length === 0 && (

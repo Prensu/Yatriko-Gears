@@ -271,6 +271,8 @@ export default function GearFormPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
+  const saleOnly = form.availableFor.length === 1 && form.availableFor[0] === "sale"
+
   const set = <K extends keyof GearFormState>(key: K, value: GearFormState[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
 
@@ -297,8 +299,11 @@ export default function GearFormPage() {
           name: gear.name,
           description: gear.description,
           longDescription: gear.longDescription ?? "",
-          realPrice: String(gear.realPrice),
-          discountedPrice: String(gear.discountedPrice),
+          // Sale-only gear has one fixed price. Keep the legacy two-price
+          // representation synchronized when loading older records.
+          realPrice: String(gear.availableFor.length === 1 && gear.availableFor[0] === "sale" ? gear.discountedPrice : gear.realPrice),
+          discountedPrice: String(gear.availableFor.length === 1 && gear.availableFor[0] === "sale" ? gear.discountedPrice : gear.discountedPrice),
+          salePrice: gear.availableFor.includes("sale") ? String(gear.salePrice ?? gear.discountedPrice) : "",
           availableFor: gear.availableFor.length > 0 ? gear.availableFor : ["rent"],
           colors: gear.colors,
           specs: gear.specs,
@@ -471,38 +476,92 @@ export default function GearFormPage() {
             </FormField>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <FormField label="Real price (Rs)" htmlFor="realPrice" required error={errors.realPrice}>
-                <input
-                  id="realPrice"
-                  type="number"
-                  min="0"
-                  step="1"
-                  inputMode="numeric"
-                  className={`input ${errors.realPrice ? "input-error" : ""}`}
-                  value={form.realPrice}
-                  onChange={(event) => set("realPrice", event.target.value)}
-                  placeholder="800"
-                />
-              </FormField>
+              {saleOnly ? (
+                <FormField
+                  label="Sale price (Rs)"
+                  htmlFor="realPrice"
+                  required
+                  error={errors.realPrice}
+                  hint="Fixed selling price — no discount is applied."
+                >
+                  <input
+                    id="realPrice"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    className={`input ${errors.realPrice ? "input-error" : ""}`}
+                    value={form.realPrice}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      setForm((current) => ({
+                        ...current,
+                        salePrice: value,
+                        realPrice: value,
+                        discountedPrice: value,
+                      }))
+                    }}
+                    placeholder="3000"
+                  />
+                </FormField>
+              ) : (
+                <>
+                  <FormField label="Real price (Rs)" htmlFor="realPrice" required error={errors.realPrice}>
+                    <input
+                      id="realPrice"
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      className={`input ${errors.realPrice ? "input-error" : ""}`}
+                      value={form.realPrice}
+                      onChange={(event) => set("realPrice", event.target.value)}
+                      placeholder="800"
+                    />
+                  </FormField>
 
-              <FormField
-                label="Discounted price (Rs)"
-                htmlFor="discountedPrice"
-                required
-                error={errors.discountedPrice}
-              >
-                <input
-                  id="discountedPrice"
-                  type="number"
-                  min="0"
-                  step="1"
-                  inputMode="numeric"
-                  className={`input ${errors.discountedPrice ? "input-error" : ""}`}
-                  value={form.discountedPrice}
-                  onChange={(event) => set("discountedPrice", event.target.value)}
-                  placeholder="650"
-                />
-              </FormField>
+                  <FormField
+                    label="Discounted price (Rs)"
+                    htmlFor="discountedPrice"
+                    required
+                    error={errors.discountedPrice}
+                  >
+                    <input
+                      id="discountedPrice"
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      className={`input ${errors.discountedPrice ? "input-error" : ""}`}
+                      value={form.discountedPrice}
+                      onChange={(event) => set("discountedPrice", event.target.value)}
+                      placeholder="650"
+                    />
+                  </FormField>
+                </>
+              )}
+
+              {!saleOnly && form.availableFor.includes("sale") && (
+                <FormField
+                  label="Sale price (Rs)"
+                  htmlFor="salePrice"
+                  required
+                  error={errors.salePrice}
+                  hint="Fixed selling price shown when customers choose For Sale."
+                >
+                  <input
+                    id="salePrice"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    className={`input ${errors.salePrice ? "input-error" : ""}`}
+                    value={form.salePrice}
+                    onChange={(event) => set("salePrice", event.target.value)}
+                    placeholder="3000"
+                  />
+                </FormField>
+              )}
             </div>
 
             <FormField label="Available for" required error={errors.availableFor}>
@@ -513,7 +572,16 @@ export default function GearFormPage() {
                   { value: "sale", label: "Sale" },
                 ]}
                 value={form.availableFor}
-                onChange={(value) => set("availableFor", value as GearFormState["availableFor"])}
+                onChange={(value) => {
+                  const next = value as GearFormState["availableFor"]
+                  setForm((current) => ({
+                    ...current,
+                    availableFor: next,
+                    ...(next.length === 1 && next[0] === "sale"
+                      ? { salePrice: current.salePrice || current.discountedPrice }
+                      : {}),
+                  }))
+                }}
               />
             </FormField>
 

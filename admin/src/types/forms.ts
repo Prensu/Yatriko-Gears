@@ -35,6 +35,7 @@ export const gearFormSchema = z
     longDescription: z.string().max(50000, "Description is too long").optional().default(""),
     realPrice: numberField("Real price"),
     discountedPrice: numberField("Discounted price"),
+    salePrice: numberField("Sale price").optional(),
     availableFor: z
       .array(z.enum(["rent", "sale"]))
       .min(1, "Choose at least one of rent / sale"),
@@ -48,9 +49,28 @@ export const gearFormSchema = z
     isNew: z.boolean(),
     status: statusSchema,
   })
-  .refine((values) => values.discountedPrice <= values.realPrice, {
-    path: ["discountedPrice"],
-    message: "Discounted price cannot exceed the real price",
+  .superRefine((values, context) => {
+    const saleOnly = values.availableFor.length === 1 && values.availableFor[0] === "sale"
+    if (values.availableFor.includes("sale") && values.salePrice === undefined) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["salePrice"],
+        message: "Sale price is required for products available for sale",
+      })
+    }
+    if (saleOnly && values.discountedPrice !== values.realPrice) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["realPrice"],
+        message: "Sale-only products use one fixed price",
+      })
+    } else if (!saleOnly && values.discountedPrice > values.realPrice) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["discountedPrice"],
+        message: "Discounted price cannot exceed the real price",
+      })
+    }
   })
 
 export type GearFormValues = z.infer<typeof gearFormSchema>
@@ -61,6 +81,7 @@ export type GearFormState = {
   longDescription: string
   realPrice: string
   discountedPrice: string
+  salePrice: string
   availableFor: Array<"rent" | "sale">
   colors: string[]
   specs: Record<string, string>
@@ -78,6 +99,7 @@ export const emptyGearForm: GearFormState = {
   longDescription: "",
   realPrice: "",
   discountedPrice: "",
+  salePrice: "",
   availableFor: ["rent"],
   colors: [],
   specs: {},

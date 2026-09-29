@@ -95,6 +95,7 @@ export const gearSchema = z.object({
   longDescription: z.string().nullish().transform((value) => value ?? ""),
   realPrice: z.number(),
   discountedPrice: z.number(),
+  salePrice: z.number().optional(),
   availableFor: z.array(z.enum(["rent", "sale"])).default(["rent"]),
   colors: z.array(z.string()).default([]),
   specs: specsSchema,

@@ -11,6 +11,7 @@ export const GearCreateDTO = z.object({
   longDescription: z.string().max(50000).optional().default(""),
   realPrice: z.coerce.number().min(0),
   discountedPrice: z.coerce.number().min(0),
+  salePrice: z.coerce.number().min(0).optional(),
   availableFor: z.preprocess(parseMaybeJson, z.array(z.enum(["rent", "sale"])).default(["rent"])),
   colors: z.preprocess(parseMaybeJson, z.array(z.string()).default([])),
   specs: z.preprocess(parseMaybeJson, z.record(z.string()).default({})),

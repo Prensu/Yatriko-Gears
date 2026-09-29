@@ -4,9 +4,11 @@ import { resolveGearImage } from "@/lib/gearImages"
 import { useCart } from "@/context/CartContext"
 import { useToast } from "@/context/ToastContext"
 
-export default function GearCard({ gear }: { gear: Gear }) {
+export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "rent" | "sale" }) {
   const imageSrc = resolveGearImage(gear.image)
   const priceOnRequest = gear.realPrice === 0
+  const showingSale = mode === "sale" && gear.availableFor.includes("sale")
+  const displayPrice = showingSale ? (gear.salePrice ?? gear.discountedPrice) : gear.discountedPrice
   const { addItem } = useCart()
   const toast = useToast()
 
@@ -51,7 +53,9 @@ export default function GearCard({ gear }: { gear: Gear }) {
           {priceOnRequest ? (
             <span className="text-sm font-semibold text-forest-700">Price on request</span>
           ) : (
-            <span className="font-display text-lg font-bold text-forest-700">Rs. {gear.discountedPrice}</span>
+            <span className="font-display text-lg font-bold text-forest-700">
+              Rs. {displayPrice.toLocaleString()}{showingSale ? "" : " / day"}
+            </span>
           )}
         </div>
         {gear.colors.length > 0 && (
