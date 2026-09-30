@@ -241,7 +241,7 @@ export default function BookingsPage() {
                   {open.items.map((item) => (
                     <li key={item.gear} className="flex justify-between gap-3 px-3 py-2">
                       <span className="text-ink-800">{item.name} × {item.quantity}</span>
-                      <span className="text-ink-500">{formatPrice(item.pricePerDay)}/day</span>
+                      <span className="text-ink-500">{formatPrice(item.pricePerDay)}/night</span>
                     </li>
                   ))}
                 </ul>

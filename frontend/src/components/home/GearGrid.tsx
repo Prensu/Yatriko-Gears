@@ -17,7 +17,7 @@ export default function GearGrid() {
         <SectionHeading
           eyebrow="Camp More, Carry Less"
           title="Popular Gear"
-          subtitle="Everything you need for a night under the stars — rented by the day, delivered to your door."
+          subtitle="Everything you need for a night under the stars — rented by the night, delivered to your door."
         />
         <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {gear.map((g) => (

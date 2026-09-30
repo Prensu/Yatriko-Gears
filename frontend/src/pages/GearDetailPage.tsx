@@ -232,6 +232,7 @@ export default function GearDetailPage() {
   const showingSale = pricingMode === "sale" && canBuy
   const displayPrice = showingSale ? (gear.salePrice ?? gear.discountedPrice) : gear.discountedPrice
   const priceOnRequest = displayPrice === 0
+  const hasRentalDiscount = !showingSale && gear.discountedPrice < gear.realPrice
   const categoryName =
     typeof gear.category === "object" && gear.category !== null
       ? gear.category.name
@@ -348,7 +349,12 @@ export default function GearDetailPage() {
                     </span>
                     {!showingSale && (
                       <span className="mb-1.5 text-sm font-medium text-slate-400">
-                        / day
+                        / night
+                      </span>
+                    )}
+                    {hasRentalDiscount && (
+                      <span className="mb-1.5 text-sm text-slate-400 line-through">
+                        Rs. {gear.realPrice.toLocaleString()}
                       </span>
                     )}
                   </>

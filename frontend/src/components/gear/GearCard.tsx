@@ -6,9 +6,10 @@ import { useToast } from "@/context/ToastContext"
 
 export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "rent" | "sale" }) {
   const imageSrc = resolveGearImage(gear.image)
-  const priceOnRequest = gear.realPrice === 0
-  const showingSale = mode === "sale" && gear.availableFor.includes("sale")
+  const showingSale = (mode === "sale" || !gear.availableFor.includes("rent")) && gear.availableFor.includes("sale")
   const displayPrice = showingSale ? (gear.salePrice ?? gear.discountedPrice) : gear.discountedPrice
+  const priceOnRequest = displayPrice === 0
+  const hasRentalDiscount = !showingSale && gear.discountedPrice < gear.realPrice
   const { addItem } = useCart()
   const toast = useToast()
 
@@ -53,9 +54,16 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
           {priceOnRequest ? (
             <span className="text-sm font-semibold text-forest-700">Price on request</span>
           ) : (
-            <span className="font-display text-lg font-bold text-forest-700">
-              Rs. {displayPrice.toLocaleString()}{showingSale ? "" : " / day"}
-            </span>
+            <>
+              <span className="font-display text-lg font-bold text-forest-700">
+                Rs. {displayPrice.toLocaleString()}{showingSale ? "" : " / night"}
+              </span>
+              {hasRentalDiscount && (
+                <span className="text-sm text-slate-400 line-through">
+                  Rs. {gear.realPrice.toLocaleString()}
+                </span>
+              )}
+            </>
           )}
         </div>
         {gear.colors.length > 0 && (

@@ -252,7 +252,12 @@ export default function CartPage() {
                                 {gear.name}
                               </p>
                               <p className="text-sm text-slate-500">
-                                Rs. {gear.discountedPrice} / day
+                                Rs. {gear.discountedPrice.toLocaleString("en-IN")} / night
+                                {gear.discountedPrice < gear.realPrice && (
+                                  <span className="ml-2 text-xs text-slate-400 line-through">
+                                    Rs. {gear.realPrice.toLocaleString("en-IN")}
+                                  </span>
+                                )}
                               </p>
                             </div>
                             <button

@@ -125,7 +125,7 @@ export default function MyBookingsPage() {
                       <span>
                         {item.name} × {item.quantity}
                       </span>
-                      <span className="text-slate-400">Rs. {item.pricePerDay} / day</span>
+                      <span className="text-slate-400">Rs. {item.pricePerDay} / night</span>
                     </li>
                   ))}
                 </ul>
@@ -140,7 +140,7 @@ export default function MyBookingsPage() {
                   <div className="text-sm text-slate-500">
                     {formatDate(booking.startDate)} → {formatDate(booking.endDate)}
                     <span className="ml-2 text-slate-400">
-                      ({booking.days} day{booking.days > 1 ? "s" : ""})
+                      ({booking.days} night{booking.days > 1 ? "s" : ""})
                     </span>
                   </div>
 

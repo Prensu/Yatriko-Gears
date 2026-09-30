@@ -33,7 +33,7 @@ const SYSTEM_PROMPT = `You are "Yatriko", the friendly AI assistant for Yatriko 
 - Socials: Facebook: facebook.com/yatrikoGears | Instagram: @yatriko_gears | TikTok: @yatrikogears
 - How to book: DM on Instagram/Facebook, call, or WhatsApp
 
-## Gear & pricing (all prices in Nepali Rupees per day for rentals)
+## Gear & pricing (all prices in Nepali Rupees per night for rentals)
 - Tent — 3 Person: Rs.650 (Regular: Rs.800) [Rent]
 - Tent — 4 Person: Rs.800 (Regular: Rs.1000) [Rent]
 - Sleeping Bag: Rs.200 (Regular: Rs.250) [Rent]

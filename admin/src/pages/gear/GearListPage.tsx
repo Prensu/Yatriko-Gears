@@ -84,7 +84,7 @@ export default function GearListPage() {
     },
     {
       key: "price",
-      header: "Price / day",
+      header: "Price / night",
       render: (gear) => (
         <div className="whitespace-nowrap">
           <span className="font-medium text-ink-900">{formatPrice(gear.discountedPrice)}</span>

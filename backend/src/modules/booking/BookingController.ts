@@ -113,7 +113,7 @@ class BookingController {
       const itemLines = items
         .map(
           (item: { name: string; quantity: number; pricePerDay: number }) =>
-            `<li>${item.name} &times; ${item.quantity} — Rs. ${item.pricePerDay}/day</li>`,
+            `<li>${item.name} &times; ${item.quantity} — Rs. ${item.pricePerDay}/night</li>`,
         )
         .join("")
       const dateRange = `${body.startDate} to ${body.endDate}`
@@ -124,7 +124,7 @@ class BookingController {
         .sendEmail({
           to: notifyEmail,
           sub: `New booking ${booking.code}`,
-          message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) booked ${items.length} item(s) for ${days} day(s).</p><ul>${itemLines}</ul><p>Deliver to: ${booking.deliveryAddress}</p><p>Delivery charge: To be discussed on WhatsApp.</p><p>Gear total: Rs. ${total}</p>`,
+          message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) booked ${items.length} item(s) for ${days} night(s).</p><ul>${itemLines}</ul><p>Deliver to: ${booking.deliveryAddress}</p><p>Delivery charge: To be discussed on WhatsApp.</p><p>Gear total: Rs. ${total}</p>`,
         })
         .catch((err) => {
           log.error({ err, to: notifyEmail, code: booking.code }, "Booking notification email could not be sent — check email env vars")
@@ -139,7 +139,7 @@ class BookingController {
             <p>We have your booking <b>${booking.code}</b>. Our team will call you on
             ${booking.customerPhone} to confirm delivery.</p>
             <ul>${itemLines}</ul>
-            <p><b>Rental dates:</b> ${dateRange} (${days} day${days > 1 ? "s" : ""})<br/>
+            <p><b>Rental dates:</b> ${dateRange} (${days} night${days > 1 ? "s" : ""})<br/>
             <b>Deliver to:</b> ${booking.deliveryAddress}<br/>
             <b>Delivery charge:</b> To be discussed on WhatsApp<br/>
             <b>Gear total:</b> Rs. ${total}<br/>

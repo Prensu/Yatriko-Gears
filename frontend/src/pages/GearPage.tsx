@@ -17,7 +17,7 @@ const FILTERS: { key: Filter; label: string }[] = [
 export default function GearPage() {
   usePageMeta({
     title: "All Camping Gear on Rent",
-    description: "Browse our full camping gear catalogue — tents, sleeping bags, stoves, chairs and lighting — with daily rental rates and valley-wide delivery.",
+    description: "Browse our full camping gear catalogue — tents, sleeping bags, stoves, chairs and lighting — with nightly rental rates and valley-wide delivery.",
     path: "/gear",
   })
 
@@ -45,7 +45,7 @@ export default function GearPage() {
         <SectionHeading
           eyebrow="Gear Up for Memories"
           title="All Camping Gear"
-          subtitle="Every price shown is the discounted daily rate. DM or call to book."
+          subtitle="Rental prices are shown per night. DM or call to book."
         />
 
         {/* Category pills + search */}
