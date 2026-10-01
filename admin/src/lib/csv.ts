@@ -19,7 +19,7 @@ export function toCsv<T>(rows: T[], columns: CsvColumn<T>[]): string {
 
 export function downloadCsv(filename: string, csv: string): void {
   // Prepend a BOM so Excel reads UTF-8 correctly.
-  const blob = new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8;" })
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" })
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.href = url

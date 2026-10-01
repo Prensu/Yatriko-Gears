@@ -1,4 +1,5 @@
 import express from "express"
+import mongoose from "mongoose"
 import helmet from "helmet"
 import cors from "cors"
 import rateLimit from "express-rate-limit"
@@ -100,9 +101,6 @@ app.use(express.urlencoded({ limit: "3mb", extended: true }))
 
 // 5.5 Health check — before versioned routes, no auth needed
 app.get("/health", (_req, res) => {
-  // Lazy import to avoid circular dependency at module level
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const mongoose = require("mongoose")
   res.json({
     status: "ok",
     uptime: process.uptime(),

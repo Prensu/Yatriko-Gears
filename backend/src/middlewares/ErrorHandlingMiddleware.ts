@@ -17,21 +17,16 @@ const ErrorHandlingMiddleware = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction,
 ) => {
-  let statusCode = 500
-  let code = "INTERNAL_ERROR"
-  let message = "Internal Server Error"
-  let detail: unknown = null
-
-  if (error instanceof Error) {
-    statusCode = 400
-    code = "BAD_REQUEST"
-    message = error.message // e.g. multer "File format not supported"
-  } else {
-    statusCode = error.code ?? 500
-    code = statusCode === 404 ? "NOT_FOUND" : statusCode >= 500 ? "INTERNAL_ERROR" : "BAD_REQUEST"
-    message = error.message ?? "Internal Server Error"
-    detail = error.detail ?? null
-  }
+  const statusCode = error instanceof Error ? 400 : error.code ?? 500
+  const code = error instanceof Error
+    ? "BAD_REQUEST"
+    : statusCode === 404
+      ? "NOT_FOUND"
+      : statusCode >= 500
+        ? "INTERNAL_ERROR"
+        : "BAD_REQUEST"
+  const message = error instanceof Error ? error.message : error.message ?? "Internal Server Error"
+  const detail: unknown = error instanceof Error ? null : error.detail ?? null
 
   /**
    * Log before responding. 5xx means we broke something and it carries a
