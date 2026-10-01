@@ -56,6 +56,5 @@ router.use("/subscriber", formLimiter, subscriberRouter)
 router.use("/chat",chatRouter)
 router.use("/settings", settingsRouter)
 router.use("/uploads", uploadRouter)
-router.use("/upload", uploadRouter)
 
 export default router

@@ -1,4 +1,3 @@
-import path from "node:path"
 import express from "express"
 import helmet from "helmet"
 import cors from "cors"
@@ -33,9 +32,7 @@ app.use(
      * Health checks and static images would otherwise drown the stream — one
      * page load pulls a dozen images and says nothing useful about the app.
      */
-    autoLogging: {
-      ignore: (req) => req.url === "/health" || (req.url ?? "").startsWith("/images/"),
-    },
+    autoLogging: { ignore: (req) => req.url === "/health" },
 
     /**
      * One readable line per request. pino-http's defaults serialize the whole
@@ -97,12 +94,9 @@ app.use(
   }),
 )
 
-// 4. Body parsers — limit kept in sync with multer fileSize (3 MB)
+// 4. Body parsers
 app.use(express.json({ limit: "3mb" }))
 app.use(express.urlencoded({ limit: "3mb", extended: true }))
-
-// 5. Static files (uploaded images, read-only)
-app.use("/images", express.static(path.resolve("./public/uploads/")))
 
 // 5.5 Health check — before versioned routes, no auth needed
 app.get("/health", (_req, res) => {

@@ -17,7 +17,6 @@ const port = Number(process.env.PORT ?? 9005)
 
 export const appConfig = {
   port,
-  imagePath: process.env.IMAGE_BASE_PATH ?? `http://localhost:${port}/images/`,
   jwtSecret: required("JWT_SECRET"),
   jwtRefreshSecret: required("JWT_REFRESH_SECRET"),
   allowedOrigins: (process.env.ALLOWED_ORIGINS ?? "http://localhost:5173").split(",").map((o) => o.trim()),

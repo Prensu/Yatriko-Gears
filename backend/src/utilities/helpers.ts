@@ -1,5 +1,4 @@
 import slugify from "slugify"
-import { appConfig } from "../config/AppConfig"
 import cloudinary from "../config/cloudinaryConfig"
 import { loggerFor } from "../config/logger"
 
@@ -11,17 +10,6 @@ export type StoredImage = {
   filename?: string
   size?: number
   mimeType?: string
-}
-
-/** Normalize a multer file into the stored image sub-document (legacy). */
-export function mapImage(image: Express.Multer.File, dir: string): StoredImage {
-  return {
-    url: appConfig.imagePath + dir + image.filename, // filename, NOT fieldname
-    path: image.destination,
-    filename: image.filename,
-    size: image.size,
-    mimeType: image.mimetype,
-  }
 }
 
 /** Normalize a Cloudinary upload result into the stored image sub-document. */

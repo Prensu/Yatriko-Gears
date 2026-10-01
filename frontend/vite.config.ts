@@ -22,10 +22,6 @@ export default defineConfig({
         target: "http://localhost:9005",
         changeOrigin: true,
       },
-      "/gemini": {
-        target: "http://localhost:9005",
-        changeOrigin: true,
-      },
       // The admin CMS is a separate Vite app (admin/, port 5174) mounted here
       // so it shares this origin: http://localhost:5173/admin
       // ws:true keeps its hot-reload socket working through the proxy.

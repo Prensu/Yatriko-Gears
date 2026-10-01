@@ -4,29 +4,17 @@ Three pieces:
 
 | Piece | Host | Why |
 |---|---|---|
-| `backend/` — Express API | **Render** (Singapore region) | long-running Node process + a persistent disk for uploads |
+| `backend/` — Express API | **Render** (Singapore region) | long-running Node process |
 | `frontend/` — public site | **Vercel** | static SPA on a global CDN |
 | `admin/` — CMS | **Vercel** (second project) | static SPA, served at `/admin` |
 
 ---
 
-## ⚠️ Read this first: uploaded images
+## Image uploads
 
-Gear, category and destination images are written to `backend/public/uploads` on
-disk. **Render's filesystem is ephemeral** — without a persistent disk, every
-image an admin uploads vanishes on the next deploy or restart, leaving broken
-images across the site.
-
-`render.yaml` therefore declares a 1 GB disk mounted at the uploads path. Two
-things to know:
-
-1. **Disks require a paid Render instance.** On the free plan the disk is
-   ignored and uploads will not survive.
-2. **A disk pins the service to one instance** — you cannot scale horizontally
-   while using one.
-
-The better long-term fix is to send images to Cloudinary, which this project
-already uses for video. Until then, keep the disk.
+Gear, category, destination and settings images upload directly from the admin
+browser to Cloudinary. The API stores the Cloudinary URL and public ID; Render's
+local filesystem is not used for uploaded images.
 
 ---
 
@@ -53,7 +41,6 @@ Copy from your local `backend/.env`, with these changed for production:
 | Variable | Production value |
 |---|---|
 | `ALLOWED_ORIGINS` | `https://your-site.vercel.app,https://your-admin.vercel.app` (comma-separated, no spaces) |
-| `IMAGE_BASE_PATH` | `https://your-api.onrender.com/images/` — **must end with a slash** |
 | `JWT_SECRET`, `JWT_REFRESH_SECRET` | fresh values, not the local ones |
 | `MONGODB_URL` | Atlas connection string |
 

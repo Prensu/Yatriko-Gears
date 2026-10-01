@@ -1,7 +1,6 @@
 # ============================================
 # Yatriko Gears — root .gitignore
-# (covers both yatriko-frontend/ and yatriko-backend/)
-# Rename this file to ".gitignore" at the project root
+# (covers frontend/, backend/ and admin/)
 # ============================================
 
 # --- Dependencies ---
@@ -19,8 +18,8 @@ dist/
 build/
 *.tsbuildinfo
 
-# --- Uploaded media (backend multer storage) ---
-yatriko-backend/public/uploads/
+# --- Uploaded media ---
+backend/public/uploads/
 
 # --- Logs ---
 logs/
