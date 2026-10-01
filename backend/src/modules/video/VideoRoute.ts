@@ -1,4 +1,5 @@
 import { Router } from "express"
+import optionalAuth from "../../middlewares/OptionalAuthMiddleware"
 import Auth from "../../middlewares/AuthMiddleware"
 import bodyValidator from "../../middlewares/BodyValidationMiddleware"
 import VideoController from "./VideoController"
@@ -7,7 +8,7 @@ import { VideoCreateDTO, VideoUpdateDTO } from "./VideoDto"
 const videoRouter = Router()
 const videoCtrl = new VideoController()
 
-videoRouter.get("/", videoCtrl.listAllVideos)
+videoRouter.get("/", optionalAuth, videoCtrl.listAllVideos)
 videoRouter.post("/upload-signature", Auth(["admin"]), videoCtrl.getUploadSignature)
 videoRouter.post("/", Auth(["admin"]), bodyValidator(VideoCreateDTO), videoCtrl.createVideo)
 videoRouter.put("/:id", Auth(["admin"]), bodyValidator(VideoUpdateDTO), videoCtrl.updateVideo)

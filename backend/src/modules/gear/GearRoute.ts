@@ -1,4 +1,5 @@
 import { Router } from "express"
+import optionalAuth from "../../middlewares/OptionalAuthMiddleware"
 import Auth from "../../middlewares/AuthMiddleware"
 import bodyValidator from "../../middlewares/BodyValidationMiddleware"
 import GearController from "./GearController"
@@ -13,8 +14,8 @@ gearRouter.post(
   bodyValidator(GearCreateDTO),
   gearCtrl.createGear,
 )
-gearRouter.get("/", gearCtrl.listAllGear)
-gearRouter.get("/:slug", gearCtrl.getGearDetail)
+gearRouter.get("/", optionalAuth, gearCtrl.listAllGear)
+gearRouter.get("/:slug", optionalAuth, gearCtrl.getGearDetail)
 gearRouter.put(
   "/:slug",
   Auth(["admin"]),

@@ -4,6 +4,7 @@ import ChatModel from "./ChatModel"
 import type { IAuthRequest } from "../auth/AuthContract"
 import { geminiConfig } from "../../config/AppConfig"
 import { loggerFor } from "../../config/logger"
+import sanitizeHtml from "sanitize-html"
 
 const log = loggerFor("ChatController")
 
@@ -262,7 +263,7 @@ class ChatController {
       }
 
       // Format response as clean HTML
-      const htmlReply = formatAsHtml(rawReply)
+      const htmlReply = sanitizeHtml(formatAsHtml(rawReply), { allowedTags: ["p", "br", "strong", "em", "b", "i", "ul", "ol", "li", "a", "code"], allowedAttributes: { a: ["href", "rel", "target"] }, allowedSchemes: ["http", "https", "tel", "mailto"], transformTags: { a: (_tag, attrs) => ({ tagName: "a", attribs: { ...attrs, rel: "noopener noreferrer", target: "_blank" } }) } })
 
       history.push({ role: "model", parts: [{ text: htmlReply }] })
 

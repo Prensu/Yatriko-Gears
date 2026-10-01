@@ -1,0 +1,3 @@
+import { cloudinaryConfig } from "../config/AppConfig"
+export function isOwnCloudinaryUrl(url: unknown): url is string { if (typeof url !== "string") return false; try { const parsed = new URL(url); return parsed.protocol === "https:" && parsed.hostname === "res.cloudinary.com" && parsed.pathname.startsWith(`/${cloudinaryConfig.cloudName}/image/upload/`) } catch { return false } }
+export function isAllowedPublicId(publicId: unknown, allowedPrefix: string): publicId is string { return typeof publicId === "string" && publicId.startsWith(allowedPrefix) && !publicId.includes("..") && !publicId.startsWith("/") && /^[A-Za-z0-9_\-/.]+$/.test(publicId) }

@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify'
+import { sanitizeRichHtml } from '../../lib/sanitize'
 import { useState, useRef, useEffect } from 'react'
 
 interface RichContentProps {
@@ -20,10 +20,7 @@ export default function RichContent({ content, title }: RichContentProps) {
   if (!content) return null
 
   // Clean the HTML
-  const cleanHtml = DOMPurify.sanitize(content, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'ul', 'ol', 'li', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div', 'img', 'blockquote'],
-    ALLOWED_ATTR: ['href', 'target', 'src', 'alt', 'class', 'style']
-  })
+  const cleanHtml = sanitizeRichHtml(content)
 
   return (
     <div className="mt-12 rounded-2xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-sm">

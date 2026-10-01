@@ -2,6 +2,7 @@ import type { NextFunction, Response } from "express"
 import PackageModel from "./PackageModel"
 import { getPagination, makeSlug } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
+import { escapeRegex, getSearchTerm, getStringParam } from "../../utilities/query"
 
 class PackageController {
   /** POST /api/v1/package — admin */
@@ -35,10 +36,10 @@ class PackageController {
        * Public callers get the live catalogue. The CMS passes ?status=inactive
        * or ?status=all so unpublished items don't vanish from its own tables.
        */
-      const requestedStatus = String(req.query.status ?? "active")
+      const requestedStatus = req.loggedInUser?.role === "admin" ? (getStringParam(req.query as Record<string, unknown>, "status") ?? "active") : "active"
       const filter: Record<string, unknown> = {}
       if (requestedStatus !== "all") filter.status = requestedStatus
-      if (req.query.search) filter.name = { $regex: String(req.query.search), $options: "i" }
+      const term = getSearchTerm(req.query as Record<string, unknown>); if (term) filter.name = { $regex: escapeRegex(term), $options: "i" }
 
       const [items, total] = await Promise.all([
         PackageModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),

@@ -36,7 +36,7 @@ export function mapCloudinaryImage(params: {
  */
 export async function destroyCloudinaryImage(publicId?: string): Promise<void> {
   if (!publicId) return
-  if (publicId.startsWith(".") || publicId.startsWith("/") || publicId.startsWith("public/")) {
+  if (!publicId.startsWith("yatriko/") || publicId.includes("..") || publicId.startsWith("/") || !/^[A-Za-z0-9_\-/.]+$/.test(publicId)) {
     return
   }
   try {
@@ -53,7 +53,7 @@ export function makeSlug(name: string): string {
 
 /** Uniform pagination inputs with a hard cap. */
 export function getPagination(query: Record<string, unknown>) {
-  const page = Math.max(Number(query.page ?? 1) || 1, 1)
+  const page = Math.min(Math.max(Number(query.page ?? 1) || 1, 1), 10000)
   const limit = Math.min(Math.max(Number(query.limit ?? 10) || 10, 1), 100)
   const skip = (page - 1) * limit
   return { page, limit, skip }

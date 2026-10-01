@@ -1,6 +1,8 @@
 import { Router } from "express"
 import rateLimit from "express-rate-limit"
 import ChatController from "./ChatController"
+import bodyValidator from "../../middlewares/BodyValidationMiddleware"
+import { z } from "zod"
 
 const chatRouter = Router()
 const chatCtrl = new ChatController()
@@ -14,6 +16,6 @@ const chatLimiter = rateLimit({
   message: { data: null, message: "Too many messages — please try again later", meta: null },
 })
 
-chatRouter.post("/", chatLimiter, chatCtrl.sendMessage)
+chatRouter.post("/", chatLimiter, bodyValidator(z.object({ message: z.string().min(1).max(1000), sessionId: z.string().uuid().optional() })), chatCtrl.sendMessage)
 
 export default chatRouter

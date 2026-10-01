@@ -1,4 +1,5 @@
 import { Router } from "express"
+import optionalAuth from "../../middlewares/OptionalAuthMiddleware"
 import Auth from "../../middlewares/AuthMiddleware"
 import bodyValidator from "../../middlewares/BodyValidationMiddleware"
 import CategoryController from "./CategoryController"
@@ -13,8 +14,8 @@ categoryRouter.post(
   bodyValidator(CategoryCreateDTO),
   catCtrl.createCategory,
 )
-categoryRouter.get("/", catCtrl.listAllCategory)
-categoryRouter.get("/:slug", catCtrl.getCategoryDetail)
+categoryRouter.get("/", optionalAuth, catCtrl.listAllCategory)
+categoryRouter.get("/:slug", optionalAuth, catCtrl.getCategoryDetail)
 categoryRouter.put(
   "/:slug",
   Auth(["admin"]),

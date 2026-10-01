@@ -2,6 +2,8 @@ import type { NextFunction, Response } from "express"
 import CategoryModel from "./CategoryModel"
 import { destroyCloudinaryImage, getPagination, makeSlug, mapCloudinaryImage } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
+import { isOwnCloudinaryUrl } from "../../utilities/cloudinaryGuard"
+import { escapeRegex, getSearchTerm, getStringParam } from "../../utilities/query"
 
 class CategoryController {
   /** POST /api/v1/category — admin */
@@ -15,6 +17,7 @@ class CategoryController {
       }
 
       if (data.imageUrl && data.imagePublicId) {
+        if (!isOwnCloudinaryUrl(data.imageUrl)) throw { code: 400, message: "Invalid image" }
         data.image = mapCloudinaryImage({ url: data.imageUrl, publicId: data.imagePublicId })
       }
       delete data.imageUrl
@@ -38,8 +41,8 @@ class CategoryController {
       const { page, limit, skip } = getPagination(req.query as Record<string, unknown>)
 
       const filter: Record<string, unknown> = {}
-      if (req.query.status) filter.status = req.query.status
-      if (req.query.search) filter.name = { $regex: String(req.query.search), $options: "i" }
+      if (req.loggedInUser?.role === "admin") { const status = getStringParam(req.query as Record<string, unknown>, "status"); if (status && status !== "all") filter.status = status } else filter.status = "active"
+      const term = getSearchTerm(req.query as Record<string, unknown>); if (term) filter.name = { $regex: escapeRegex(term), $options: "i" }
 
       const [items, total] = await Promise.all([
         CategoryModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
@@ -55,7 +58,7 @@ class CategoryController {
   /** GET /api/v1/category/:slug — public */
   getCategoryDetail = async (req: IAuthRequest, res: Response, next: NextFunction) => {
     try {
-      const category = await CategoryModel.findOne({ slug: req.params.slug })
+      const category = await CategoryModel.findOne({ slug: req.params.slug, ...(req.loggedInUser?.role === "admin" ? {} : { status: "active" }) })
       if (!category) throw { code: 404, message: "Category not found" }
       res.json({ data: category, message: "Category detail", meta: null })
     } catch (exception) {
@@ -73,6 +76,7 @@ class CategoryController {
       if (!existing) throw { code: 404, message: "Category not found" }
 
       if (data.imageUrl && data.imagePublicId) {
+        if (!isOwnCloudinaryUrl(data.imageUrl)) throw { code: 400, message: "Invalid image" }
         if (existing.image?.path && existing.image.path !== data.imagePublicId) {
           await destroyCloudinaryImage(existing.image.path)
         }

@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { FaPaperPlane, FaXmark } from "react-icons/fa6"
 import { TbMessageChatbot } from "react-icons/tb"
 import { sendChatMessage } from "@/api/chat"
+import { sanitizeRichHtml } from "@/lib/sanitize"
 
 type Message = {
   id: string
@@ -210,7 +211,7 @@ export default function ChatWidget() {
                     {msg.role === "assistant" ? (
                       <div
                         className="space-y-1 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_p]:mb-1 [&_p:last-child]:mb-0"
-                        dangerouslySetInnerHTML={{ __html: msg.text }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(msg.text) }}
                       />
                     ) : (
                       msg.text.split("\n").map((line, i) => (

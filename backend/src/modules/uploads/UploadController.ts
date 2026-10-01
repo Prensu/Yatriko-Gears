@@ -38,7 +38,7 @@ class UploadController {
         throw { code: 403, message: "Only admins can upload images to this folder" }
       }
 
-      const targetFolder = IMAGE_UPLOAD_FOLDERS[folderParam]
+      const targetFolder = (folderParam === "user" || folderParam === "users") && req.loggedInUser?.role !== "admin" ? `yatriko/images/users/${req.loggedInUser?._id}` : IMAGE_UPLOAD_FOLDERS[folderParam]
       const timestamp = Math.round(Date.now() / 1000)
       const paramsToSign = { timestamp, folder: targetFolder }
       const signature = cloudinary.utils.api_sign_request(paramsToSign, cloudinaryConfig.apiSecret)

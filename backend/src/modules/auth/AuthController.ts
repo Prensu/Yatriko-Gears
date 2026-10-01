@@ -9,6 +9,8 @@ import { destroyCloudinaryImage, mapCloudinaryImage } from "../../utilities/help
 import { verifyGoogleIdToken } from "./GoogleVerifier"
 import type { IAuthRequest } from "./AuthContract"
 import { loggerFor } from "../../config/logger"
+import { isAllowedPublicId, isOwnCloudinaryUrl } from "../../utilities/cloudinaryGuard"
+import { escapeHtml } from "../../utilities/escapeHtml"
 
 const log = loggerFor("AuthController")
 
@@ -34,7 +36,7 @@ class AuthController {
         await emailService.sendEmail({
           to: user.email,
           sub: "Welcome to Yatriko Gears \u26fa",
-          message: `<h2>Namaste ${user.name}!</h2><p>Your account is ready. Gear up. Head out. Make memories.</p>`,
+          message: `<h2>Namaste ${escapeHtml(user.name)}!</h2><p>Your account is ready. Gear up. Head out. Make memories.</p>`,
         })
       } catch {
         log.error("Welcome email could not be sent")
@@ -168,8 +170,10 @@ class AuthController {
       delete data.role
 
       if (data.imageUrl && data.imagePublicId) {
+        const prefix = `yatriko/images/users/${req.loggedInUser?._id}/`
+        if (!isOwnCloudinaryUrl(data.imageUrl) || !isAllowedPublicId(data.imagePublicId, prefix)) throw { code: 400, message: "Invalid image" }
         const existing = await UserModel.findById(req.loggedInUser?._id)
-        if (existing?.image?.path && existing.image.path !== data.imagePublicId) {
+        if (existing?.image?.path && existing.image.path !== data.imagePublicId && isAllowedPublicId(existing.image.path, prefix)) {
           await destroyCloudinaryImage(existing.image.path)
         }
         data.image = mapCloudinaryImage({

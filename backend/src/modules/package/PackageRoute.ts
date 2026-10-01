@@ -1,4 +1,5 @@
 import { Router } from "express"
+import optionalAuth from "../../middlewares/OptionalAuthMiddleware"
 import Auth from "../../middlewares/AuthMiddleware"
 import bodyValidator from "../../middlewares/BodyValidationMiddleware"
 import PackageController from "./PackageController"
@@ -8,8 +9,8 @@ const packageRouter = Router()
 const pkgCtrl = new PackageController()
 
 packageRouter.post("/", Auth(["admin"]), bodyValidator(PackageCreateDTO), pkgCtrl.createPackage)
-packageRouter.get("/", pkgCtrl.listAllPackages)
-packageRouter.get("/:slug", pkgCtrl.getPackageDetail)
+packageRouter.get("/", optionalAuth, pkgCtrl.listAllPackages)
+packageRouter.get("/:slug", optionalAuth, pkgCtrl.getPackageDetail)
 packageRouter.put("/:slug", Auth(["admin"]), bodyValidator(PackageUpdateDTO), pkgCtrl.updatePackage)
 packageRouter.delete("/:slug", Auth(["admin"]), pkgCtrl.deletePackage)
 

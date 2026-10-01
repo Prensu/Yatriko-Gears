@@ -3,6 +3,8 @@ import GearModel from "./GearModel"
 import CategoryModel from "../category/CategoryModel"
 import { destroyCloudinaryImage, getPagination, makeSlug, mapCloudinaryImage } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
+import { escapeRegex, getSearchTerm, getStringParam } from "../../utilities/query"
+import { isOwnCloudinaryUrl, isAllowedPublicId } from "../../utilities/cloudinaryGuard"
 
 /**
  * Serialize a gear document into the shape the frontend's gearSchema expects:
@@ -64,6 +66,7 @@ class GearController {
 
       // Multi-image: prefer imagesData array, fall back to legacy single fields.
       if (Array.isArray(data.imagesData) && data.imagesData.length > 0) {
+        if (data.imagesData.some((entry: { imageUrl?: string; url?: string }) => !isOwnCloudinaryUrl(entry.imageUrl ?? entry.url))) throw { code: 400, message: "Invalid image" }
         data.images = data.imagesData.map(mapImageEntry)
         // Also populate legacy `image` with the primary for backward compat.
         const primary = data.imagesData[0]
@@ -107,12 +110,12 @@ class GearController {
        * Public callers get the live catalogue. The CMS passes ?status=inactive
        * or ?status=all so unpublished items don't vanish from its own tables.
        */
-      const requestedStatus = String(req.query.status ?? "active")
+      const requestedStatus = req.loggedInUser?.role === "admin" ? (getStringParam(req.query as Record<string, unknown>, "status") ?? "active") : "active"
       const filter: Record<string, unknown> = {}
       if (requestedStatus !== "all") filter.status = requestedStatus
-      if (req.query.search) filter.name = { $regex: String(req.query.search), $options: "i" }
-      if (req.query.category) {
-        const category = await CategoryModel.findOne({ slug: String(req.query.category) })
+      const term = getSearchTerm(req.query as Record<string, unknown>); if (term) filter.name = { $regex: escapeRegex(term), $options: "i" }
+      const categoryParam = getStringParam(req.query as Record<string, unknown>, "category"); if (categoryParam) {
+        const category = await CategoryModel.findOne({ slug: categoryParam })
         filter.category = category?._id ?? null
       }
 
@@ -134,7 +137,7 @@ class GearController {
   /** GET /api/v1/gear/:slug — public */
   getGearDetail = async (req: IAuthRequest, res: Response, next: NextFunction) => {
     try {
-      const gear = await GearModel.findOne({ slug: req.params.slug }).populate("category", "name slug")
+      const gear = await GearModel.findOne({ slug: req.params.slug, ...(req.loggedInUser?.role === "admin" ? {} : { status: "active" }) }).populate("category", "name slug")
       if (!gear) throw { code: 404, message: "Gear not found" }
       res.json({ data: toPublicGear(gear), message: "Gear detail", meta: null })
     } catch (exception) {
@@ -178,6 +181,7 @@ class GearController {
         if (existing.image?.path && existing.image.path !== data.imagePublicId) {
           await destroyCloudinaryImage(existing.image.path)
         }
+        if (!isOwnCloudinaryUrl(data.imageUrl) || !isAllowedPublicId(data.imagePublicId, "yatriko/")) throw { code: 400, message: "Invalid image" }
         data.image = mapCloudinaryImage({ url: data.imageUrl, publicId: data.imagePublicId })
         data.images = [{ url: data.imageUrl, publicId: data.imagePublicId }]
       }
