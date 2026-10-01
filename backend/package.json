@@ -2,6 +2,7 @@
   "name": "yatriko-backend",
   "private": true,
   "version": "0.1.0",
+  "engines": { "node": ">=22" },
   "description": "Yatriko Gears REST API — Express + TypeScript + MongoDB (feature-module architecture)",
   "main": "dist/server.js",
   "scripts": {
