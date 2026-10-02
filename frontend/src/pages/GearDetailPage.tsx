@@ -1,107 +1,67 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useParams, Link } from "react-router-dom"
-import { fetchGear, fetchGearBySlug } from "@/api/gear"
-import type { Gear } from "@/types"
-import { resolveGearImage } from "@/lib/gearImages"
-import { useCart } from "@/context/CartContext"
-import { useToast } from "@/context/ToastContext"
-import { usePageMeta } from "@/hooks/usePageMeta"
-import GearCard from "@/components/gear/GearCard"
-import RichContent from "@/components/common/RichContent"
-import { FiTruck, FiShield } from "react-icons/fi"
-import { BsStars } from "react-icons/bs"
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { fetchGear, fetchGearBySlug } from "@/api/gear";
+import type { Gear } from "@/types";
+import { resolveGearImage } from "@/lib/gearImages";
+import { useCart } from "@/context/CartContext";
+import { useToast } from "@/context/ToastContext";
+import { usePageMeta } from "@/hooks/usePageMeta";
+import GearCard from "@/components/gear/GearCard";
+import RichContent from "@/components/common/RichContent";
+import { FiTruck, FiShield } from "react-icons/fi";
+import { BsStars } from "react-icons/bs";
 
 /* ------------------------------------------------------------------ */
 /* Image Gallery (inline)                                               */
 /* ------------------------------------------------------------------ */
 
 function ImageGallery({ images, name }: { images: string[]; name: string }) {
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(0);
 
   // ── Touch / swipe state ──
-  const touchStartX = useRef(0)
-  const touchDeltaX = useRef(0)
-  const isSwiping = useRef(false)
+  const touchStartX = useRef(0);
+  const touchDeltaX = useRef(0);
+  const isSwiping = useRef(false);
 
   const goTo = useCallback(
     (index: number) => {
-      setActiveIndex(Math.max(0, Math.min(index, images.length - 1)))
+      setActiveIndex(Math.max(0, Math.min(index, images.length - 1)));
     },
     [images.length],
-  )
+  );
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-    touchDeltaX.current = 0
-    isSwiping.current = true
-  }, [])
+    touchStartX.current = e.touches[0].clientX;
+    touchDeltaX.current = 0;
+    isSwiping.current = true;
+  }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isSwiping.current) return
-    touchDeltaX.current = e.touches[0].clientX - touchStartX.current
-  }, [])
+    if (!isSwiping.current) return;
+    touchDeltaX.current = e.touches[0].clientX - touchStartX.current;
+  }, []);
 
   const onTouchEnd = useCallback(() => {
-    if (!isSwiping.current) return
-    isSwiping.current = false
-    const threshold = 50
+    if (!isSwiping.current) return;
+    isSwiping.current = false;
+    const threshold = 50;
     if (touchDeltaX.current < -threshold) {
-      goTo(activeIndex + 1)
+      goTo(activeIndex + 1);
     } else if (touchDeltaX.current > threshold) {
-      goTo(activeIndex - 1)
+      goTo(activeIndex - 1);
     }
-  }, [activeIndex, goTo])
+  }, [activeIndex, goTo]);
 
-  const hasMultiple = images.length > 1
-  const activeSrc = images[activeIndex] ?? ""
+  const hasMultiple = images.length > 1;
+  const activeSrc = images[activeIndex] ?? "";
 
   return (
-    <div className="space-y-3">
-      {/* ── Main image ── */}
-      <div
-        className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-gradient-to-br from-sand via-white to-forest-50/30 shadow-sm"
-        onTouchStart={hasMultiple ? onTouchStart : undefined}
-        onTouchMove={hasMultiple ? onTouchMove : undefined}
-        onTouchEnd={hasMultiple ? onTouchEnd : undefined}
-      >
-        <div className="relative flex aspect-[4/3] lg:aspect-[5/4] items-center justify-center p-4 sm:p-8">
-          {activeSrc ? (
-            <img
-              key={activeSrc}
-              src={activeSrc}
-              alt={`${name} — photo ${activeIndex + 1}`}
-              className="h-full w-full rounded-lg object-contain drop-shadow-lg transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-8xl text-slate-300">
-              ⛺
-            </div>
-          )}
-        </div>
-
-        {/* Mobile dot indicators */}
-        {hasMultiple && (
-          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 sm:hidden">
-            {images.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => goTo(idx)}
-                aria-label={`View photo ${idx + 1}`}
-                className={`h-2 rounded-full transition-all duration-200 ${
-                  idx === activeIndex
-                    ? "w-5 bg-forest-600"
-                    : "w-2 bg-slate-400/50"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── Thumbnail strip (hidden when only 1 image) ── */}
+    // sm+: thumbnails sit to the LEFT of the main image (Alibaba-style).
+    // mobile: unchanged — thumbnails hidden, dot indicators overlay the image instead.
+    <div className="sm:flex sm:items-start sm:gap-3">
+      {/* ── Thumbnail column (desktop/tablet only, hidden when only 1 image) ── */}
       {hasMultiple && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        <div className="hidden sm:flex sm:max-h-[420px] lg:max-h-[480px] sm:flex-col sm:gap-2 sm:overflow-y-auto sm:overflow-x-visible sm:pr-1 scrollbar-thin">
           {images.map((src, idx) => (
             <button
               key={`${src}-${idx}`}
@@ -123,8 +83,50 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
           ))}
         </div>
       )}
+
+      {/* ── Main image ── */}
+      <div
+        className="group relative flex-1 overflow-hidden rounded-2xl border border-slate-200/60 bg-gradient-to-br from-sand via-white to-forest-50/30 shadow-sm"
+        onTouchStart={hasMultiple ? onTouchStart : undefined}
+        onTouchMove={hasMultiple ? onTouchMove : undefined}
+        onTouchEnd={hasMultiple ? onTouchEnd : undefined}
+      >
+        <div className="relative flex aspect-[4/3] lg:aspect-[5/4] items-center justify-center p-4 sm:p-8">
+          {activeSrc ? (
+            <img
+              key={activeSrc}
+              src={activeSrc}
+              alt={`${name} — photo ${activeIndex + 1}`}
+              className="h-full w-full rounded-lg object-contain drop-shadow-lg transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-8xl text-slate-300">
+              ⛺
+            </div>
+          )}
+        </div>
+
+        {/* Mobile dot indicators — unchanged */}
+        {hasMultiple && (
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 sm:hidden">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => goTo(idx)}
+                aria-label={`View photo ${idx + 1}`}
+                className={`h-2 rounded-full transition-all duration-200 ${
+                  idx === activeIndex
+                    ? "w-5 bg-forest-600"
+                    : "w-2 bg-slate-400/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -132,65 +134,68 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
 /* ------------------------------------------------------------------ */
 
 export default function GearDetailPage() {
-  const { slug } = useParams<{ slug: string }>()
-  const [state, setState] = useState<{ slug: string; gear: Gear | null } | null>(null)
-  const [relatedGear, setRelatedGear] = useState<Gear[]>([])
-  const [quantity, setQuantity] = useState(1)
-  const [pricingMode, setPricingMode] = useState<"rent" | "sale">("rent")
+  const { slug } = useParams<{ slug: string }>();
+  const [state, setState] = useState<{
+    slug: string;
+    gear: Gear | null;
+  } | null>(null);
+  const [relatedGear, setRelatedGear] = useState<Gear[]>([]);
+  const [quantity, setQuantity] = useState(1);
+  const [pricingMode, setPricingMode] = useState<"rent" | "sale">("rent");
 
-  const loading = !state || state.slug !== slug
-  const gear = state && state.slug === slug ? state.gear : null
+  const loading = !state || state.slug !== slug;
+  const gear = state && state.slug === slug ? state.gear : null;
 
-  const { addItem } = useCart()
-  const toast = useToast()
+  const { addItem } = useCart();
+  const toast = useToast();
 
   usePageMeta({
-    title: gear ? `${gear.name} — Yatriko Gears` : "Gear Details — Yatriko Gears",
+    title: gear
+      ? `${gear.name} — Yatriko Gears`
+      : "Gear Details — Yatriko Gears",
     description:
       gear?.description ||
       "Rent high quality trekking and camping gear with delivery all over Nepal.",
     path: `/gear/${slug ?? ""}`,
-  })
+  });
 
   useEffect(() => {
-    if (!slug) return
-    let active = true
+    if (!slug) return;
+    let active = true;
 
     fetchGearBySlug(slug)
       .then((data) => {
-        if (!active) return
-        setState({ slug, gear: data ?? null })
-        setQuantity(1)
-        setPricingMode(data?.availableFor.includes("rent") ? "rent" : "sale")
+        if (!active) return;
+        setState({ slug, gear: data ?? null });
+        setQuantity(1);
+        setPricingMode(data?.availableFor.includes("rent") ? "rent" : "sale");
       })
       .catch(() => {
-        if (!active) return
-        setState({ slug, gear: null })
-      })
+        if (!active) return;
+        setState({ slug, gear: null });
+      });
 
     return () => {
-      active = false
-    }
-  }, [slug])
+      active = false;
+    };
+  }, [slug]);
 
   // Load related gear recommendations
   useEffect(() => {
-    if (!gear) return
+    if (!gear) return;
 
     fetchGear().then((all) => {
-      const filtered = all
-        .filter((item) => item._id !== gear._id)
-        .slice(0, 4)
-      setRelatedGear(filtered)
-    })
-  }, [gear])
+      const filtered = all.filter((item) => item._id !== gear._id).slice(0, 4);
+      setRelatedGear(filtered);
+    });
+  }, [gear]);
 
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-forest-100 border-t-forest-600" />
       </div>
-    )
+    );
   }
 
   if (!gear) {
@@ -204,7 +209,8 @@ export default function GearDetailPage() {
             Gear Not Found
           </h1>
           <p className="mx-auto mt-3 max-w-md text-sm text-slate-500">
-            We could not find the gear you are looking for. It may have been renamed or removed from our catalogue.
+            We could not find the gear you are looking for. It may have been
+            renamed or removed from our catalogue.
           </p>
           <div className="mt-8">
             <Link to="/gear" className="btn-primary">
@@ -213,57 +219,101 @@ export default function GearDetailPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Build the gallery images array: prefer the multi-image `images` field,
   // fall back to the single `image` field for legacy/fallback data.
   const galleryImages: string[] = (() => {
     if (gear.images && gear.images.length > 0) {
-      const resolved = gear.images.map((src) => resolveGearImage(src)).filter(Boolean)
-      if (resolved.length > 0) return resolved
+      const resolved = gear.images
+        .map((src) => resolveGearImage(src))
+        .filter(Boolean);
+      if (resolved.length > 0) return resolved;
     }
-    const single = resolveGearImage(gear.image)
-    return single ? [single] : []
-  })()
+    const single = resolveGearImage(gear.image);
+    return single ? [single] : [];
+  })();
 
-  const canRent = gear.availableFor.includes("rent")
-  const canBuy = gear.availableFor.includes("sale")
-  const showingSale = pricingMode === "sale" && canBuy
-  const displayPrice = showingSale ? (gear.salePrice ?? gear.discountedPrice) : gear.discountedPrice
-  const priceOnRequest = displayPrice === 0
-  const hasRentalDiscount = !showingSale && gear.discountedPrice < gear.realPrice
+  const canRent = gear.availableFor.includes("rent");
+  const canBuy = gear.availableFor.includes("sale");
+  const showingSale = pricingMode === "sale" && canBuy;
+  const displayPrice = showingSale
+    ? (gear.salePrice ?? gear.discountedPrice)
+    : gear.discountedPrice;
+  const priceOnRequest = displayPrice === 0;
+  const hasRentalDiscount =
+    !showingSale && gear.discountedPrice < gear.realPrice;
   const categoryName =
     typeof gear.category === "object" && gear.category !== null
       ? gear.category.name
       : typeof gear.category === "string"
         ? gear.category
-        : null
+        : null;
 
   const handleAddToCart = () => {
-    addItem(gear._id, quantity)
-    toast.success(`${quantity}x ${gear.name} added to your cart`)
-  }
+    addItem(gear._id, quantity);
+    toast.success(`${quantity}x ${gear.name} added to your cart`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand/40 via-white to-sand/20">
       <div className="container-site py-6 sm:py-10">
         {/* Breadcrumbs */}
-        <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-1.5 text-sm text-slate-400">
+        <nav
+          aria-label="Breadcrumb"
+          className="mb-8 flex flex-wrap items-center gap-1.5 text-sm text-slate-400"
+        >
           <Link to="/" className="transition-colors hover:text-forest-600">
             Home
           </Link>
-          <svg className="h-3.5 w-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+          <svg
+            className="h-3.5 w-3.5 text-slate-300"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
           <Link to="/gear" className="transition-colors hover:text-forest-600">
             Gear
           </Link>
           {categoryName && (
             <>
-              <svg className="h-3.5 w-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              <svg
+                className="h-3.5 w-3.5 text-slate-300"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
               <span className="text-slate-500">{categoryName}</span>
             </>
           )}
-          <svg className="h-3.5 w-3.5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+          <svg
+            className="h-3.5 w-3.5 text-slate-300"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
           <span className="font-medium text-navy-900 truncate max-w-[180px] sm:max-w-none">
             {gear.name}
           </span>
@@ -271,12 +321,15 @@ export default function GearDetailPage() {
 
         {/* ── Main Product Layout ── */}
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">
-
           {/* ─── Left: Product Image Gallery ─── */}
           <div className="space-y-5">
             {/* Gallery with overlay badges */}
             <div className="relative">
-              <ImageGallery key={gear._id} images={galleryImages} name={gear.name} />
+              <ImageGallery
+                key={gear._id}
+                images={galleryImages}
+                name={gear.name}
+              />
 
               {/* Overlay Badges — positioned over the gallery */}
               <div className="pointer-events-none absolute left-4 top-4 z-10 flex flex-col gap-2">
@@ -305,16 +358,35 @@ export default function GearDetailPage() {
             {/* Trust Badges — below image on desktop */}
             <div className="hidden lg:grid grid-cols-3 gap-3">
               {[
-                { icon: <BsStars className="h-5 w-5" />, title: "Sanitized & Inspected", sub: "Thoroughly cleaned before every rental" },
-                { icon: <FiTruck className="h-5 w-5" />, title: "All over Nepal Delivery", sub: "Delivered right to your doorstep" },
-                { icon: <FiShield className="h-5 w-5" />, title: "Damage Protection", sub: "Fair deposit & wear tolerance" },
+                {
+                  icon: <BsStars className="h-5 w-5" />,
+                  title: "Sanitized & Inspected",
+                  sub: "Thoroughly cleaned before every rental",
+                },
+                {
+                  icon: <FiTruck className="h-5 w-5" />,
+                  title: "All over Nepal Delivery",
+                  sub: "Delivered right to your doorstep",
+                },
+                {
+                  icon: <FiShield className="h-5 w-5" />,
+                  title: "Damage Protection",
+                  sub: "Fair deposit & wear tolerance",
+                },
               ].map((badge) => (
-                <div key={badge.title} className="group/badge flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white p-4 text-center shadow-sm transition-all duration-200 hover:border-forest-200 hover:shadow-md">
+                <div
+                  key={badge.title}
+                  className="group/badge flex flex-col items-center gap-2 rounded-xl border border-slate-100 bg-white p-4 text-center shadow-sm transition-all duration-200 hover:border-forest-200 hover:shadow-md"
+                >
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-forest-50 text-forest-600 transition-transform duration-200 group-hover/badge:scale-110">
                     {badge.icon}
                   </span>
-                  <h4 className="text-xs font-bold text-navy-900">{badge.title}</h4>
-                  <p className="text-[11px] leading-snug text-slate-400">{badge.sub}</p>
+                  <h4 className="text-xs font-bold text-navy-900">
+                    {badge.title}
+                  </h4>
+                  <p className="text-[11px] leading-snug text-slate-400">
+                    {badge.sub}
+                  </p>
                 </div>
               ))}
             </div>
@@ -362,12 +434,18 @@ export default function GearDetailPage() {
               </div>
 
               {canRent && canBuy && (
-                <div className="mt-5 flex rounded-xl bg-slate-100 p-1" role="group" aria-label="Choose rent or buy">
+                <div
+                  className="mt-5 flex rounded-xl bg-slate-100 p-1"
+                  role="group"
+                  aria-label="Choose rent or buy"
+                >
                   <button
                     type="button"
                     onClick={() => setPricingMode("rent")}
                     className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
-                      !showingSale ? "bg-forest-600 text-white shadow-sm" : "text-slate-600 hover:bg-white"
+                      !showingSale
+                        ? "bg-forest-600 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-white"
                     }`}
                   >
                     Rent
@@ -376,7 +454,9 @@ export default function GearDetailPage() {
                     type="button"
                     onClick={() => setPricingMode("sale")}
                     className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-bold transition ${
-                      showingSale ? "bg-navy-900 text-white shadow-sm" : "text-slate-600 hover:bg-white"
+                      showingSale
+                        ? "bg-navy-900 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-white"
                     }`}
                   >
                     Buy
@@ -471,7 +551,15 @@ export default function GearDetailPage() {
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-30"
                     aria-label="Decrease quantity"
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" d="M5 12h14" /></svg>
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path strokeLinecap="round" d="M5 12h14" />
+                    </svg>
                   </button>
                   <span className="font-display text-lg font-bold text-navy-900">
                     {quantity}
@@ -480,15 +568,24 @@ export default function GearDetailPage() {
                     type="button"
                     onClick={() =>
                       setQuantity((q) =>
-                        typeof gear.quantityTotal === "number" && gear.quantityTotal > 0
+                        typeof gear.quantityTotal === "number" &&
+                        gear.quantityTotal > 0
                           ? Math.min(gear.quantityTotal, q + 1)
-                          : q + 1
+                          : q + 1,
                       )
                     }
                     className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100"
                     aria-label="Increase quantity"
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" d="M12 5v14M5 12h14" /></svg>
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
+                      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                    </svg>
                   </button>
                 </div>
 
@@ -511,12 +608,14 @@ export default function GearDetailPage() {
                     <circle cx="20" cy="21" r="1" />
                     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                   </svg>
-                  {showingSale ? "Buy" : "Rent"} · Add to Cart · Rs. {(displayPrice * quantity).toLocaleString()}
+                  {showingSale ? "Buy" : "Rent"} · Add to Cart · Rs.{" "}
+                  {(displayPrice * quantity).toLocaleString()}
                 </button>
               </div>
 
               <p className="mt-3 text-center text-xs text-slate-400 sm:text-left">
-                Need custom rental dates or delivery? Add gear to your cart and proceed to booking.
+                Need custom rental dates or delivery? Add gear to your cart and
+                proceed to booking.
               </p>
             </div>
 
@@ -527,9 +626,14 @@ export default function GearDetailPage() {
                 { icon: <FiTruck className="h-5 w-5" />, title: "Delivery" },
                 { icon: <FiShield className="h-5 w-5" />, title: "Protected" },
               ].map((badge) => (
-                <div key={badge.title} className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-100 bg-white p-3 text-center shadow-sm">
+                <div
+                  key={badge.title}
+                  className="flex flex-col items-center gap-1.5 rounded-xl border border-slate-100 bg-white p-3 text-center shadow-sm"
+                >
                   <span className="text-forest-600">{badge.icon}</span>
-                  <span className="text-[10px] font-bold text-slate-600">{badge.title}</span>
+                  <span className="text-[10px] font-bold text-slate-600">
+                    {badge.title}
+                  </span>
                 </div>
               ))}
             </div>
@@ -538,9 +642,9 @@ export default function GearDetailPage() {
 
         {/* ── Rich Description Section ── */}
         {gear.longDescription && (
-          <RichContent 
-            title={`Product Description of ${gear.name}`} 
-            content={gear.longDescription} 
+          <RichContent
+            title={`Product Description of ${gear.name}`}
+            content={gear.longDescription}
           />
         )}
 
@@ -564,7 +668,19 @@ export default function GearDetailPage() {
                 className="hidden font-display text-sm font-semibold text-forest-700 transition-colors hover:text-forest-800 sm:inline-flex sm:items-center sm:gap-1"
               >
                 View catalogue
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
               </Link>
             </div>
 
@@ -583,5 +699,5 @@ export default function GearDetailPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
