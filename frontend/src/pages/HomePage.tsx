@@ -8,7 +8,6 @@ import SpotsSection from "@/components/home/SpotsSection"
 import InstaFeed from "@/components/home/InstaFeed"
 import ContactSection from "@/components/home/ContactSection"
 import { usePageMeta } from "@/hooks/usePageMeta"
-import StructuredData from "@/components/common/StructuredData"
 import { scrollToAnchor } from "@/lib/scroll"
 
 export default function HomePage() {
@@ -36,7 +35,6 @@ export default function HomePage() {
 
   return (
     <>
-      <StructuredData />
       <Hero />
       <GearGrid />
       <PackageBand />

@@ -26,6 +26,7 @@ const NAV: NavGroup[] = [
       { to: "/packages", label: "Packages", icon: "M21 8 12 3 3 8l9 5 9-5Zm0 0v8l-9 5-9-5V8" },
       { to: "/destinations", label: "Destinations", icon: "M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Zm0-8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" },
       { to: "/videos", label: "Videos", icon: "M15 10.5V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3.5l6 4v-11l-6 4Z" },
+      { to: "/blog", label: "Blog", icon: "M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5A2.5 2.5 0 0 0 17.5 16H6.5A2.5 2.5 0 0 0 4 18.5v-13ZM7 7h9M7 10h9M7 13h6" },
     ],
   },
   {

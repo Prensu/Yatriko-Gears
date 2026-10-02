@@ -11,6 +11,8 @@ import PackageListPage from "@/pages/packages/PackageListPage"
 import PackageFormPage from "@/pages/packages/PackageFormPage"
 import DestinationListPage from "@/pages/destinations/DestinationListPage"
 import DestinationFormPage from "@/pages/destinations/DestinationFormPage"
+import BlogListPage from "@/pages/blog/BlogListPage"
+import BlogFormPage from "@/pages/blog/BlogFormPage"
 import VideosPage from "@/pages/VideosPage"
 import BookingsPage from "@/pages/BookingsPage"
 import LeadsPage from "@/pages/LeadsPage"
@@ -45,6 +47,10 @@ export default function App() {
           <Route path="destinations" element={<DestinationListPage />} />
           <Route path="destinations/new" element={<DestinationFormPage />} />
           <Route path="destinations/:slug/edit" element={<DestinationFormPage />} />
+
+          <Route path="blog" element={<BlogListPage />} />
+          <Route path="blog/new" element={<BlogFormPage />} />
+          <Route path="blog/:slug/edit" element={<BlogFormPage />} />
 
           <Route path="videos" element={<VideosPage />} />
           <Route path="bookings" element={<BookingsPage />} />

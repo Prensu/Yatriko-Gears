@@ -4,10 +4,12 @@ import Footer from "./Footer";
 import WhatsAppFloat from "./WhatsAppFloat";
 import InstagramFloat from "./InstagramFloat";
 import ChatWidget from "@/components/chat/ChatWidget";
+import StructuredData from "@/components/common/StructuredData";
 
 export default function Layout() {
   return (
     <div className="flex min-h-screen flex-col">
+      <StructuredData />
       <Header />
       <main className="flex-1">
         <Outlet />

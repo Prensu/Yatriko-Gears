@@ -5,9 +5,10 @@ import type { Gear } from "@/types";
 import { resolveGearImage } from "@/lib/gearImages";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { SITE_URL, usePageMeta } from "@/hooks/usePageMeta";
 import GearCard from "@/components/gear/GearCard";
 import RichContent from "@/components/common/RichContent";
+import StructuredData from "@/components/common/StructuredData";
 import { FiTruck, FiShield } from "react-icons/fi";
 import { BsStars } from "react-icons/bs";
 
@@ -149,14 +150,19 @@ export default function GearDetailPage() {
   const { addItem } = useCart();
   const toast = useToast();
 
+  const metaImage = gear ? resolveGearImage(gear.images?.[0] || gear.image) : undefined;
+  const productDescription = gear
+    ? gear.description ||
+      gear.longDescription ||
+      `${gear.name} for camping and trekking in Nepal. Check rental availability, pricing and delivery from Yatriko Gears.`
+    : "Browse camping and trekking gear available for rent or sale from Yatriko Gears in Nepal.";
+
   usePageMeta({
-    title: gear
-      ? `${gear.name} — Yatriko Gears`
-      : "Gear Details — Yatriko Gears",
-    description:
-      gear?.description ||
-      "Rent high quality trekking and camping gear with delivery all over Nepal.",
+    title: gear ? `${gear.name} Camping Gear Rental` : "Camping Gear Details",
+    description: productDescription,
     path: `/gear/${slug ?? ""}`,
+    image: metaImage,
+    type: "product",
   });
 
   useEffect(() => {
@@ -241,6 +247,30 @@ export default function GearDetailPage() {
   const displayPrice = showingSale
     ? (gear.salePrice ?? gear.discountedPrice)
     : gear.discountedPrice;
+
+  const productStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: gear.name,
+    description: productDescription,
+    image: galleryImages,
+    url: `${SITE_URL}/gear/${gear.slug}`,
+    brand: {
+      "@type": "Brand",
+      name: "Yatriko Gears",
+    },
+    offers: {
+      "@type": "Offer",
+      price: displayPrice,
+      priceCurrency: "NPR",
+      availability:
+        gear.quantityTotal === 0
+          ? "https://schema.org/OutOfStock"
+          : "https://schema.org/InStock",
+      url: `${SITE_URL}/gear/${gear.slug}`,
+    },
+  };
+
   const priceOnRequest = displayPrice === 0;
   const hasRentalDiscount =
     !showingSale && gear.discountedPrice < gear.realPrice;
@@ -258,6 +288,7 @@ export default function GearDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand/40 via-white to-sand/20">
+      <StructuredData data={productStructuredData} />
       <div className="container-site py-6 sm:py-10">
         {/* Breadcrumbs */}
         <nav

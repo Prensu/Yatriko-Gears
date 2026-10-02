@@ -14,6 +14,8 @@ const GearPage = lazy(() => import("@/pages/GearPage"))
 const GearDetailPage = lazy(() => import("@/pages/GearDetailPage"))
 const PortfolioPage = lazy(() => import("@/pages/PortfolioPage"))
 const ContactPage = lazy(() => import("@/pages/ContactPage"))
+const BlogListPage = lazy(() => import("@/pages/BlogListPage"))
+const BlogPostPage = lazy(() => import("@/pages/BlogPostPage"))
 const LoginPage = lazy(() => import("@/pages/LoginPage"))
 const RegisterPage = lazy(() => import("@/pages/RegisterPage"))
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"))
@@ -60,6 +62,8 @@ export default function App() {
             <Route path="gear/:slug" element={<GearDetailPage />} />
             <Route path="portfolio" element={<PortfolioPage />} />
             <Route path="contact" element={<ContactPage />} />
+            <Route path="blog" element={<BlogListPage />} />
+            <Route path="blog/:slug" element={<BlogPostPage />} />
 
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />

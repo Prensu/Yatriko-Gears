@@ -56,6 +56,21 @@ export const destinationSchema = z.object({
 })
 export type Destination = z.infer<typeof destinationSchema>
 
+export const blogSchema = z.object({
+  _id: z.string(),
+  title: z.string(),
+  slug: z.string(),
+  excerpt: z.string(),
+  coverImage: z.string().optional().default(""),
+  content: z.string(),
+  author: z.string().optional().default("Yatriko Gears"),
+  publishedAt: z.string().nullish().transform((value) => value ?? ""),
+  metaTitle: z.string().nullish().transform((value) => value ?? ""),
+  metaDescription: z.string().nullish().transform((value) => value ?? ""),
+  createdAt: z.string().optional(),
+})
+export type Blog = z.infer<typeof blogSchema>
+
 export const videoSchema = z.object({
   _id: z.string(),
   title: z.string(),

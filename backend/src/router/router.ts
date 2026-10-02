@@ -7,6 +7,7 @@ import gearRouter from "../modules/gear/GearRoute"
 import packageRouter from "../modules/package/PackageRoute"
 import destinationRouter from "../modules/destination/DestinationRoute"
 import videoRouter from "../modules/video/VideoRoute"
+import blogRouter from "../modules/blog/BlogRoute"
 import contactRouter from "../modules/contact/ContactRoute"
 import subscriberRouter from "../modules/subscriber/SubscriberRoute"
 import bookingRouter from "../modules/booking/BookingRoute"
@@ -49,6 +50,7 @@ router.use("/gear", gearRouter)
 router.use("/package", packageRouter)
 router.use("/destination", destinationRouter)
 router.use("/video", videoRouter)
+router.use("/blog", blogRouter)
 router.use("/booking", bookingRouter)
 
 router.use("/contact", formLimiter, contactRouter)

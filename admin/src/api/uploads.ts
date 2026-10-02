@@ -8,7 +8,7 @@ import {
   type UploadSignature,
 } from "@/types"
 
-export type UploadFolder = "gear" | "category" | "destination" | "user" | "settings"
+export type UploadFolder = "gear" | "category" | "destination" | "blog" | "user" | "settings"
 
 /** Cloudinary's own error body: { error: { message } }. */
 const cloudinaryErrorSchema = z.object({

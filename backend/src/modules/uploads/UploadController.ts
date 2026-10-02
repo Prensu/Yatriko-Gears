@@ -12,6 +12,7 @@ export const IMAGE_UPLOAD_FOLDERS: Record<string, string> = {
   user: "yatriko/images/users",
   users: "yatriko/images/users",
   settings: "yatriko/images/settings",
+  blog: "yatriko/images/blog",
 }
 
 class UploadController {
@@ -29,7 +30,7 @@ class UploadController {
       if (!folderParam || !(folderParam in IMAGE_UPLOAD_FOLDERS)) {
         throw {
           code: 400,
-          message: "Invalid or missing upload folder. Allowed: gear, category, destination, user, settings",
+          message: "Invalid or missing upload folder. Allowed: gear, category, destination, blog, user, settings",
         }
       }
 

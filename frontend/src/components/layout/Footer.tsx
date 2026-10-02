@@ -143,6 +143,7 @@ export default function Footer() {
             </li>
             <li>
               <FooterLink to="/portfolio">Portfolio</FooterLink>
+              <FooterLink to="/blog">Blog</FooterLink>
             </li>
             <li>
               <FooterLink to="/contact">Contact Us</FooterLink>

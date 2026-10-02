@@ -186,6 +186,40 @@ export const emptyDestinationForm: DestinationFormState = {
 }
 
 /* ------------------------------------------------------------------ */
+/* Blog — POST/PUT /blog (JSON, after the direct Cloudinary upload)      */
+
+export const blogFormSchema = z.object({
+  title: z.string().trim().min(2, "Title must have atleast 2 character").max(200, "Title is too long"),
+  excerpt: z.string().trim().min(1, "Excerpt is required").max(300, "Excerpt is too long"),
+  content: z.string().min(1, "Content is required").max(100000, "Content is too long"),
+  author: z.string().trim().max(120, "Author is too long"),
+  status: statusSchema,
+  metaTitle: z.string().max(200, "Meta title is too long"),
+  metaDescription: z.string().max(300, "Meta description is too long"),
+})
+export type BlogFormValues = z.infer<typeof blogFormSchema>
+
+export type BlogFormState = {
+  title: string
+  excerpt: string
+  content: string
+  author: string
+  status: Status
+  metaTitle: string
+  metaDescription: string
+}
+
+export const emptyBlogForm: BlogFormState = {
+  title: "",
+  excerpt: "",
+  content: "",
+  author: "Yatriko Gears",
+  status: "active",
+  metaTitle: "",
+  metaDescription: "",
+}
+
+/* ------------------------------------------------------------------ */
 /* Video — POST /video (JSON, after the direct Cloudinary upload)       */
 /* ------------------------------------------------------------------ */
 
