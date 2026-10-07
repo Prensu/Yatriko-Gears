@@ -21,7 +21,11 @@ export default function GearGrid() {
         />
         <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {gear.map((g) => (
-            <GearCard key={g._id} gear={g} />
+            <GearCard
+              key={g._id}
+              gear={g}
+              mode={g.availableFor.includes("rent") ? "rent" : "sale"}
+            />
           ))}
         </div>
         <div className="mt-10 text-center">

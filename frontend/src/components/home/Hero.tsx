@@ -15,7 +15,9 @@ export default function Hero() {
             Escape. Explore. Experience.
           </h1>
           <p className="mt-4 max-w-xl text-lg text-white/85">
-            Quality camping gear on rent & sale — delivery all over Nepal. Gear up. Head out. Make memories.
+            Quality Camping Gear for Rent & Sale - Sales delivered across Nepal
+            | Rentals available for store pickup- Gear up. Head out. Make
+            memories.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <Link to="/gear" className="btn-primary">
@@ -38,7 +40,7 @@ export default function Hero() {
             ["🚚", "Delivery all over Nepal"],
             ["💬", "DM to book instantly"],
             ["🛡️", "Quality guaranteed"],
-            ["💰", "Best price guarantee"]
+            ["💰", "Best price guarantee"],
           ].map(([icon, label]) => (
             <div
               key={label}

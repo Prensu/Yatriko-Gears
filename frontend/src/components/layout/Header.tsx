@@ -1,18 +1,19 @@
-import { useState } from "react"
-import { Link, NavLink, useNavigate } from "react-router-dom"
-import logoImg from "@/assets/logo.png"
-import { useAuth } from "@/context/AuthContext"
-import { useCart } from "@/context/CartContext"
-import AccountMenu, { Avatar } from "@/components/layout/AccountMenu"
-import { scrollToTop } from "@/lib/scroll"
+import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import logoImg from "@/assets/logo.png";
+import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
+import AccountMenu, { Avatar } from "@/components/layout/AccountMenu";
+import { scrollToTop } from "@/lib/scroll";
 
 const navItems = [
   { to: "/", label: "Home" },
-  { to: "/gear", label: "Gear" },
+  { to: "/gear", label: "Shop Now" },
+  { to: "/rental-list", label: "Rental List" },
   { to: "/portfolio", label: "Portfolio" },
   { to: "/blog", label: "Blog" },
   { to: "/contact", label: "Contact" },
-]
+];
 
 function CartIcon({ count }: { count: number }) {
   return (
@@ -40,25 +41,33 @@ function CartIcon({ count }: { count: number }) {
         </span>
       )}
     </Link>
-  )
+  );
 }
 
 export default function Header() {
-  const [open, setOpen] = useState(false)
-  const { user, status, signOut } = useAuth()
-  const { itemCount } = useCart()
-  const navigate = useNavigate()
+  const [open, setOpen] = useState(false);
+  const { user, status, signOut } = useAuth();
+  const { itemCount } = useCart();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    await signOut()
-    setOpen(false)
-    navigate("/")
-  }
+    await signOut();
+    setOpen(false);
+    navigate("/");
+  };
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur">
       <div className="container-site flex h-20 items-center justify-between">
-        <Link to="/" onClick={scrollToTop} className="flex items-center gap-3 font-display text-xl font-extrabold text-forest-700">
-          <img src={logoImg} alt="Yatriko Gears Logo" className="h-20 w-auto object-contain sm:h-28 md:h-16" />
+        <Link
+          to="/"
+          onClick={scrollToTop}
+          className="flex items-center gap-3 font-display text-xl font-extrabold text-forest-700"
+        >
+          <img
+            src={logoImg}
+            alt="Yatriko Gears Logo"
+            className="h-20 w-auto object-contain sm:h-28 md:h-16"
+          />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -90,7 +99,7 @@ export default function Header() {
             </Link>
           )}
 
-          <Link to="/gear" className="btn-primary !px-5 !py-2 text-sm">
+          <Link to="/rental-list" className="btn-primary !px-5 !py-2 text-sm">
             Rent Gear
           </Link>
         </nav>
@@ -116,8 +125,8 @@ export default function Header() {
               key={item.to}
               to={item.to}
               onClick={() => {
-                scrollToTop()
-                setOpen(false)
+                scrollToTop();
+                setOpen(false);
               }}
               className="block py-3 font-display font-semibold text-navy-800"
             >
@@ -131,8 +140,12 @@ export default function Header() {
                 <div className="mb-1 flex items-center gap-3 rounded-2xl bg-sand px-3 py-3">
                   <Avatar size="h-10 w-10" />
                   <div className="min-w-0">
-                    <p className="truncate font-display font-bold text-navy-900">{user?.name}</p>
-                    <p className="truncate text-xs text-slate-500">{user?.email}</p>
+                    <p className="truncate font-display font-bold text-navy-900">
+                      {user?.name}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {user?.email}
+                    </p>
                   </div>
                 </div>
                 <NavLink
@@ -172,5 +185,5 @@ export default function Header() {
         </nav>
       )}
     </header>
-  )
+  );
 }

@@ -742,9 +742,6 @@ export default function GearDetailPage() {
                 <h2 className="mt-1 font-display text-2xl font-bold text-navy-900 sm:text-3xl">
                   You Might Also Need
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Frequently rented together for camping & treks.
-                </p>
               </div>
               <Link
                 to="/gear"
@@ -769,7 +766,11 @@ export default function GearDetailPage() {
 
             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {relatedGear.map((item) => (
-                <GearCard key={item._id} gear={item} />
+                <GearCard
+                  key={item._id}
+                  gear={item}
+                  mode={item.availableFor.includes("rent") ? "rent" : "sale"}
+                />
               ))}
             </div>
 

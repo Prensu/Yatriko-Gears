@@ -6,7 +6,7 @@ import { useToast } from "@/context/ToastContext"
 
 export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "rent" | "sale" }) {
   const imageSrc = resolveGearImage(gear.image)
-  const showingSale = (mode === "sale" || !gear.availableFor.includes("rent")) && gear.availableFor.includes("sale")
+  const showingSale = mode === "sale" && gear.availableFor.includes("sale")
   const displayPrice = showingSale ? (gear.salePrice ?? gear.discountedPrice) : gear.discountedPrice
   const priceOnRequest = displayPrice === 0
   const hasRentalDiscount = !showingSale && gear.discountedPrice < gear.realPrice

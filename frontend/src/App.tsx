@@ -59,6 +59,7 @@ export default function App() {
           >
             <Route index element={<HomePage />} />
             <Route path="gear" element={<GearPage />} />
+            <Route path="rental-list" element={<GearPage rentalOnly />} />
             <Route path="gear/:slug" element={<GearDetailPage />} />
             <Route path="portfolio" element={<PortfolioPage />} />
             <Route path="contact" element={<ContactPage />} />
