@@ -43,6 +43,16 @@ export const GearCreateDTO = z.object({
       .optional()
       .default([]),
   ),
+  videos: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        publicId: z.string().min(1),
+      }),
+    )
+    .max(5, "Maximum 5 videos allowed")
+    .optional()
+    .default([]),
 })
 
 export const GearUpdateDTO = GearCreateDTO.partial()

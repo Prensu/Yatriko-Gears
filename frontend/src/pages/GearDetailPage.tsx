@@ -16,8 +16,14 @@ import { BsStars } from "react-icons/bs";
 /* Image Gallery (inline)                                               */
 /* ------------------------------------------------------------------ */
 
-function ImageGallery({ images, name }: { images: string[]; name: string }) {
+type GalleryMedia = { type: "image" | "video"; src: string }
+
+function ImageGallery({ images, videos, name }: { images: string[]; videos: string[]; name: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const media: GalleryMedia[] = [
+    ...images.map((src) => ({ type: "image" as const, src })),
+    ...videos.map((src) => ({ type: "video" as const, src })),
+  ];
 
   // ── Touch / swipe state ──
   const touchStartX = useRef(0);
@@ -26,9 +32,9 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
 
   const goTo = useCallback(
     (index: number) => {
-      setActiveIndex(Math.max(0, Math.min(index, images.length - 1)));
+      setActiveIndex(Math.max(0, Math.min(index, media.length - 1)));
     },
-    [images.length],
+    [media.length],
   );
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
@@ -53,8 +59,8 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
     }
   }, [activeIndex, goTo]);
 
-  const hasMultiple = images.length > 1;
-  const activeSrc = images[activeIndex] ?? "";
+  const hasMultiple = media.length > 1;
+  const activeMedia = media[activeIndex];
 
   return (
     // sm+: thumbnails sit to the LEFT of the main image (Alibaba-style).
@@ -63,9 +69,9 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
       {/* ── Thumbnail column (desktop/tablet only, hidden when only 1 image) ── */}
       {hasMultiple && (
         <div className="hidden sm:flex sm:max-h-[420px] lg:max-h-[480px] sm:flex-col sm:gap-2 sm:overflow-y-auto sm:overflow-x-visible sm:pr-1 scrollbar-thin">
-          {images.map((src, idx) => (
+          {media.map((item, idx) => (
             <button
-              key={`${src}-${idx}`}
+              key={`${item.src}-${idx}`}
               type="button"
               onClick={() => goTo(idx)}
               className={`flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-200 ${
@@ -74,12 +80,19 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
                   : "border-transparent opacity-70 hover:opacity-100 hover:border-slate-300"
               }`}
             >
-              <img
-                src={src}
-                alt={`${name} thumbnail ${idx + 1}`}
-                className="h-16 w-16 object-cover sm:h-20 sm:w-20"
-                loading="lazy"
-              />
+              {item.type === "video" ? (
+                <div className="relative h-16 w-16 bg-navy-900 sm:h-20 sm:w-20">
+                  <video src={item.src} muted preload="metadata" className="h-full w-full object-cover" />
+                  <span className="absolute inset-0 flex items-center justify-center text-xl text-white">▶</span>
+                </div>
+              ) : (
+                <img
+                  src={item.src}
+                  alt={`${name} thumbnail ${idx + 1}`}
+                  className="h-16 w-16 object-cover sm:h-20 sm:w-20"
+                  loading="lazy"
+                />
+              )}
             </button>
           ))}
         </div>
@@ -93,10 +106,19 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
         onTouchEnd={hasMultiple ? onTouchEnd : undefined}
       >
         <div className="relative flex aspect-[4/3] lg:aspect-[5/4] items-center justify-center p-4 sm:p-8">
-          {activeSrc ? (
+          {activeMedia?.type === "video" ? (
+            <video
+              key={activeMedia.src}
+              src={activeMedia.src}
+              controls
+              playsInline
+              preload="metadata"
+              className="h-full w-full rounded-lg object-contain drop-shadow-lg"
+            />
+          ) : activeMedia?.src ? (
             <img
-              key={activeSrc}
-              src={activeSrc}
+              key={activeMedia.src}
+              src={activeMedia.src}
               alt={`${name} — photo ${activeIndex + 1}`}
               className="h-full w-full rounded-lg object-contain drop-shadow-lg transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             />
@@ -110,7 +132,7 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
         {/* Mobile dot indicators — unchanged */}
         {hasMultiple && (
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 sm:hidden">
-            {images.map((_, idx) => (
+            {media.map((_, idx) => (
               <button
                 key={idx}
                 type="button"
@@ -282,7 +304,8 @@ export default function GearDetailPage() {
         : null;
 
   const handleAddToCart = () => {
-    addItem(gear._id, quantity, showingSale ? "sale" : "rent");
+    if (!showingSale) return;
+    addItem(gear._id, quantity, "sale");
     toast.success(`${quantity}x ${gear.name} added to your cart`);
   };
 
@@ -359,6 +382,7 @@ export default function GearDetailPage() {
               <ImageGallery
                 key={gear._id}
                 images={galleryImages}
+                videos={gear.videos.map((video) => video.url)}
                 name={gear.name}
               />
 
@@ -421,6 +445,7 @@ export default function GearDetailPage() {
                 </div>
               ))}
             </div>
+
           </div>
 
           {/* ─── Right: Product Info ─── */}
@@ -495,22 +520,12 @@ export default function GearDetailPage() {
                 </div>
               )}
 
-              {typeof gear.quantityTotal === "number" && (
+              {gear.quantityTotal === 0 && (
                 <div className="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3">
-                  {gear.quantityTotal > 0 ? (
-                    <span className="inline-flex items-center gap-2 text-sm font-medium text-forest-700">
-                      <span className="relative flex h-2.5 w-2.5">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-forest-400 opacity-75" />
-                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-forest-500" />
-                      </span>
-                      In Stock — {gear.quantityTotal} available
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-2 text-sm font-medium text-amber-600">
-                      <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                      Currently booked out
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-2 text-sm font-medium text-amber-600">
+                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                    Out of stock
+                  </span>
                 </div>
               )}
             </div>
@@ -572,82 +587,98 @@ export default function GearDetailPage() {
 
             {/* Quantity + Add to Cart */}
             <div className="mt-8 rounded-2xl border border-forest-100 bg-gradient-to-r from-forest-50/50 to-white p-5 shadow-sm">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                {/* Quantity Selector */}
-                <div className="flex h-12 items-center justify-between rounded-xl border border-slate-200 bg-white px-1.5 shadow-sm sm:w-36">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    disabled={quantity <= 1}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-30"
-                    aria-label="Decrease quantity"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
+              {showingSale ? (
+                <>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    {/* Quantity Selector */}
+                    <div className="flex h-12 items-center justify-between rounded-xl border border-slate-200 bg-white px-1.5 shadow-sm sm:w-36">
+                      <button
+                        type="button"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        disabled={quantity <= 1}
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 disabled:opacity-30"
+                        aria-label="Decrease quantity"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                        >
+                          <path strokeLinecap="round" d="M5 12h14" />
+                        </svg>
+                      </button>
+                      <span className="font-display text-lg font-bold text-navy-900">
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setQuantity((q) =>
+                            typeof gear.quantityTotal === "number" &&
+                            gear.quantityTotal > 0
+                              ? Math.min(gear.quantityTotal, q + 1)
+                              : q + 1,
+                          )
+                        }
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100"
+                        aria-label="Increase quantity"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                        >
+                          <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* CTA Button */}
+                    <button
+                      type="button"
+                      onClick={handleAddToCart}
+                      className="group/cta relative flex h-12 flex-1 items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-forest-600 font-display text-sm font-bold text-white shadow-lg shadow-forest-600/25 transition-all duration-200 hover:bg-forest-700 hover:shadow-xl hover:shadow-forest-700/30 active:scale-[0.98]"
                     >
-                      <path strokeLinecap="round" d="M5 12h14" />
-                    </svg>
-                  </button>
-                  <span className="font-display text-lg font-bold text-navy-900">
-                    {quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setQuantity((q) =>
-                        typeof gear.quantityTotal === "number" &&
-                        gear.quantityTotal > 0
-                          ? Math.min(gear.quantityTotal, q + 1)
-                          : q + 1,
-                      )
-                    }
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100"
-                    aria-label="Increase quantity"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                    >
-                      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                    </svg>
-                  </button>
+                      <svg
+                        className="h-5 w-5 transition-transform duration-200 group-hover/cta:-translate-y-0.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="9" cy="21" r="1" />
+                        <circle cx="20" cy="21" r="1" />
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                      </svg>
+                      Buy · Add to Cart · Rs. {(displayPrice * quantity).toLocaleString()}
+                    </button>
+                  </div>
+
+                  <p className="mt-3 text-center text-xs text-slate-400 sm:text-left">
+                    Add this gear to your cart and proceed to checkout.
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="font-display text-lg font-bold text-navy-900">
+                      Rental availability is confirmed by our team
+                    </h2>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                      Message us with your dates and we'll confirm this gear for you.
+                    </p>
+                  </div>
+                  <Link to="/contact" className="btn-primary inline-flex w-full justify-center sm:w-auto">
+                    Contact us about this gear
+                  </Link>
                 </div>
-
-                {/* CTA Button */}
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="group/cta relative flex h-12 flex-1 items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-forest-600 font-display text-sm font-bold text-white shadow-lg shadow-forest-600/25 transition-all duration-200 hover:bg-forest-700 hover:shadow-xl hover:shadow-forest-700/30 active:scale-[0.98]"
-                >
-                  <svg
-                    className="h-5 w-5 transition-transform duration-200 group-hover/cta:-translate-y-0.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="9" cy="21" r="1" />
-                    <circle cx="20" cy="21" r="1" />
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                  </svg>
-                  {showingSale ? "Buy" : "Rent"} · Add to Cart · Rs.{" "}
-                  {(displayPrice * quantity).toLocaleString()}
-                </button>
-              </div>
-
-              <p className="mt-3 text-center text-xs text-slate-400 sm:text-left">
-                Need custom rental dates or delivery? Add gear to your cart and
-                proceed to booking.
-              </p>
+              )}
             </div>
 
             {/* Mobile Trust Badges */}

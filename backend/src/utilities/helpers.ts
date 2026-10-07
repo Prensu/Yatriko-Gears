@@ -46,6 +46,20 @@ export async function destroyCloudinaryImage(publicId?: string): Promise<void> {
   }
 }
 
+/** Destroy a gear video asset on Cloudinary (non-critical). */
+export async function destroyCloudinaryVideo(publicId?: string): Promise<void> {
+  if (!publicId || !isSafeCloudinaryPublicId(publicId)) return
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: "video" })
+  } catch {
+    log.error(`Cloudinary video asset could not be destroyed: ${publicId}`)
+  }
+}
+
+function isSafeCloudinaryPublicId(publicId: string): boolean {
+  return publicId.startsWith("yatriko/") && !publicId.includes("..") && !publicId.startsWith("/") && /^[A-Za-z0-9_\-/.]+$/.test(publicId)
+}
+
 /** Slug helper — lower, strict, trimmed. */
 export function makeSlug(name: string): string {
   return slugify(name, { lower: true, strict: true, trim: true })

@@ -103,6 +103,7 @@ export const gearSchema = z.object({
   images: z.array(z.string()).optional().default([]),
   /** Full image objects with publicId — used by the CMS for reorder + delete. */
   imagesRaw: z.array(z.object({ url: z.string(), publicId: z.string() })).optional().default([]),
+  videos: z.array(z.object({ url: z.string().url(), publicId: z.string() })).optional().default([]),
   category: categoryRefSchema,
   quantityTotal: z.number().default(1),
   isNew: z.boolean().default(false),

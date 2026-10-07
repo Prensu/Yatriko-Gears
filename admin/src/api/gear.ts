@@ -20,6 +20,7 @@ export type GearInput = GearFormValues & {
   imageUrl?: string
   imagePublicId?: string
   imagesData?: Array<{ imageUrl: string; imagePublicId: string }>
+  videos?: Array<{ url: string; publicId: string }>
 }
 
 /** POST /gear (JSON). */

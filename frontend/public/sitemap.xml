@@ -31,7 +31,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://yatrikogears.com/gear/camping-lantern-pro</loc>
+    <loc>https://yatrikogears.com/gear/butane-gas</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -46,7 +46,17 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://yatrikogears.com/gear/floding-camping-chair-with-armrest-and-cup-holder</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://yatrikogears.com/gear/foldable-chair</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://yatrikogears.com/gear/foldable-small-chair</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -66,22 +76,32 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://yatrikogears.com/gear/head-light-1791341239006</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://yatrikogears.com/gear/led-light</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://yatrikogears.com/gear/mattress</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://yatrikogears.com/gear/max-gas</loc>
+    <loc>https://yatrikogears.com/gear/max-gas-1791341611910</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://yatrikogears.com/gear/portable-super-stove-with-gas</loc>
+    <loc>https://yatrikogears.com/gear/multipurpose-stove</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://yatrikogears.com/gear/powerbank</loc>
+    <loc>https://yatrikogears.com/gear/portable-super-stove</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -97,16 +117,6 @@
   </url>
   <url>
     <loc>https://yatrikogears.com/gear/tent-4-person</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://yatrikogears.com/gear/tent-light</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://yatrikogears.com/gear/trekking-bag</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>

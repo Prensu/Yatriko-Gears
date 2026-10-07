@@ -25,6 +25,11 @@ const GearSchema = new mongoose.Schema(
       type: [{ url: { type: String, required: true }, publicId: { type: String, required: true } }],
       default: [],
     },
+    /** Product videos uploaded directly to Cloudinary. */
+    videos: {
+      type: [{ url: { type: String, required: true }, publicId: { type: String, required: true } }],
+      default: [],
+    },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", default: null },
     /** Units the shop physically owns — the ceiling for overlapping rentals. */
     quantityTotal: { type: Number, default: 1, min: 0 },

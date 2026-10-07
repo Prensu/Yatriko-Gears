@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type DragEvent } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { createGear, fetchGearBySlug, updateGear } from "@/api/gear"
 import { uploadImage } from "@/api/uploads"
+import { fetchUploadSignature, uploadToCloudinary } from "@/api/video"
 import { fetchCategoryOptions } from "@/api/category"
 import { ApiRequestError, errorMessage, isCanceled } from "@/lib/api"
 import { usePageMeta } from "@/hooks/usePageMeta"
@@ -26,6 +27,7 @@ type ExistingImage = { url: string; publicId: string }
 
 const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "svg", "webp"]
 const MAX_SIZE_MB = 3
+const MAX_VIDEO_MB = 100
 
 function MultiImageManager({
   existingImages,
@@ -251,6 +253,73 @@ function MultiImageManager({
   )
 }
 
+function GearVideoManager({
+  existingVideos,
+  onExistingChange,
+  newFiles,
+  onNewFilesChange,
+  onReject,
+}: {
+  existingVideos: Array<{ url: string; publicId: string }>
+  onExistingChange: (videos: Array<{ url: string; publicId: string }>) => void
+  newFiles: File[]
+  onNewFilesChange: (files: File[]) => void
+  onReject: (message: string) => void
+}) {
+  const totalCount = existingVideos.length + newFiles.length
+
+  const addFiles = (fileList: FileList | null) => {
+    if (!fileList) return
+    const accepted: File[] = []
+    for (const file of Array.from(fileList)) {
+      if (totalCount + accepted.length >= 5) {
+        onReject("Maximum 5 videos allowed")
+        break
+      }
+      if (!file.type.startsWith("video/")) {
+        onReject(`${file.name} is not a video file`)
+        continue
+      }
+      if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+        onReject(`${file.name} is larger than ${MAX_VIDEO_MB} MB`)
+        continue
+      }
+      accepted.push(file)
+    }
+    if (accepted.length > 0) onNewFilesChange([...newFiles, ...accepted])
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-ink-500">MP4, MOV or WebM · up to {MAX_VIDEO_MB} MB each.</p>
+      <input
+        type="file"
+        accept="video/*"
+        multiple
+        onChange={(event) => addFiles(event.target.files)}
+        className="block w-full text-sm text-ink-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+      />
+      {existingVideos.map((video, index) => (
+        <div key={`${video.publicId}-${index}`} className="flex items-center gap-3 rounded-lg border border-ink-200 bg-ink-50 p-2">
+          <video src={video.url} controls preload="metadata" className="h-16 w-24 rounded object-cover" />
+          <span className="min-w-0 flex-1 truncate text-xs text-ink-600">Saved video {index + 1}</span>
+          <button type="button" onClick={() => onExistingChange(existingVideos.filter((_, i) => i !== index))} className="text-xs font-semibold text-red-600 hover:text-red-700">
+            Remove
+          </button>
+        </div>
+      ))}
+      {newFiles.map((file, index) => (
+        <div key={`${file.name}-${file.lastModified}`} className="flex items-center gap-3 rounded-lg border border-brand-200 bg-brand-50 p-2">
+          <span className="min-w-0 flex-1 truncate text-xs text-ink-700">{file.name}</span>
+          <button type="button" onClick={() => onNewFilesChange(newFiles.filter((_, i) => i !== index))} className="text-xs font-semibold text-red-600 hover:text-red-700">
+            Remove
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /* ------------------------------------------------------------------ */
 /* Page                                                                 */
 /* ------------------------------------------------------------------ */
@@ -265,6 +334,7 @@ export default function GearFormPage() {
 
   const [form, setForm] = useState<GearFormState>(emptyGearForm)
   const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newVideoFiles, setNewVideoFiles] = useState<File[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(isEdit)
@@ -317,8 +387,10 @@ export default function GearFormPage() {
               : gear.image
                 ? [{ url: gear.image, publicId: "" }]
                 : [],
+          existingVideos: gear.videos ?? [],
         })
         setNewFiles([])
+        setNewVideoFiles([])
         setLoading(false)
       })
       .catch((error: unknown) => {
@@ -350,6 +422,13 @@ export default function GearFormPage() {
         uploadedNew.push(uploaded)
       }
 
+      const uploadedVideos: Array<{ url: string; publicId: string }> = []
+      for (const file of newVideoFiles) {
+        const signature = await fetchUploadSignature()
+        const uploaded = await uploadToCloudinary(signature, file)
+        uploadedVideos.push({ url: uploaded.secure_url, publicId: uploaded.public_id })
+      }
+
       // Build the combined imagesData array: existing (retained) + new uploads.
       const imagesData = [
         ...form.existingImages.map((img) => ({
@@ -362,6 +441,10 @@ export default function GearFormPage() {
       const payload = {
         ...parsed.data,
         imagesData: imagesData.length > 0 ? imagesData : undefined,
+        videos: [
+          ...form.existingVideos,
+          ...uploadedVideos,
+        ],
       }
 
       if (slug) await updateGear(slug, payload)
@@ -617,6 +700,17 @@ export default function GearFormPage() {
               onExistingChange={(images) => set("existingImages", images)}
               newFiles={newFiles}
               onNewFilesChange={setNewFiles}
+              onReject={(message) => toast.error(message)}
+            />
+          </section>
+
+          <section className="card space-y-4 p-5">
+            <h2 className="text-sm font-semibold text-ink-900">Gear videos</h2>
+            <GearVideoManager
+              existingVideos={form.existingVideos}
+              onExistingChange={(videos) => set("existingVideos", videos)}
+              newFiles={newVideoFiles}
+              onNewFilesChange={setNewVideoFiles}
               onReject={(message) => toast.error(message)}
             />
           </section>

@@ -1,10 +1,10 @@
 import type { NextFunction, Response } from "express"
 import GearModel from "./GearModel"
 import CategoryModel from "../category/CategoryModel"
-import { destroyCloudinaryImage, getPagination, makeSlug, mapCloudinaryImage } from "../../utilities/helpers"
+import { destroyCloudinaryImage, destroyCloudinaryVideo, getPagination, makeSlug, mapCloudinaryImage } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
 import { escapeRegex, getSearchTerm, getStringParam } from "../../utilities/query"
-import { isOwnCloudinaryUrl, isAllowedPublicId } from "../../utilities/cloudinaryGuard"
+import { isOwnCloudinaryUrl, isOwnCloudinaryVideoUrl, isAllowedPublicId } from "../../utilities/cloudinaryGuard"
 
 /**
  * Serialize a gear document into the shape the frontend's gearSchema expects:
@@ -81,6 +81,13 @@ class GearController {
       delete data.imageUrl
       delete data.imagePublicId
       delete data.imagesData
+
+      if (Array.isArray(data.videos)) {
+        if (data.videos.some((video: { url?: string; publicId?: string }) =>
+          !isOwnCloudinaryVideoUrl(video.url) || !isAllowedPublicId(video.publicId, "yatriko/videos/"))) {
+          throw { code: 400, message: "Invalid gear video" }
+        }
+      }
 
       // multipart forms send "null" as a literal string — normalize FKs
       if (!data.category || data.category === "null") data.category = null
@@ -189,6 +196,20 @@ class GearController {
       delete data.imagePublicId
       delete data.imagesData
 
+      if (Array.isArray(data.videos)) {
+        const newVideos = data.videos as Array<{ url: string; publicId: string }>
+        if (newVideos.some((video) =>
+          !isOwnCloudinaryVideoUrl(video.url) || !isAllowedPublicId(video.publicId, "yatriko/videos/"))) {
+          throw { code: 400, message: "Invalid gear video" }
+        }
+        const newPublicIds = new Set(newVideos.map((video) => video.publicId))
+        for (const oldVideo of existing.videos ?? []) {
+          if (oldVideo.publicId && !newPublicIds.has(oldVideo.publicId)) {
+            await destroyCloudinaryVideo(oldVideo.publicId)
+          }
+        }
+      }
+
       if (data.category === "null") data.category = null
 
       if ("isNew" in data) {
@@ -222,6 +243,9 @@ class GearController {
       // Also clean up the legacy image field if present and not already covered.
       if (gear.image?.path) {
         await destroyCloudinaryImage(gear.image.path)
+      }
+      for (const video of gear.videos ?? []) {
+        await destroyCloudinaryVideo(video.publicId)
       }
 
       res.json({ data: null, message: "Gear deleted successfully", meta: null })

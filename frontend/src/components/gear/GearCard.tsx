@@ -66,22 +66,34 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
             </>
           )}
         </div>
+        {gear.quantityTotal === 0 && (
+          <p className="mt-2 text-xs font-semibold text-amber-600">Out of stock</p>
+        )}
         {gear.colors.length > 0 && (
           <p className="mt-2 text-[11px] text-slate-400">Colors: {gear.colors.join(" · ")}</p>
         )}
-        <button
-          type="button"
-          onClick={handleAdd}
-          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full bg-forest-600 px-4 py-2
-                     font-display text-sm font-semibold text-white transition hover:bg-forest-700 active:scale-[0.97]"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-          </svg>
-          Add to Cart
-        </button>
+        {showingSale ? (
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full bg-forest-600 px-4 py-2
+                       font-display text-sm font-semibold text-white transition hover:bg-forest-700 active:scale-[0.97]"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            Add to Cart
+          </button>
+        ) : (
+          <Link
+            to={`/gear/${gear.slug}`}
+            className="btn-secondary mt-4 flex w-full items-center justify-center"
+          >
+            View details
+          </Link>
+        )}
       </div>
     </article>
   )

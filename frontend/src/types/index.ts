@@ -26,6 +26,7 @@ export const gearSchema = z.object({
   specs: z.record(z.string()).nullish().transform((v) => v ?? {}),
   image: z.string().nullish().transform((v) => v ?? ""),
   images: z.array(z.string()).nullish().transform((v) => v ?? []),
+  videos: z.array(z.object({ url: z.string().url(), publicId: z.string() })).nullish().transform((v) => v ?? []),
   // Uncategorised gear comes back as null, not undefined — .optional() alone
   // would reject it and take the whole list down with it.
   category: z.union([z.string(), gearCategorySchema]).nullish(),

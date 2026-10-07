@@ -390,7 +390,7 @@ export default function CartPage() {
                           {item.mode === "sale" ? (
                             overStock ? (
                               <p className="mt-1 text-xs font-semibold text-red-600">
-                                Only {gear.quantityTotal} available to buy
+                                This item is no longer available in the requested quantity.
                               </p>
                             ) : null
                           ) : checkingStock ? (
@@ -405,17 +405,10 @@ export default function CartPage() {
                               </p>
                             ) : overStock ? (
                               <p className="mt-1 text-xs font-semibold text-red-600">
-                                Only {avail.quantityAvailable} available for
-                                these dates
+                                The requested quantity is unavailable for
+                                these dates.
                               </p>
-                            ) : (
-                              <p className="mt-1 text-xs text-slate-500">
-                                <span className="font-semibold text-forest-700">
-                                  {avail.quantityAvailable} available
-                                </span>{" "}
-                                for these dates
-                              </p>
-                            )
+                            ) : null
                           ) : null}
                         </div>
                       </li>
@@ -633,8 +626,8 @@ export default function CartPage() {
                 {submitting
                   ? "Please wait…"
                   : hasRental
-                    ? "Confirm Booking — Cash on Delivery"
-                    : "Confirm Order — Cash on Delivery"}
+                    ? "Confirm Booking"
+                    : "Confirm Order"}
               </button>
             )}
 

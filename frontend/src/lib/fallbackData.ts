@@ -4,7 +4,7 @@ import type { Gear } from "@/types"
  * Official Yatriko Gears price list (Rs.) — used as fallback until the
  * backend gear API is live, and as the seed data reference.
  */
-const FALLBACK_GEAR_BASE: Array<Omit<Gear, "longDescription" | "images">> = [
+const FALLBACK_GEAR_BASE: Array<Omit<Gear, "longDescription" | "images" | "videos">> = [
   { _id: "1", name: "Tent — 3 Person", slug: "tent-3-person", realPrice: 800, discountedPrice: 650, availableFor: ["rent"], colors: [], specs: { capacity: "3 person" }, image: "tent-3-person.jpg", description: "Roomy 3-person dome tent.", isNew: false },
   { _id: "2", name: "Tent — 4 Person", slug: "tent-4-person", realPrice: 1000, discountedPrice: 800, availableFor: ["rent"], colors: [], specs: { capacity: "4 person" }, image: "tent-4-person.jpg", description: "Spacious 4-person dome tent.", isNew: false },
   { _id: "3", name: "Sleeping Bag", slug: "sleeping-bag", realPrice: 250, discountedPrice: 200, availableFor: ["rent"], colors: [], specs: {}, image: "sleeping-bag-himalaya.jpg", description: "Warm sleeping bag, Himalaya tested.", isNew: false },
@@ -33,6 +33,7 @@ export const FALLBACK_GEAR: Gear[] = FALLBACK_GEAR_BASE.map((gear) => ({
   ...gear,
   longDescription: gear.description,
   images: gear.image ? [gear.image] : [],
+  videos: [],
 }))
 
 export const SPOTS = [
