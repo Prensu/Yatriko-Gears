@@ -14,7 +14,7 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
   const toast = useToast()
 
   const handleAdd = () => {
-    addItem(gear._id)
+    addItem(gear._id, 1, showingSale ? "sale" : "rent")
     toast.success(`${gear.name} added to cart`)
   }
 
