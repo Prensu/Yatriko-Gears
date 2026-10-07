@@ -15,6 +15,7 @@ export const BookingCreateDTO = z
           gear: z.string().min(1, "Gear is compulsory"),
           quantity: z.coerce.number().int().min(1, "At least 1").max(20, "Max 20 per item"),
           mode: z.enum(["rent", "sale"]).default("rent"),
+          color: z.string().trim().max(80).optional(),
         }),
       )
       .min(1, "Add at least one item"),

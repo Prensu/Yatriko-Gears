@@ -59,7 +59,7 @@ class BookingController {
         throw { code: 422, message: "One or more items are no longer available" }
       }
 
-      const items = body.items.map((item: { gear: string; quantity: number; mode: "rent" | "sale" }) => {
+      const items = body.items.map((item: { gear: string; quantity: number; mode: "rent" | "sale"; color?: string }) => {
         const gear = gearDocs.find((doc) => String(doc._id) === item.gear)
         if (!gear) throw { code: 422, message: "Gear not found" }
         if (!gear.availableFor.includes(item.mode)) throw { code: 422, message: `${gear.name} is not available for ${item.mode === "sale" ? "purchase" : "rental"}` }
@@ -72,6 +72,7 @@ class BookingController {
           pricePerDay: item.mode === "rent" ? gear.discountedPrice : 0,
           unitPrice: item.mode === "sale" ? (gear.salePrice ?? gear.discountedPrice) : undefined,
           quantity: item.quantity,
+          color: item.color,
         }
       })
 
@@ -116,8 +117,8 @@ class BookingController {
 
       const itemLines = items
         .map(
-          (item: { name: string; quantity: number; mode: string; pricePerDay: number; unitPrice?: number }) =>
-            `<li>${item.name} &times; ${item.quantity} — Rs. ${item.mode === "sale" ? item.unitPrice : item.pricePerDay}${item.mode === "sale" ? " each (purchase)" : "/night"}</li>`,
+          (item: { name: string; quantity: number; mode: string; pricePerDay: number; unitPrice?: number; color?: string }) =>
+            `<li>${item.name}${item.color ? ` — Color: ${item.color}` : ""} &times; ${item.quantity} — Rs. ${item.mode === "sale" ? item.unitPrice : item.pricePerDay}${item.mode === "sale" ? " each (purchase)" : "/night"}</li>`,
         )
         .join("")
       const dateRange = hasRental ? `${body.startDate} to ${body.endDate}` : ""

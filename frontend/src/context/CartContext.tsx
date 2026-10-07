@@ -21,15 +21,16 @@ export type CartItem = {
   gearId: string
   quantity: number
   mode: "rent" | "sale"
+  color?: string
 }
 
 type CartContextValue = {
   items: CartItem[]
   /** Total number of individual items (sum of quantities). */
   itemCount: number
-  addItem: (gearId: string, quantity?: number, mode?: CartItem["mode"]) => void
-  removeItem: (gearId: string, mode: CartItem["mode"]) => void
-  updateQuantity: (gearId: string, mode: CartItem["mode"], quantity: number) => void
+  addItem: (gearId: string, quantity?: number, mode?: CartItem["mode"], color?: string) => void
+  removeItem: (gearId: string, mode: CartItem["mode"], color?: string) => void
+  updateQuantity: (gearId: string, mode: CartItem["mode"], quantity: number, color?: string) => void
   clearCart: () => void
 }
 
@@ -68,16 +69,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addItem = useCallback(
-    (gearId: string, quantity = 1, mode: CartItem["mode"] = "rent") => {
+    (gearId: string, quantity = 1, mode: CartItem["mode"] = "rent", color?: string) => {
       setItems((current) => {
-        const existing = current.find((item) => item.gearId === gearId && item.mode === mode)
+        const existing = current.find((item) => item.gearId === gearId && item.mode === mode && item.color === color)
         const next = existing
           ? current.map((item) =>
-              item.gearId === gearId && item.mode === mode
+              item.gearId === gearId && item.mode === mode && item.color === color
                 ? { ...item, quantity: item.quantity + quantity }
                 : item,
             )
-          : [...current, { gearId, quantity, mode }]
+          : [...current, { gearId, quantity, mode, ...(color ? { color } : {}) }]
         writeStorage(next)
         return next
       })
@@ -86,9 +87,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   )
 
   const removeItem = useCallback(
-    (gearId: string, mode: CartItem["mode"]) => {
+    (gearId: string, mode: CartItem["mode"], color?: string) => {
       setItems((current) => {
-        const next = current.filter((item) => !(item.gearId === gearId && item.mode === mode))
+        const next = current.filter((item) => !(item.gearId === gearId && item.mode === mode && item.color === color))
         writeStorage(next)
         return next
       })
@@ -97,11 +98,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   )
 
   const updateQuantity = useCallback(
-    (gearId: string, mode: CartItem["mode"], quantity: number) => {
+    (gearId: string, mode: CartItem["mode"], quantity: number, color?: string) => {
       if (quantity < 1) return
       setItems((current) => {
         const next = current.map((item) =>
-          item.gearId === gearId && item.mode === mode ? { ...item, quantity } : item,
+          item.gearId === gearId && item.mode === mode && item.color === color ? { ...item, quantity } : item,
         )
         writeStorage(next)
         return next

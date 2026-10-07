@@ -181,6 +181,7 @@ export default function GearDetailPage() {
   const [relatedGear, setRelatedGear] = useState<Gear[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [pricingMode, setPricingMode] = useState<"rent" | "sale">("rent");
+  const [selectedColor, setSelectedColor] = useState("");
 
   const loading = !state || state.slug !== slug;
   const gear = state && state.slug === slug ? state.gear : null;
@@ -323,7 +324,7 @@ export default function GearDetailPage() {
 
   const handleAddToCart = () => {
     if (!showingSale) return;
-    addItem(gear._id, quantity, "sale");
+    addItem(gear._id, quantity, "sale", selectedColor || undefined);
     toast.success(`${quantity}x ${gear.name} added to your cart`);
   };
 
@@ -569,12 +570,12 @@ export default function GearDetailPage() {
                 </h3>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {gear.colors.map((color) => (
-                    <span
+                    <button type="button" onClick={() => setSelectedColor(color)}
                       key={color}
                       className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-forest-300 hover:bg-forest-50"
                     >
                       {color}
-                    </span>
+                    </button>
                   ))}
                 </div>
               </div>

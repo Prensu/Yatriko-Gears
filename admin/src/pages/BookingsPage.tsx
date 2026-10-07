@@ -239,7 +239,7 @@ export default function BookingsPage() {
                 <ul className="divide-y divide-ink-100 rounded-lg border border-ink-200">
                   {open.items.map((item) => (
                     <li key={item.gear} className="flex justify-between gap-3 px-3 py-2">
-                      <span className="text-ink-800"><span className="mr-2 rounded-full bg-ink-100 px-2 py-0.5 text-xs font-semibold">{item.mode === "sale" ? "Buy" : "Rent"}</span>{item.name} × {item.quantity}</span>
+                      <span className="text-ink-800"><span className="mr-2 rounded-full bg-ink-100 px-2 py-0.5 text-xs font-semibold">{item.mode === "sale" ? "Buy" : "Rent"}</span>{item.name}{item.color ? <span className="ml-2 text-forest-700">({item.color})</span> : null} × {item.quantity}</span>
                       <span className="text-ink-500">{item.mode === "sale" ? `${formatPrice(item.unitPrice ?? item.pricePerDay ?? 0)} each` : `${formatPrice(item.pricePerDay ?? 0)}/night`}</span>
                     </li>
                   ))}

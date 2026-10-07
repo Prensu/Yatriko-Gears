@@ -13,6 +13,7 @@ const BookingItemSchema = new mongoose.Schema(
     mode: { type: String, enum: ["rent", "sale"], default: "rent" },
     unitPrice: { type: Number, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
+    color: { type: String, trim: true, maxlength: 80 },
   },
   { _id: false },
 )

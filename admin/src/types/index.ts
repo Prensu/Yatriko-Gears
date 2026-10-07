@@ -267,6 +267,7 @@ export const bookingSchema = z.object({
       pricePerDay: z.number().optional(),
       unitPrice: z.number().optional(),
       quantity: z.number(),
+      color: z.string().nullish().transform((v) => v ?? ""),
     }),
   ),
   startDate: z.string().nullish(),

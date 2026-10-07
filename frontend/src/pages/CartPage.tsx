@@ -195,6 +195,7 @@ export default function CartPage() {
           gear: item.gearId,
           quantity: item.quantity,
           mode: item.mode,
+          color: item.color,
         })),
         ...(hasRental ? { startDate, endDate } : {}),
         deliveryAddress,
@@ -316,6 +317,7 @@ export default function CartPage() {
                               <p className="truncate font-display font-semibold text-navy-900">
                                 {gear.name}
                               </p>
+                              {item.color && <p className="text-sm font-medium text-forest-700">Color: {item.color}</p>}
                               <span className="mr-2 rounded-full bg-sand px-2 py-0.5 text-xs font-semibold text-forest-700">
                                 {item.mode === "sale" ? "Buy" : "Rent"}
                               </span>
@@ -335,7 +337,7 @@ export default function CartPage() {
                             </div>
                             <button
                               type="button"
-                              onClick={() => removeItem(item.gearId, item.mode)}
+                              onClick={() => removeItem(item.gearId, item.mode, item.color)}
                               className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                               aria-label={`Remove ${gear.name}`}
                             >
@@ -361,6 +363,7 @@ export default function CartPage() {
                                   item.gearId,
                                   item.mode,
                                   item.quantity - 1,
+                                  item.color,
                                 )
                               }
                               disabled={item.quantity <= 1}
@@ -378,6 +381,7 @@ export default function CartPage() {
                                   item.gearId,
                                   item.mode,
                                   item.quantity + 1,
+                                  item.color,
                                 )
                               }
                               className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-forest-400 hover:text-forest-700"

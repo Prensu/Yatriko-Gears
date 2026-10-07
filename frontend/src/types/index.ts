@@ -91,6 +91,7 @@ export const bookingItemSchema = z.object({
   pricePerDay: z.number().optional(),
   unitPrice: z.number().optional(),
   quantity: z.number(),
+  color: z.string().nullish().transform((v) => v ?? ""),
 })
 
 export const bookingStatusSchema = z.enum([
