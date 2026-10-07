@@ -8,6 +8,7 @@ const dateOnly = z
 
 export const BookingCreateDTO = z
   .object({
+    name: z.string().trim().min(2, "Please enter your full name").max(80, "Name is too long"),
     items: z
       .array(
         z.object({

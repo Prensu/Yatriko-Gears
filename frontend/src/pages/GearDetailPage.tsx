@@ -6,6 +6,7 @@ import { resolveGearImage } from "@/lib/gearImages";
 import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 import { SITE_URL, usePageMeta } from "@/hooks/usePageMeta";
+import { CONTACTS } from "@/lib/fallbackData";
 import GearCard from "@/components/gear/GearCard";
 import RichContent from "@/components/common/RichContent";
 import StructuredData from "@/components/common/StructuredData";
@@ -692,12 +693,20 @@ export default function GearDetailPage() {
                       you.
                     </p>
                   </div>
-                  <Link
-                    to="/contact"
+                  <a
+                    href={CONTACTS.instagram}
+                    target="_blank"
+                    rel="noreferrer"
                     className="btn-primary inline-flex w-full justify-center sm:w-auto"
                   >
                     Contact us about this gear
-                  </Link>
+                  </a>
+                  <p className="text-xs text-slate-500">
+                    By renting you agree to our terms and conditions{" "}
+                    <Link to="/rental-terms" className="font-semibold text-forest-700 hover:underline">
+                      here
+                    </Link>
+                  </p>
                 </div>
               )}
             </div>

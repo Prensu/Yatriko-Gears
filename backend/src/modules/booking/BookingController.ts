@@ -90,9 +90,9 @@ class BookingController {
       const total = calculateTotal(subtotal)
 
       const booking = new BookingModel({
-        code: makeBookingCode(user.name ?? ""),
+        code: makeBookingCode(body.name),
         user: user._id,
-        customerName: user.name,
+        customerName: body.name,
         customerEmail: user.email,
         customerPhone: body.phone,
         deliveryAddress: body.deliveryAddress,

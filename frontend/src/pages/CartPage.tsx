@@ -9,6 +9,7 @@ import { createBooking, fetchAvailability } from "@/api/booking";
 import { ApiRequestError } from "@/lib/api";
 import { resolveGearImage } from "@/lib/gearImages";
 import type { Availability, Gear } from "@/types";
+import { cartCheckoutSchema, validateForm } from "@/types/forms";
 
 /** Local YYYY-MM-DD — toISOString() would shift the date in Nepal's timezone. */
 function toInputDate(date: Date): string {
@@ -121,6 +122,8 @@ export default function CartPage() {
   const [deliveryAddress, setDeliveryAddress] = useState(user?.address ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [note, setNote] = useState("");
+  const [name, setName] = useState(user?.name ?? "");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   /* ------------------------------------------------------------------ */
   /* Price preview (server recomputes — this is display-only)              */
@@ -160,14 +163,10 @@ export default function CartPage() {
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setError("");
+    setFieldErrors({});
 
     if (status !== "authenticated") {
       navigate("/login");
-      return;
-    }
-
-    if (hasRental && days < 1) {
-      setError("Return date cannot be before the pickup date.");
       return;
     }
 
@@ -176,10 +175,22 @@ export default function CartPage() {
       return;
     }
 
+    const formResult = validateForm(cartCheckoutSchema, {
+      name, phone, deliveryAddress, note,
+      startDate: hasRental ? startDate : "",
+      endDate: hasRental ? endDate : "",
+    });
+    if (!formResult.ok) {
+      setFieldErrors(formResult.errors);
+      setError("Please correct the highlighted fields.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
       const booking = await createBooking({
+        name: formResult.data.name,
         items: items.map((item) => ({
           gear: item.gearId,
           quantity: item.quantity,
@@ -484,6 +495,11 @@ export default function CartPage() {
 
               <div className="mt-4 space-y-4">
                 <div>
+                  <label htmlFor="name" className="text-xs font-semibold uppercase tracking-wide text-slate-500">Full name</label>
+                  <input id="name" type="text" autoComplete="name" placeholder="Your full name" className="input-underline" value={name} onChange={(event) => setName(event.target.value)} aria-invalid={Boolean(fieldErrors.name)} />
+                  {fieldErrors.name ? <p className="mt-1 text-xs text-red-600">{fieldErrors.name}</p> : null}
+                </div>
+                <div>
                   <label
                     htmlFor="phone"
                     className="text-xs font-semibold uppercase tracking-wide text-slate-500"
@@ -497,7 +513,9 @@ export default function CartPage() {
                     className="input-underline"
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
+                    aria-invalid={Boolean(fieldErrors.phone)}
                   />
+                  {fieldErrors.phone ? <p className="mt-1 text-xs text-red-600">{fieldErrors.phone}</p> : null}
                 </div>
                 <div>
                   <label
@@ -513,7 +531,9 @@ export default function CartPage() {
                     className="input-underline"
                     value={deliveryAddress}
                     onChange={(event) => setDeliveryAddress(event.target.value)}
+                    aria-invalid={Boolean(fieldErrors.deliveryAddress)}
                   />
+                  {fieldErrors.deliveryAddress ? <p className="mt-1 text-xs text-red-600">{fieldErrors.deliveryAddress}</p> : null}
                 </div>
                 <div>
                   <label
@@ -529,7 +549,9 @@ export default function CartPage() {
                     className="input-underline"
                     value={note}
                     onChange={(event) => setNote(event.target.value)}
+                    aria-invalid={Boolean(fieldErrors.note)}
                   />
+                  {fieldErrors.note ? <p className="mt-1 text-xs text-red-600">{fieldErrors.note}</p> : null}
                 </div>
               </div>
             </div>

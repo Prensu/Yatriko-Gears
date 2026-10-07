@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { fetchGear } from "@/api/gear";
 import type { Gear } from "@/types";
 import GearCard from "@/components/gear/GearCard";
@@ -107,6 +107,52 @@ export default function GearPage({
           <p className="mt-16 text-center text-slate-500">
             No gear matches your search. 🏕️
           </p>
+        )}
+        {isRentalPage && (
+          <div className="relative mt-12 overflow-hidden rounded-[2rem] border border-forest-100 bg-white shadow-[0_14px_45px_rgba(31,78,55,0.08)]">
+            <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-forest-50" aria-hidden="true" />
+            <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-sm">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-forest-600">
+                  <span className="h-2 w-2 rounded-full bg-forest-500" aria-hidden="true" />
+                  Plan with confidence
+                </div>
+                <h2 className="mt-2 font-display text-2xl font-extrabold text-navy-900">Before you rent</h2>
+                <p className="mt-2 text-sm leading-relaxed text-slate-500">
+                  A few essentials to keep your adventure smooth from pickup to return.
+                </p>
+              </div>
+
+              <ul className="grid flex-1 gap-3 sm:grid-cols-2 lg:max-w-3xl lg:grid-cols-5">
+                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">🪪</span>
+                  <span className="pt-1 font-semibold">Original Nepali ID</span>
+                </li>
+                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">💰</span>
+                  <span className="pt-1 font-semibold">Rs. 1,500 refundable deposit</span>
+                </li>
+                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">✓</span>
+                  <span className="pt-1 font-semibold">50% advance, full payment before delivery</span>
+                </li>
+                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">⏱</span>
+                  <span className="pt-1 font-semibold">Rs. 100/day late fee</span>
+                </li>
+                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">☀</span>
+                  <span className="pt-1 font-semibold">Open 6 AM to 6 PM</span>
+                </li>
+              </ul>
+            </div>
+            <div className="relative flex flex-col gap-3 border-t border-slate-100 bg-forest-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+              <p className="text-sm text-slate-600">Need the complete rental policy?</p>
+              <Link to="/rental-terms" className="inline-flex items-center font-display text-sm font-bold text-forest-700 transition hover:text-forest-900 hover:underline">
+                Read full terms and conditions <span className="ml-1" aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </div>
         )}
       </div>
     </section>

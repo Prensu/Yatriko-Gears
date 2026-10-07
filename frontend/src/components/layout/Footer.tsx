@@ -148,6 +148,9 @@ export default function Footer() {
             <li>
               <FooterLink to="/contact">Contact Us</FooterLink>
             </li>
+            <li>
+              <FooterLink to="/rental-terms">Terms and Conditions</FooterLink>
+            </li>
           </ul>
         </motion.div>
 

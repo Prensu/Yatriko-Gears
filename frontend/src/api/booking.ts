@@ -9,6 +9,7 @@ import {
 
 export type BookingInput = {
   items: { gear: string; quantity: number; mode: "rent" | "sale" }[]
+  name: string
   startDate?: string
   endDate?: string
   deliveryAddress: string

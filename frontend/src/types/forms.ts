@@ -29,6 +29,21 @@ export const bookingFormSchema = z.object({
 })
 export type BookingFormValues = z.infer<typeof bookingFormSchema>
 
+/** Cart checkout details — POST /api/v1/booking */
+export const cartCheckoutSchema = z.object({
+  name: z.string().trim().min(2, "Please enter your full name").max(80, "Name is too long"),
+  phone: z.string().trim().regex(/^((\+977[- ]?)?9\d{9})$/, "Enter a valid Nepali mobile number"),
+  deliveryAddress: z.string().trim().min(4, "Where should we deliver?").max(200, "Address is too long"),
+  note: z.string().max(500, "Note is too long"),
+  startDate: z.string(),
+  endDate: z.string(),
+}).superRefine((values, ctx) => {
+  if (values.startDate && values.endDate && new Date(values.endDate) < new Date(values.startDate)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["endDate"], message: "Return date cannot be before the pickup date" })
+  }
+})
+export type CartCheckoutValues = z.infer<typeof cartCheckoutSchema>
+
 /** Generic helper: validate + flatten Zod errors for form UIs */
 export function validateForm<S extends z.ZodTypeAny>(
   schema: S,

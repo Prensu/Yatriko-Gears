@@ -81,6 +81,7 @@ const staticRoutes = [
   ["/portfolio", "monthly", "0.7"],
   ["/blog", "weekly", "0.8"],
   ["/contact", "monthly", "0.8"],
+  ["/rental-terms", "yearly", "0.7"],
 ]
 
 let gearRoutes = await existingGearUrls()
