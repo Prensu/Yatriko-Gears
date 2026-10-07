@@ -123,9 +123,10 @@ export default function MyBookingsPage() {
                   {booking.items.map((item) => (
                     <li key={item.gear} className="flex justify-between gap-3">
                       <span>
+                        <span className="mr-2 rounded-full bg-sand px-2 py-0.5 text-xs font-semibold text-forest-700">{item.mode === "sale" ? "Buy" : "Rent"}</span>
                         {item.name} × {item.quantity}
                       </span>
-                      <span className="text-slate-400">Rs. {item.pricePerDay} / night</span>
+                      <span className="text-slate-400">{item.mode === "sale" ? `Rs. ${item.unitPrice ?? item.pricePerDay ?? 0} each` : `Rs. ${item.pricePerDay ?? 0} / night`}</span>
                     </li>
                   ))}
                 </ul>
@@ -138,7 +139,7 @@ export default function MyBookingsPage() {
 
                 <div className="mt-4 flex flex-wrap items-end justify-between gap-4 border-t border-slate-100 pt-4">
                   <div className="text-sm text-slate-500">
-                    {formatDate(booking.startDate)} → {formatDate(booking.endDate)}
+                    {booking.startDate && booking.endDate ? `${formatDate(booking.startDate)} → ${formatDate(booking.endDate)}` : "Purchase — no rental dates"}
                     <span className="ml-2 text-slate-400">
                       ({booking.days} night{booking.days > 1 ? "s" : ""})
                     </span>

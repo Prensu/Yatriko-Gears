@@ -42,15 +42,16 @@ class BookingController {
       const user = req.loggedInUser
       if (!user?._id) throw { code: 401, message: "Unauthorized" }
 
-      const startDate = new Date(body.startDate)
-      const endDate = new Date(body.endDate)
+      const hasRental = body.items.some((item: { mode?: string }) => item.mode !== "sale")
+      const startDate = body.startDate ? new Date(body.startDate) : undefined
+      const endDate = body.endDate ? new Date(body.endDate) : undefined
 
       // Don't let people book yesterday.
       const today = new Date()
       today.setHours(0, 0, 0, 0)
-      if (startDate < today) throw { code: 400, message: "Pickup date cannot be in the past" }
+      if (hasRental && startDate && startDate < today) throw { code: 400, message: "Pickup date cannot be in the past" }
 
-      const days = countDays(startDate, endDate)
+      const days = hasRental && startDate && endDate ? countDays(startDate, endDate) : 0
 
       const gearIds = body.items.map((item: { gear: string }) => item.gear)
       const gearDocs = await GearModel.find({ _id: { $in: gearIds }, status: "active" })
@@ -58,27 +59,31 @@ class BookingController {
         throw { code: 422, message: "One or more items are no longer available" }
       }
 
-      const items = body.items.map((item: { gear: string; quantity: number }) => {
+      const items = body.items.map((item: { gear: string; quantity: number; mode: "rent" | "sale" }) => {
         const gear = gearDocs.find((doc) => String(doc._id) === item.gear)
         if (!gear) throw { code: 422, message: "Gear not found" }
+        if (!gear.availableFor.includes(item.mode)) throw { code: 422, message: `${gear.name} is not available for ${item.mode === "sale" ? "purchase" : "rental"}` }
+        if (item.mode === "sale" && item.quantity > gear.quantityTotal) throw { code: 422, message: `Only ${gear.quantityTotal} × ${gear.name} available to buy` }
         return {
           gear: gear._id,
           name: gear.name,
           // The discounted price is what the site advertises, so charge that.
-          pricePerDay: gear.discountedPrice,
+          mode: item.mode,
+          pricePerDay: item.mode === "rent" ? gear.discountedPrice : 0,
+          unitPrice: item.mode === "sale" ? (gear.salePrice ?? gear.discountedPrice) : undefined,
           quantity: item.quantity,
         }
       })
 
       // Stock gate: refuse before we create anything, so two customers can't
       // both walk away thinking they have the same tent.
-      await assertAvailable(
-        items.map((item: { gear: unknown; quantity: number }) => ({
+      if (hasRental) await assertAvailable(
+        items.filter((item: { mode: string }) => item.mode !== "sale").map((item: { gear: unknown; quantity: number }) => ({
           gear: String(item.gear),
           quantity: item.quantity,
         })),
-        startDate,
-        endDate,
+        startDate!,
+        endDate!,
       )
 
       const subtotal = calculateSubtotal(items, days)
@@ -93,8 +98,7 @@ class BookingController {
         deliveryAddress: body.deliveryAddress,
         note: body.note,
         items,
-        startDate,
-        endDate,
+        ...(hasRental ? { startDate, endDate } : {}),
         days,
         subtotal,
         deliveryCharge: 0,
@@ -112,11 +116,11 @@ class BookingController {
 
       const itemLines = items
         .map(
-          (item: { name: string; quantity: number; pricePerDay: number }) =>
-            `<li>${item.name} &times; ${item.quantity} — Rs. ${item.pricePerDay}/night</li>`,
+          (item: { name: string; quantity: number; mode: string; pricePerDay: number; unitPrice?: number }) =>
+            `<li>${item.name} &times; ${item.quantity} — Rs. ${item.mode === "sale" ? item.unitPrice : item.pricePerDay}${item.mode === "sale" ? " each (purchase)" : "/night"}</li>`,
         )
         .join("")
-      const dateRange = `${body.startDate} to ${body.endDate}`
+      const dateRange = hasRental ? `${body.startDate} to ${body.endDate}` : ""
 
       // Both emails are non-critical: the booking stands even if SMTP is down.
       // Fire-and-forget — do NOT await these, the response has already gone out.
@@ -124,7 +128,7 @@ class BookingController {
         .sendEmail({
           to: notifyEmail,
           sub: `New booking ${booking.code}`,
-          message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) booked ${items.length} item(s) for ${days} night(s).</p><ul>${itemLines}</ul><p>Deliver to: ${booking.deliveryAddress}</p><p>Delivery charge: To be discussed on WhatsApp.</p><p>Gear total: Rs. ${total}</p>`,
+          message: `<p><b>${booking.customerName}</b> (${booking.customerPhone}) placed ${hasRental ? `a booking for ${items.length} item(s) for ${days} night(s)` : "a purchase order"}.</p><ul>${itemLines}</ul><p>Deliver to: ${booking.deliveryAddress}</p><p>Delivery charge: To be discussed on WhatsApp.</p><p>Gear total: Rs. ${total}</p>`,
         })
         .catch((err) => {
           log.error({ err, to: notifyEmail, code: booking.code }, "Booking notification email could not be sent — check email env vars")
@@ -139,7 +143,7 @@ class BookingController {
             <p>We have your booking <b>${booking.code}</b>. Our team will call you on
             ${booking.customerPhone} to confirm delivery.</p>
             <ul>${itemLines}</ul>
-            <p><b>Rental dates:</b> ${dateRange} (${days} night${days > 1 ? "s" : ""})<br/>
+            ${hasRental ? `<p><b>Rental dates:</b> ${dateRange} (${days} night${days > 1 ? "s" : ""})<br/>` : "<p><b>Purchase order:</b> no rental dates needed.<br/>"}
             <b>Deliver to:</b> ${booking.deliveryAddress}<br/>
             <b>Delivery charge:</b> To be discussed on WhatsApp<br/>
             <b>Gear total:</b> Rs. ${total}<br/>

@@ -24,6 +24,21 @@ function numberField(label: string) {
   )
 }
 
+/** Like numberField, but "" is allowed and yields undefined. */
+function optionalNumberField(label: string) {
+  return z.preprocess(
+    (value) => {
+      if (typeof value !== "string") return value
+      const trimmed = value.trim()
+      return trimmed === "" ? undefined : Number(trimmed)
+    },
+    z
+      .number({ invalid_type_error: `${label} must be a number` })
+      .min(0, `${label} cannot be negative`)
+      .optional(),
+  )
+}
+
 /* ------------------------------------------------------------------ */
 /* Gear — POST/PUT /gear (multipart, file field: image)                 */
 /* ------------------------------------------------------------------ */
@@ -35,7 +50,7 @@ export const gearFormSchema = z
     longDescription: z.string().max(50000, "Description is too long").optional().default(""),
     realPrice: numberField("Real price"),
     discountedPrice: numberField("Discounted price"),
-    salePrice: numberField("Sale price").optional(),
+    salePrice: optionalNumberField("Sale price"),
     availableFor: z
       .array(z.enum(["rent", "sale"]))
       .min(1, "Choose at least one of rent / sale"),

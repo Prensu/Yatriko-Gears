@@ -8,9 +8,9 @@ import {
 } from "@/types"
 
 export type BookingInput = {
-  items: { gear: string; quantity: number }[]
-  startDate: string
-  endDate: string
+  items: { gear: string; quantity: number; mode: "rent" | "sale" }[]
+  startDate?: string
+  endDate?: string
   deliveryAddress: string
   phone: string
   note?: string

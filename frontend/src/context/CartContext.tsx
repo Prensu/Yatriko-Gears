@@ -20,15 +20,16 @@ const STORAGE_KEY = "yatriko.cart"
 export type CartItem = {
   gearId: string
   quantity: number
+  mode: "rent" | "sale"
 }
 
 type CartContextValue = {
   items: CartItem[]
   /** Total number of individual items (sum of quantities). */
   itemCount: number
-  addItem: (gearId: string, quantity?: number) => void
-  removeItem: (gearId: string) => void
-  updateQuantity: (gearId: string, quantity: number) => void
+  addItem: (gearId: string, quantity?: number, mode?: CartItem["mode"]) => void
+  removeItem: (gearId: string, mode: CartItem["mode"]) => void
+  updateQuantity: (gearId: string, mode: CartItem["mode"], quantity: number) => void
   clearCart: () => void
 }
 
@@ -48,7 +49,7 @@ function readStorage(): CartItem[] {
         typeof (item as CartItem).gearId === "string" &&
         typeof (item as CartItem).quantity === "number" &&
         (item as CartItem).quantity > 0,
-    )
+    ).map((item) => ({ ...item, mode: (item.mode === "sale" ? "sale" : "rent") as CartItem["mode"] }))
   } catch {
     return []
   }
@@ -67,16 +68,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addItem = useCallback(
-    (gearId: string, quantity = 1) => {
+    (gearId: string, quantity = 1, mode: CartItem["mode"] = "rent") => {
       setItems((current) => {
-        const existing = current.find((item) => item.gearId === gearId)
+        const existing = current.find((item) => item.gearId === gearId && item.mode === mode)
         const next = existing
           ? current.map((item) =>
-              item.gearId === gearId
+              item.gearId === gearId && item.mode === mode
                 ? { ...item, quantity: item.quantity + quantity }
                 : item,
             )
-          : [...current, { gearId, quantity }]
+          : [...current, { gearId, quantity, mode }]
         writeStorage(next)
         return next
       })
@@ -85,9 +86,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   )
 
   const removeItem = useCallback(
-    (gearId: string) => {
+    (gearId: string, mode: CartItem["mode"]) => {
       setItems((current) => {
-        const next = current.filter((item) => item.gearId !== gearId)
+        const next = current.filter((item) => !(item.gearId === gearId && item.mode === mode))
         writeStorage(next)
         return next
       })
@@ -96,11 +97,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   )
 
   const updateQuantity = useCallback(
-    (gearId: string, quantity: number) => {
+    (gearId: string, mode: CartItem["mode"], quantity: number) => {
       if (quantity < 1) return
       setItems((current) => {
         const next = current.map((item) =>
-          item.gearId === gearId ? { ...item, quantity } : item,
+          item.gearId === gearId && item.mode === mode ? { ...item, quantity } : item,
         )
         writeStorage(next)
         return next

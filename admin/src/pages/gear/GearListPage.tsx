@@ -50,6 +50,7 @@ export default function GearListPage() {
     {
       key: "name",
       header: "Item",
+      className: "w-full max-w-0",
       render: (gear) => (
         <div className="flex items-center gap-3">
           {gear.image ? (
@@ -62,7 +63,9 @@ export default function GearListPage() {
             </span>
           )}
           <div className="min-w-0">
-            <p className="truncate font-medium text-ink-900">{gear.name}</p>
+            <p className="line-clamp-2 break-words font-medium text-ink-900" title={gear.name}>
+              {gear.name}
+            </p>
             <a
               href={`/gear/${encodeURIComponent(gear.slug)}`}
               target="_blank"
@@ -131,9 +134,9 @@ export default function GearListPage() {
     {
       key: "actions",
       header: "",
-      className: "w-32 text-right",
+      className: "w-32 whitespace-nowrap text-right",
       render: (gear) => (
-        <div className="flex justify-end gap-1">
+        <div className="flex shrink-0 justify-end gap-1">
           <Link to={`/gear/${encodeURIComponent(gear.slug)}/edit`} className="btn-secondary btn-sm">
             Edit
           </Link>

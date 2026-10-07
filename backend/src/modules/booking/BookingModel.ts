@@ -9,7 +9,9 @@ const BookingItemSchema = new mongoose.Schema(
   {
     gear: { type: mongoose.Schema.Types.ObjectId, ref: "Gear", required: true },
     name: { type: String, required: true },
-    pricePerDay: { type: Number, required: true, min: 0 },
+    pricePerDay: { type: Number, required: true, min: 0, default: 0 },
+    mode: { type: String, enum: ["rent", "sale"], default: "rent" },
+    unitPrice: { type: Number, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
   },
   { _id: false },
@@ -30,9 +32,9 @@ const BookingSchema = new mongoose.Schema(
 
     items: { type: [BookingItemSchema], required: true },
 
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
-    days: { type: Number, required: true, min: 1 },
+    startDate: { type: Date },
+    endDate: { type: Date },
+    days: { type: Number, required: true, min: 0 },
 
     subtotal: { type: Number, required: true, min: 0 },
     deliveryCharge: { type: Number, default: 0, min: 0 },

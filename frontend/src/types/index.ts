@@ -86,7 +86,9 @@ export type Video = z.infer<typeof videoSchema>
 export const bookingItemSchema = z.object({
   gear: z.string(),
   name: z.string(),
-  pricePerDay: z.number(),
+  mode: z.enum(["rent", "sale"]).default("rent"),
+  pricePerDay: z.number().optional(),
+  unitPrice: z.number().optional(),
   quantity: z.number(),
 })
 
@@ -103,9 +105,9 @@ export const bookingSchema = z.object({
   _id: z.string(),
   code: z.string(),
   items: z.array(bookingItemSchema),
-  startDate: z.string(),
-  endDate: z.string(),
-  days: z.number(),
+  startDate: z.string().nullish(),
+  endDate: z.string().nullish(),
+  days: z.number().default(0),
   subtotal: z.number(),
   deliveryCharge: z.number().default(0),
   total: z.number(),

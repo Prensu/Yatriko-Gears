@@ -28,6 +28,8 @@ export default function CartPage() {
   })
 
   const { items, removeItem, updateQuantity, clearCart } = useCart()
+  const hasRental = items.some((item) => item.mode === "rent")
+  const hasSale = items.some((item) => item.mode === "sale")
   const { user, status } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
@@ -73,12 +75,12 @@ export default function CartPage() {
   const [checkingStock, setCheckingStock] = useState(false)
 
   useEffect(() => {
-    if (items.length === 0 || !startDate || !endDate || endDate < startDate) return
+    if (!hasRental || items.length === 0 || !startDate || !endDate || endDate < startDate) return
     let cancelled = false
     setCheckingStock(true)
 
     Promise.all(
-      items.map((item) =>
+      items.filter((item) => item.mode === "rent").map((item) =>
         fetchAvailability(item.gearId, startDate, endDate).then((result) => [item.gearId, result] as const),
       ),
     )
@@ -98,7 +100,7 @@ export default function CartPage() {
     return () => {
       cancelled = true
     }
-  }, [items, startDate, endDate])
+  }, [items, hasRental, startDate, endDate])
 
   /* ------------------------------------------------------------------ */
   /* Delivery form state                                                   */
@@ -114,7 +116,9 @@ export default function CartPage() {
     let total = 0
     for (const item of items) {
       const gear = gearMap.get(item.gearId)
-      if (gear) total += gear.discountedPrice * item.quantity * Math.max(days, 0)
+      if (gear) total += item.mode === "sale"
+        ? (gear.salePrice ?? gear.discountedPrice) * item.quantity
+        : gear.discountedPrice * item.quantity * Math.max(days, 0)
     }
     return total
   }, [items, gearMap, days])
@@ -127,8 +131,13 @@ export default function CartPage() {
 
   const hasStockIssue = useMemo(() => {
     for (const item of items) {
-      const avail = availability.get(item.gearId)
-      if (avail && item.quantity > avail.quantityAvailable) return true
+      if (item.mode === "rent") {
+        const avail = availability.get(item.gearId)
+        if (avail && item.quantity > avail.quantityAvailable) return true
+      } else {
+        const gear = gearMap.get(item.gearId)
+        if (gear && item.quantity > (gear.quantityTotal ?? 1)) return true
+      }
     }
     return false
   }, [items, availability])
@@ -142,7 +151,7 @@ export default function CartPage() {
       return
     }
 
-    if (days < 1) {
+    if (hasRental && days < 1) {
       setError("Return date cannot be before the pickup date.")
       return
     }
@@ -156,9 +165,8 @@ export default function CartPage() {
 
     try {
       const booking = await createBooking({
-        items: items.map((item) => ({ gear: item.gearId, quantity: item.quantity })),
-        startDate,
-        endDate,
+        items: items.map((item) => ({ gear: item.gearId, quantity: item.quantity, mode: item.mode })),
+        ...(hasRental ? { startDate, endDate } : {}),
         deliveryAddress,
         phone,
         note,
@@ -208,7 +216,7 @@ export default function CartPage() {
 
         <h1 className="mt-4 font-display text-3xl font-extrabold text-navy-900">Your Cart</h1>
         <p className="mt-1 text-slate-500">
-          Review your gear, pick your dates, and confirm your booking.
+          {hasRental ? "Review your gear, pick your dates, and confirm your booking." : "Review your purchase and confirm your order."}
         </p>
 
         <form onSubmit={onSubmit} noValidate className="mt-8 grid gap-6 lg:grid-cols-3">
@@ -233,10 +241,12 @@ export default function CartPage() {
                     if (!gear) return null
                     const imageSrc = resolveGearImage(gear.image)
                     const avail = availability.get(item.gearId)
-                    const overStock = avail ? item.quantity > avail.quantityAvailable : false
+                    const overStock = item.mode === "sale"
+                      ? item.quantity > (gear.quantityTotal ?? 1)
+                      : avail ? item.quantity > avail.quantityAvailable : false
 
                     return (
-                      <li key={item.gearId} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                      <li key={`${item.gearId}-${item.mode}`} className="flex gap-4 py-4 first:pt-0 last:pb-0">
                         {imageSrc ? (
                           <img src={imageSrc} alt="" className="h-20 w-20 flex-shrink-0 rounded-xl object-cover" />
                         ) : (
@@ -251,8 +261,9 @@ export default function CartPage() {
                               <p className="truncate font-display font-semibold text-navy-900">
                                 {gear.name}
                               </p>
+                              <span className="mr-2 rounded-full bg-sand px-2 py-0.5 text-xs font-semibold text-forest-700">{item.mode === "sale" ? "Buy" : "Rent"}</span>
                               <p className="text-sm text-slate-500">
-                                Rs. {gear.discountedPrice.toLocaleString("en-IN")} / night
+                                Rs. {(item.mode === "sale" ? (gear.salePrice ?? gear.discountedPrice) : gear.discountedPrice).toLocaleString("en-IN")} {item.mode === "sale" ? "each" : "/ night"}
                                 {gear.discountedPrice < gear.realPrice && (
                                   <span className="ml-2 text-xs text-slate-400 line-through">
                                     Rs. {gear.realPrice.toLocaleString("en-IN")}
@@ -262,7 +273,7 @@ export default function CartPage() {
                             </div>
                             <button
                               type="button"
-                              onClick={() => removeItem(item.gearId)}
+                              onClick={() => removeItem(item.gearId, item.mode)}
                               className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
                               aria-label={`Remove ${gear.name}`}
                             >
@@ -276,7 +287,7 @@ export default function CartPage() {
                           <div className="mt-2 flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => updateQuantity(item.gearId, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.gearId, item.mode, item.quantity - 1)}
                               disabled={item.quantity <= 1}
                               className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-forest-400 hover:text-forest-700 disabled:opacity-30"
                             >
@@ -287,7 +298,7 @@ export default function CartPage() {
                             </span>
                             <button
                               type="button"
-                              onClick={() => updateQuantity(item.gearId, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.gearId, item.mode, item.quantity + 1)}
                               className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 text-sm font-bold text-slate-600 transition hover:border-forest-400 hover:text-forest-700"
                             >
                               +
@@ -295,13 +306,13 @@ export default function CartPage() {
 
                             {days > 0 && (
                               <span className="ml-auto text-sm font-semibold text-forest-700">
-                                Rs. {(gear.discountedPrice * item.quantity * days).toLocaleString("en-IN")}
+                                Rs. {((item.mode === "sale" ? (gear.salePrice ?? gear.discountedPrice) * item.quantity : gear.discountedPrice * item.quantity * days)).toLocaleString("en-IN")}
                               </span>
                             )}
                           </div>
 
                           {/* Stock warning */}
-                          {checkingStock ? (
+                          {item.mode === "sale" ? (overStock ? <p className="mt-1 text-xs font-semibold text-red-600">Only {gear.quantityTotal} available to buy</p> : null) : checkingStock ? (
                             <p className="mt-1 text-xs text-slate-400">Checking availability…</p>
                           ) : avail ? (
                             avail.quantityAvailable === 0 ? (
@@ -330,7 +341,7 @@ export default function CartPage() {
             </div>
 
             {/* Rental dates */}
-            <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+            {hasRental ? <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
               <h2 className="font-display font-bold text-navy-900">Rental dates</h2>
 
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -364,7 +375,8 @@ export default function CartPage() {
                   />
                 </div>
               </div>
-            </div>
+              {hasSale ? <p className="mt-4 text-xs text-slate-500">Rental dates apply to your rented items only. Items you&apos;re buying aren&apos;t affected by these dates.</p> : null}
+            </div> : <div className="rounded-3xl border border-slate-100 bg-white p-6 text-sm text-slate-500 shadow-sm">Purchase order — no rental dates needed. Bought items aren&apos;t tied to rental dates.</div>}
 
             {/* Delivery details */}
             <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
@@ -428,9 +440,7 @@ export default function CartPage() {
                       {gear.name} × {item.quantity}
                     </dt>
                     <dd className="whitespace-nowrap font-medium text-navy-900">
-                      {days > 0
-                        ? `Rs. ${(gear.discountedPrice * item.quantity * days).toLocaleString("en-IN")}`
-                        : "—"}
+                      Rs. {(item.mode === "sale" ? (gear.salePrice ?? gear.discountedPrice) * item.quantity : gear.discountedPrice * item.quantity * days).toLocaleString("en-IN")}
                     </dd>
                   </div>
                 )
@@ -438,10 +448,10 @@ export default function CartPage() {
             </dl>
 
             <dl className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-sm">
-              <div className="flex justify-between">
+              {hasRental ? <div className="flex justify-between">
                 <dt className="text-slate-500">Days</dt>
                 <dd className="font-medium text-navy-900">{days > 0 ? days : "—"}</dd>
-              </div>
+              </div> : null}
               <div className="flex justify-between">
                 <dt className="text-slate-500">Delivery</dt>
                 <dd>
@@ -481,9 +491,9 @@ export default function CartPage() {
               <button
                 type="submit"
                 className="btn-primary mt-5 w-full"
-                disabled={submitting || days < 1 || hasStockIssue || items.length === 0}
+                disabled={submitting || (hasRental && days < 1) || hasStockIssue || items.length === 0}
               >
-                {submitting ? "Please wait…" : "Confirm Booking — Cash on Delivery"}
+                {submitting ? "Please wait…" : hasRental ? "Confirm Booking — Cash on Delivery" : "Confirm Order — Cash on Delivery"}
               </button>
             )}
 

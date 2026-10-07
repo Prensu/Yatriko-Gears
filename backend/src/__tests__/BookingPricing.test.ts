@@ -47,6 +47,17 @@ describe("calculateSubtotal", () => {
   it("returns zero for an empty basket", () => {
     expect(calculateSubtotal([], 3)).toBe(0)
   })
+
+  it("prices sale items once without rental days", () => {
+    expect(calculateSubtotal([{ mode: "sale", unitPrice: 1200, quantity: 2 }], 5)).toBe(2400)
+  })
+
+  it("prices mixed rental and sale items independently", () => {
+    expect(calculateSubtotal([
+      { mode: "rent", pricePerDay: 700, quantity: 1 },
+      { mode: "sale", unitPrice: 1200, quantity: 2 },
+    ], 3)).toBe(4500)
+  })
 })
 
 describe("calculateTotal", () => {

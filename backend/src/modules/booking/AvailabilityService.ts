@@ -46,7 +46,7 @@ export async function getAvailability(
   for (const booking of overlapping) {
     for (const item of booking.items) {
       const id = String(item.gear)
-      booked.set(id, (booked.get(id) ?? 0) + item.quantity)
+      if (item.mode !== "sale") booked.set(id, (booked.get(id) ?? 0) + item.quantity)
     }
   }
 

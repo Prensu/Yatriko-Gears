@@ -282,7 +282,7 @@ export default function GearDetailPage() {
         : null;
 
   const handleAddToCart = () => {
-    addItem(gear._id, quantity);
+    addItem(gear._id, quantity, showingSale ? "sale" : "rent");
     toast.success(`${quantity}x ${gear.name} added to your cart`);
   };
 

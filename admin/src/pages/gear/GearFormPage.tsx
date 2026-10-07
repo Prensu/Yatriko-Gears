@@ -336,7 +336,7 @@ export default function GearFormPage() {
     const parsed = validateForm(gearFormSchema, form)
     if (!parsed.ok) {
       setErrors(parsed.errors)
-      toast.error("Please fix the highlighted fields")
+      toast.error(Object.values(parsed.errors)[0] ?? "Please fix the highlighted fields")
       return
     }
 
@@ -578,7 +578,10 @@ export default function GearFormPage() {
                     ...current,
                     availableFor: next,
                     ...(next.length === 1 && next[0] === "sale"
-                      ? { salePrice: current.salePrice || current.discountedPrice }
+                      ? (() => {
+                          const price = current.salePrice || current.discountedPrice || current.realPrice
+                          return { salePrice: price, realPrice: price, discountedPrice: price }
+                        })()
                       : {}),
                   }))
                 }}

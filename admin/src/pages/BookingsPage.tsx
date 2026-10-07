@@ -82,8 +82,7 @@ export default function BookingsPage() {
       className: "hidden lg:table-cell",
       render: (booking) => (
         <span className="whitespace-nowrap text-ink-600">
-          {formatDate(booking.startDate)} → {formatDate(booking.endDate)}
-          <span className="ml-1 text-ink-400">({booking.days}d)</span>
+          {booking.startDate && booking.endDate ? <>{formatDate(booking.startDate)} → {formatDate(booking.endDate)}<span className="ml-1 text-ink-400">({booking.days}d)</span></> : "Purchase — no rental dates"}
         </span>
       ),
     },
@@ -229,7 +228,7 @@ export default function BookingsPage() {
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-ink-500">Rental period</dt>
                   <dd className="text-ink-900">
-                    {formatDate(open.startDate)} → {formatDate(open.endDate)} ({open.days} days)
+                    {open.startDate && open.endDate ? `${formatDate(open.startDate)} → ${formatDate(open.endDate)} (${open.days} days)` : "Purchase — no rental dates"}
                   </dd>
                 </div>
 
@@ -240,8 +239,8 @@ export default function BookingsPage() {
                 <ul className="divide-y divide-ink-100 rounded-lg border border-ink-200">
                   {open.items.map((item) => (
                     <li key={item.gear} className="flex justify-between gap-3 px-3 py-2">
-                      <span className="text-ink-800">{item.name} × {item.quantity}</span>
-                      <span className="text-ink-500">{formatPrice(item.pricePerDay)}/night</span>
+                      <span className="text-ink-800"><span className="mr-2 rounded-full bg-ink-100 px-2 py-0.5 text-xs font-semibold">{item.mode === "sale" ? "Buy" : "Rent"}</span>{item.name} × {item.quantity}</span>
+                      <span className="text-ink-500">{item.mode === "sale" ? `${formatPrice(item.unitPrice ?? item.pricePerDay ?? 0)} each` : `${formatPrice(item.pricePerDay ?? 0)}/night`}</span>
                     </li>
                   ))}
                 </ul>

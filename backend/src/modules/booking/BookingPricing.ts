@@ -5,7 +5,9 @@
  */
 
 export type PricedItem = {
-  pricePerDay: number
+  mode?: "rent" | "sale"
+  pricePerDay?: number
+  unitPrice?: number
   quantity: number
 }
 
@@ -25,7 +27,9 @@ export function countDays(start: Date, end: Date): number {
 
 /** subtotal = sum(pricePerDay x quantity) x days */
 export function calculateSubtotal(items: PricedItem[], days: number): number {
-  return items.reduce((sum, item) => sum + item.pricePerDay * item.quantity * days, 0)
+  return items.reduce((sum, item) => sum + (item.mode === "sale"
+    ? (item.unitPrice ?? 0) * item.quantity
+    : (item.pricePerDay ?? 0) * item.quantity * days), 0)
 }
 
 /** Delivery is quoted separately over WhatsApp. */
