@@ -63,17 +63,14 @@ export default function GearListPage() {
             </span>
           )}
           <div className="min-w-0">
-            <p className="line-clamp-2 break-words font-medium text-ink-900" title={gear.name}>
-              {gear.name}
-            </p>
             <a
               href={`/gear/${encodeURIComponent(gear.slug)}`}
               target="_blank"
               rel="noreferrer"
-              className="block truncate text-xs text-ink-500 hover:text-emerald-700 hover:underline"
+              className="line-clamp-2 break-words font-medium text-ink-900 hover:text-emerald-700 hover:underline"
               title="View on live site"
             >
-              /{gear.slug} ↗
+              {gear.name}
             </a>
           </div>
         </div>

@@ -16,9 +16,17 @@ import { BsStars } from "react-icons/bs";
 /* Image Gallery (inline)                                               */
 /* ------------------------------------------------------------------ */
 
-type GalleryMedia = { type: "image" | "video"; src: string }
+type GalleryMedia = { type: "image" | "video"; src: string };
 
-function ImageGallery({ images, videos, name }: { images: string[]; videos: string[]; name: string }) {
+function ImageGallery({
+  images,
+  videos,
+  name,
+}: {
+  images: string[];
+  videos: string[];
+  name: string;
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const media: GalleryMedia[] = [
     ...images.map((src) => ({ type: "image" as const, src })),
@@ -82,8 +90,15 @@ function ImageGallery({ images, videos, name }: { images: string[]; videos: stri
             >
               {item.type === "video" ? (
                 <div className="relative h-16 w-16 bg-navy-900 sm:h-20 sm:w-20">
-                  <video src={item.src} muted preload="metadata" className="h-full w-full object-cover" />
-                  <span className="absolute inset-0 flex items-center justify-center text-xl text-white">▶</span>
+                  <video
+                    src={item.src}
+                    muted
+                    preload="metadata"
+                    className="h-full w-full object-cover"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center text-xl text-white">
+                    ▶
+                  </span>
                 </div>
               ) : (
                 <img
@@ -172,7 +187,9 @@ export default function GearDetailPage() {
   const { addItem } = useCart();
   const toast = useToast();
 
-  const metaImage = gear ? resolveGearImage(gear.images?.[0] || gear.image) : undefined;
+  const metaImage = gear
+    ? resolveGearImage(gear.images?.[0] || gear.image)
+    : undefined;
   const productDescription = gear
     ? gear.description ||
       gear.longDescription ||
@@ -414,9 +431,9 @@ export default function GearDetailPage() {
             <div className="hidden lg:grid grid-cols-3 gap-3">
               {[
                 {
-                  icon: <BsStars className="h-5 w-5" />,
-                  title: "Sanitized & Inspected",
-                  sub: "Thoroughly cleaned before every rental",
+                  icon: <FiTruck className="h-5 w-5" />,
+                  title: "Quality Checked",
+                  sub: "Every item is inspected before it reaches you",
                 },
                 {
                   icon: <FiTruck className="h-5 w-5" />,
@@ -445,7 +462,6 @@ export default function GearDetailPage() {
                 </div>
               ))}
             </div>
-
           </div>
 
           {/* ─── Right: Product Info ─── */}
@@ -656,7 +672,8 @@ export default function GearDetailPage() {
                         <circle cx="20" cy="21" r="1" />
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                       </svg>
-                      Buy · Add to Cart · Rs. {(displayPrice * quantity).toLocaleString()}
+                      Buy · Add to Cart · Rs.{" "}
+                      {(displayPrice * quantity).toLocaleString()}
                     </button>
                   </div>
 
@@ -671,10 +688,14 @@ export default function GearDetailPage() {
                       Rental availability is confirmed by our team
                     </h2>
                     <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                      Message us with your dates and we'll confirm this gear for you.
+                      Message us with your dates and we'll confirm this gear for
+                      you.
                     </p>
                   </div>
-                  <Link to="/contact" className="btn-primary inline-flex w-full justify-center sm:w-auto">
+                  <Link
+                    to="/contact"
+                    className="btn-primary inline-flex w-full justify-center sm:w-auto"
+                  >
                     Contact us about this gear
                   </Link>
                 </div>

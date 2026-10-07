@@ -49,7 +49,6 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
         <Link to={`/gear/${gear.slug}`} className="transition hover:text-forest-600">
           <h3 className="font-display font-semibold text-navy-900 hover:text-forest-600 transition">{gear.name}</h3>
         </Link>
-        {gear.description && <p className="mt-1 line-clamp-2 text-xs text-slate-500">{gear.description}</p>}
         <div className="mt-3 flex items-baseline gap-2">
           {priceOnRequest ? (
             <span className="text-sm font-semibold text-forest-700">Price on request</span>
