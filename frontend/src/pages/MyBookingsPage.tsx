@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { cancelBooking, fetchMyBookings } from "@/api/booking";
 import { ApiRequestError } from "@/lib/api";
 import type { Booking } from "@/types";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { useCancelBooking, useMyBookings } from "@/hooks/useBookings";
 
 const STATUS_TONE: Record<string, string> = {
   pending: "bg-amber-50 text-amber-700",
@@ -32,49 +31,30 @@ export default function MyBookingsPage() {
     noIndex: true,
   });
 
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const { data: bookings = [], isLoading: loading, error: queryError } = useMyBookings();
+  const cancelMutation = useCancelBooking();
+  const cancellingId = cancelMutation.isPending ? cancelMutation.variables?._id : null;
   const [params] = useSearchParams();
   const justBooked = params.get("new");
 
-  useEffect(() => {
-    fetchMyBookings()
-      .then(setBookings)
-      .catch((cause: unknown) =>
-        setError(
-          cause instanceof ApiRequestError
-            ? cause.message
-            : "Could not load your bookings",
-        ),
-      )
-      .finally(() => setLoading(false));
-  }, []);
+  const error = queryError
+    ? queryError instanceof ApiRequestError
+      ? queryError.message
+      : "Could not load your bookings"
+    : cancelMutation.error
+      ? cancelMutation.error instanceof ApiRequestError
+        ? cancelMutation.error.message
+        : "Could not cancel this booking"
+      : "";
 
-  const cancel = async (booking: Booking) => {
+  const cancel = (booking: Booking) => {
     if (
       !window.confirm(
         `Cancel booking ${booking.code}? This frees the gear for someone else.`,
       )
     )
       return;
-    setCancellingId(booking._id);
-    setError("");
-    try {
-      const updated = await cancelBooking(booking._id);
-      setBookings((current) =>
-        current.map((b) => (b._id === updated._id ? updated : b)),
-      );
-    } catch (cause) {
-      setError(
-        cause instanceof ApiRequestError
-          ? cause.message
-          : "Could not cancel this booking",
-      );
-    } finally {
-      setCancellingId(null);
-    }
+    cancelMutation.mutate(booking);
   };
 
   return (
@@ -192,7 +172,7 @@ export default function MyBookingsPage() {
                         type="button"
                         onClick={() => void cancel(booking)}
                         className="text-sm font-semibold text-slate-400 transition hover:text-red-600"
-                        disabled={cancellingId === booking._id}
+                        disabled={cancelMutation.isPending}
                       >
                         {cancellingId === booking._id
                           ? "Cancelling…"

@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom"
+import { useRef } from "react"
 import type { Gear } from "@/types"
 import { resolveGearImage } from "@/lib/gearImages"
 import { useCart } from "@/context/CartContext"
 import { useToast } from "@/context/ToastContext"
+import { TransitionLink } from "@/components/ui/TransitionLink"
 
 export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "rent" | "sale" }) {
   const imageSrc = resolveGearImage(gear.image)
@@ -12,6 +13,7 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
   const hasRentalDiscount = !showingSale && gear.discountedPrice < gear.realPrice
   const { addItem } = useCart()
   const toast = useToast()
+  const imageRef = useRef<HTMLImageElement>(null)
 
   const handleAdd = () => {
     addItem(gear._id, 1, showingSale ? "sale" : "rent")
@@ -20,12 +22,13 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-      <Link to={`/gear/${gear.slug}`} className="block">
+      <TransitionLink to={`/gear/${gear.slug}`} preload="gearDetail" sharedElementRef={imageRef} className="block">
         <div className="relative aspect-[4/3] overflow-hidden bg-sand">
           {imageSrc ? (
             <img
               src={imageSrc}
               alt={gear.name}
+              ref={imageRef}
               loading="lazy"
               className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
             />
@@ -44,11 +47,11 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
             )}
           </div>
         </div>
-      </Link>
+      </TransitionLink>
       <div className="p-4">
-        <Link to={`/gear/${gear.slug}`} className="transition hover:text-forest-600">
+        <TransitionLink to={`/gear/${gear.slug}`} preload="gearDetail" sharedElementRef={imageRef} className="transition hover:text-forest-600">
           <h3 className="font-display font-semibold text-navy-900 hover:text-forest-600 transition">{gear.name}</h3>
-        </Link>
+        </TransitionLink>
         <div className="mt-3 flex items-baseline gap-2">
           {priceOnRequest ? (
             <span className="text-sm font-semibold text-forest-700">Price on request</span>
@@ -86,12 +89,14 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
             Add to Cart
           </button>
         ) : (
-          <Link
+          <TransitionLink
             to={`/gear/${gear.slug}`}
+            preload="gearDetail"
+            sharedElementRef={imageRef}
             className="btn-secondary mt-4 flex w-full items-center justify-center"
           >
             View details
-          </Link>
+          </TransitionLink>
         )}
       </div>
     </article>

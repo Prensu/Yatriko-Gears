@@ -107,12 +107,27 @@ export async function fetchDestinations(): Promise<Destination[]> {
 }
 
 export async function fetchVideos(): Promise<Video[]> {
+  const result = await fetchVideosPage({ limit: CATALOGUE_LIMIT })
+  return result.videos
+}
+
+export type VideoPageResult = { videos: Video[]; page: number; limit: number; total: number }
+
+export async function fetchVideosPage(params?: {
+  category?: string
+  page?: number
+  limit?: number
+}): Promise<VideoPageResult> {
+  const page = params?.page ?? 1
+  const limit = params?.limit ?? CATALOGUE_LIMIT
   try {
-    const { data } = await api.get("/video", z.array(videoSchema))
-    return data
+    const qs = new URLSearchParams({ page: String(page), limit: String(limit) })
+    if (params?.category && params.category !== "All") qs.set("category", params.category)
+    const result = await api.get(`/video?${qs}`, z.array(videoSchema))
+    const meta = result.meta as { page?: number; limit?: number; total?: number } | undefined
+    return { videos: result.data, page: meta?.page ?? page, limit: meta?.limit ?? limit, total: meta?.total ?? result.data.length }
   } catch (error) {
-    // No fallback videos yet — return empty so the UI degrades gracefully.
     warnFallback("GET /video", error)
-    return []
+    return { videos: [], page, limit, total: 0 }
   }
 }

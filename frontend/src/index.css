@@ -31,3 +31,27 @@
     @apply py-16 sm:py-20;
   }
 }
+
+::view-transition-group(gear-image) {
+  animation-duration: 350ms;
+  animation-timing-function: ease-in-out;
+}
+
+::view-transition-old(gear-image),
+::view-transition-new(gear-image) {
+  object-fit: cover;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

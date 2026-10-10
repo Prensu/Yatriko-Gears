@@ -4,14 +4,13 @@ import Layout from "@/components/layout/Layout"
 import RequireAuth from "@/components/layout/RequireAuth"
 import HomePage from "@/pages/HomePage"
 import LeadCaptureModal from "@/components/modal/LeadCaptureModal"
+import { GearDetailPage, GearPage } from "@/lib/routes"
 
 /**
  * Only the home page ships in the initial bundle. Everything else loads on
  * demand — most visitors land on "/", and on a Nepali mobile connection every
  * kilobyte of first paint counts.
  */
-const GearPage = lazy(() => import("@/pages/GearPage"))
-const GearDetailPage = lazy(() => import("@/pages/GearDetailPage"))
 const PortfolioPage = lazy(() => import("@/pages/PortfolioPage"))
 const ContactPage = lazy(() => import("@/pages/ContactPage"))
 const RentalTermsPage = lazy(() => import("@/pages/RentalTermsPage"))

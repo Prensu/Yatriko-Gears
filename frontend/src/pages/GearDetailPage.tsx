@@ -138,6 +138,9 @@ function ImageGallery({
               key={activeMedia.src}
               src={activeMedia.src}
               alt={`${name} — photo ${activeIndex + 1}`}
+              style={{
+                viewTransitionName: activeIndex === 0 ? "gear-image" : undefined,
+              }}
               className="h-full w-full rounded-lg object-contain drop-shadow-lg transition-transform duration-500 ease-out group-hover:scale-[1.03]"
             />
           ) : (
