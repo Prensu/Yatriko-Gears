@@ -24,23 +24,25 @@ make deploy-check # everything CI/hosts will run
 
 1. **pnpm only.** Never npm or yarn, in any of the three apps.
 2. **Never trust the client for money or identity.** Booking totals are recomputed
-   server-side from stored prices; eSewa callbacks are confirmed server-to-server
-   before anything is marked paid; roles are never read from a third-party token.
+   server-side from stored prices; booking payment status is controlled by the
+   backend/admin flow; roles are never read from a third-party token.
 3. **Every API response is Zod-validated** against the `{ data, message, meta }`
    envelope. Add a backend field → update the matching schema in
    `frontend/src/types/` or `admin/src/types/`, or the public site silently falls
    back to bundled dummy data.
 4. **Secrets live in git-ignored `.env` files**, read only through
    `backend/src/config/AppConfig.ts` or `import.meta.env`. Never commit one.
-5. **`uploader()` must come before `bodyValidator()`** on multipart routes —
-   multer parses the body before Zod can see it.
+5. **Cloudinary uploads happen before content mutations.** The browser first
+   requests a signed upload payload, uploads directly to Cloudinary, then sends
+   the returned URL/public ID to the API for validation and persistence.
 6. **Don't leave dev servers running.** The user runs `make dev-all` themselves;
    stray servers cause EADDRINUSE on their next start.
 
 ## Current state
 
-- eSewa is deliberately on the **sandbox** gateway (`EPAYTEST`) until merchant
-  onboarding. Do not switch it to production without being asked.
+- Bookings currently use the configured cash-payment flow. Do not document or add
+  an online payment gateway unless its backend route, verification flow and tests
+  are implemented first.
 - Deployment targets: **Vercel** (frontend + admin) and **Render** (backend).
   See [DEPLOYMENT.md](DEPLOYMENT.md).
 - Tests: `backend/src/__tests__` and `frontend/src/__tests__` (Vitest).

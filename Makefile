@@ -49,7 +49,7 @@ help: ## Show this help menu (default when you just type "make")
 	@grep -E '^(build|build-backend|build-frontend|build-admin|start|preview|deploy-check):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo -e "$(YELLOW)── Quality Checks ─────────────────────────────────$(RESET)"
-	@grep -E '^(check|typecheck|typecheck-admin|lint|test):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
+	@grep -E '^(check|typecheck|typecheck-admin|typecheck-frontend|lint|test):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
 	@echo ""
 	@echo -e "$(YELLOW)── Database ───────────────────────────────────────$(RESET)"
 	@grep -E '^(seed):.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-18s$(RESET) %s\n", $$1, $$2}'
@@ -123,7 +123,7 @@ build-backend: ## Compile backend TypeScript -> backend/dist
 build-frontend: ## Type-check + bundle frontend -> frontend/dist
 	cd $(FRONTEND_DIR) && $(PM) run build
 
-build-admin: ## Type-check + bundle admin panel -> admin/dist
+build-admin: ## Type-check + bundle admin panel -> admin/dist/admin
 	cd $(ADMIN_DIR) && $(PM) run build
 
 start: ## Start the COMPILED backend (run build-backend first)
@@ -143,15 +143,18 @@ deploy-check: ## Dry-run what CI/hosts will do: install, check, build all three
 # │  ✅  QUALITY CHECKS                                                │
 # └──────────────────────────────────────────────────────────────────┘
 
-.PHONY: check typecheck typecheck-admin lint test
+.PHONY: check typecheck typecheck-admin typecheck-frontend lint test
 
-check: typecheck typecheck-admin lint test ## Run every check (typecheck + lint + tests)
+check: typecheck typecheck-admin typecheck-frontend lint test ## Run every check (typechecks + lint + tests)
 
 typecheck: ## Typecheck backend without emitting files
 	cd $(BACKEND_DIR) && $(PM) run typecheck
 
 typecheck-admin: ## Typecheck the admin panel without emitting files
 	cd $(ADMIN_DIR) && $(PM) run typecheck
+
+typecheck-frontend: ## Typecheck the public frontend without emitting files
+	cd $(FRONTEND_DIR) && $(PM) exec tsc -b --pretty false
 
 test: ## Run all unit tests (backend + frontend)
 	cd $(BACKEND_DIR) && $(PM) run test

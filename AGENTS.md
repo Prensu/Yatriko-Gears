@@ -57,8 +57,8 @@ Same stack as `frontend/`, **plus**:
 | Validation | Zod DTOs + `bodyValidator` middleware |
 | Auth | JWT access (1h) + refresh (1d) + revocable DB sessions; bcryptjs cost 12 |
 | Google auth | Google Identity Services, ID token verified locally against Google's JWKS |
-| Payments | eSewa ePay v2 (HMAC-SHA256 signed, server-to-server verified) |
-| Images | multer disk storage, served at `/images` |
+| Payments | Booking payment status currently uses the backend cash flow |
+| Images | Cloudinary signed direct uploads |
 | Video | Cloudinary signed direct uploads |
 | Chatbot | Google Gemini, history persisted in MongoDB with a TTL |
 | Email | nodemailer (Gmail SMTP) |
@@ -77,7 +77,7 @@ backend/src/
 ├── seed.ts                 # idempotent seeder (admin user, categories, gear, …)
 ├── config/                 # AppConfig (ALL process.env reads), mongodb, smtp, cloudinary
 ├── router/router.ts        # mounts every module under /api/v1
-├── middlewares/            # Auth(roles), bodyValidator(dto), uploader(dir), error handler
+├── middlewares/            # Auth(roles), bodyValidator(dto), error handler
 ├── modules/
 │   ├── auth/               # login, register, me, logout, refresh, google, profile
 │   │   └── GoogleVerifier.ts   # verifies Google ID tokens against Google's JWKS
@@ -85,8 +85,8 @@ backend/src/
 │   ├── booking/            # BookingModel/Dto/Controller/Route
 │   │   ├── AvailabilityService.ts  # stock + date-overlap checks
 │   │   └── BookingPricing.ts       # pure rental maths (unit tested)
-│   ├── payment/            # EsewaService (signing/verification), Controller, Route
 │   └── chat/               # Gemini chatbot, ChatModel holds history with a TTL
+│   ├── uploads/            # Cloudinary image upload signatures
 ├── services/EmailService.ts
 ├── utilities/              # commonSchema, helpers (slug, pagination, mapImage)
 └── __tests__/              # Vitest specs
@@ -97,20 +97,21 @@ backend/src/
 - **Naming**: `XxxRoute.ts`, `XxxController.ts`, `XxxDto.ts`, `XxxModel.ts`, each
   inside `modules/<feature>/`.
 - **`server.ts` vs `app.ts`**: `app.ts` exports the app and never calls `.listen()`.
-- **Middleware order in `app.ts`** (never reorder): helmet → cors → rateLimit →
-  body parsers → `/images` static → `/api/v1` router → 404 → error handler (last).
-- **Route pipeline reads left-to-right**: `Auth(["admin"]) → uploader(...).single("image")
-  → bodyValidator(Dto) → controller`. **`uploader()` must come before `bodyValidator()`**
-  — multer parses the body before Zod can validate it.
+- **Middleware order in `app.ts`** (never reorder): request logging → helmet → cors →
+  rateLimit → booking rate limit → body parsers → health check → `/api/v1` router
+  → 404 → error handler (last).
+- **Image uploads** use `GET/POST /uploads/sign` for a signed Cloudinary payload.
+  The browser uploads directly to Cloudinary; the API stores the returned URL and
+  public ID. Do not add local-disk upload handling without updating deployment and
+  cleanup behavior.
 - **Controllers**: classes with arrow-function methods. Wrap in try/catch, throw plain
   `{ code, message, detail? }` objects, always `next(exception)`. Never send status
   codes locally.
 - **Response envelope** — every response, success or error:
   `{ "data": <payload|null>, "message": "<string>", "meta": <pagination|null> }`
-- **DTOs**: multipart routes must use `z.coerce.number()` and
-  `z.preprocess(parseMaybeJson, ...)`, because multipart sends everything as strings.
-  Booleans are the trap: `z.coerce.boolean()` reads the string `"false"` as **true**,
-  so clients must send `""` for false.
+- **DTOs**: request bodies are validated with Zod before controllers run. Upload
+  fields are Cloudinary URLs/public IDs sent in JSON after the direct upload;
+  validate that the URL belongs to the configured Cloudinary account.
 - **Slugs**: user-facing resources are routed by `slug`, not `_id`. Never overwrite an
   existing slug on update.
 - **Pagination**: every list endpoint uses `getPagination()` and returns
@@ -139,8 +140,8 @@ frontend/src/
 │   ├── layout/             # Header, Footer, AccountMenu, RequireAuth
 │   ├── auth/               # GoogleSignInButton
 │   ├── home/ gear/ common/ modal/ chat/
-└── pages/                  # Home, Gear, Portfolio, Contact, Login, Register,
-                            # Book, MyBookings, PaymentResult, NotFound
+└── pages/                  # Home, Gear, RentalTerms, Portfolio, Contact, Blog,
+                            # Cart, MyBookings, Login/Register and recovery pages
 ```
 
 ### Frontend conventions
@@ -187,18 +188,17 @@ Base URL: `<origin>/api/v1` (dev: `http://localhost:9005/api/v1`, proxied from `
 | POST | /auth/register | public | role forced to `customer` |
 | POST | /auth/login | public | → `{ accessToken, refreshToken, user }` |
 | POST | /auth/google | public | body `{ credential }` — Google ID token |
-| GET / PATCH | /auth/me | Bearer | PATCH is multipart (avatar field: `image`) |
+| GET / PATCH | /auth/me | Bearer | PATCH accepts validated profile JSON and Cloudinary avatar URL/public ID |
 | POST | /auth/logout, /auth/refresh-token | mixed | |
 | POST | /auth/forgot-password, /auth/reset-password | public | |
-| GET/POST/PUT/DELETE | /gear, /category, /destination | writes = admin | multipart, image field `image` |
-| GET/POST/PUT/DELETE | /package | writes = admin | **JSON only** — no uploader on this route |
+| GET/POST/PUT/DELETE | /gear, /category, /destination | writes = admin | JSON with validated Cloudinary media fields |
+| GET/POST/PUT/DELETE | /package | writes = admin | JSON |
 | GET | /video, POST /video/upload-signature, POST/PUT/DELETE /video | writes = admin | Cloudinary |
 | POST | /booking | Bearer | server prices it; stock + date overlap enforced |
 | GET | /booking/my, /booking/availability | Bearer / public | |
 | PATCH | /booking/:id/cancel | Bearer (owner) | pending + unpaid only |
 | GET | /booking, PATCH /booking/:id/status, DELETE | admin | |
-| POST | /payment/esewa/initiate | Bearer | → signed form fields |
-| POST | /payment/esewa/verify | public | verified server-to-server before settling |
+| GET/POST | /uploads/sign | Bearer/admin or own avatar | signed Cloudinary image upload payload |
 | POST /contact, GET/PATCH/DELETE /contact | mixed | | |
 | POST /subscriber, GET/DELETE /subscriber | mixed | | |
 | GET / DELETE | /user | admin | |
@@ -232,8 +232,8 @@ make check       # typecheck (backend + admin) + lint (frontend) + tests
 5. New frontend/admin data fetching goes through `lib/api.ts` + a file in `api/`,
    validated by a Zod schema in `types/`.
 6. **Never trust the client for money or identity.** Prices are recomputed server-side;
-   payment callbacks are verified server-to-server; roles are never read from a
-   third-party token.
+   booking payment status is controlled by the backend/admin flow; roles are never
+   read from a third-party token.
 7. Secrets are read from `AppConfig.ts` (backend) or `import.meta.env` (frontend/admin),
    sourced from git-ignored `.env` files. Note that Vite inlines `VITE_*` at **build**
    time — changing one requires a rebuild, not just a restart.

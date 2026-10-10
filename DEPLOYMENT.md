@@ -86,8 +86,9 @@ VITE_PUBLIC_SITE_URL=https://your-site.vercel.app
 ```
 
 3. Note the resulting URL, e.g. `https://yatriko-admin.vercel.app`.
-4. Edit `frontend/vercel.json` and replace the placeholder host in the `/admin`
-   rewrite with that URL, then redeploy the public site. The CMS is then reachable
+4. Update the `/admin` rewrite host in `frontend/vercel.json` if the admin project
+   URL differs from the checked-in `yatriko-gears-admin.vercel.app` host, then redeploy
+   the public site. The CMS is then reachable
    at `https://your-site.vercel.app/admin`, exactly as in development.
 
 The admin build is emitted to `dist/admin`, matching its `base: "/admin/"`, and
@@ -118,7 +119,7 @@ users** can sign in. Publish it to open sign-in to everyone.
 [ ] Register a customer, then sign in with Google
 [ ] Make a booking and confirm it appears in /admin with status pending/unpaid
 [ ] Sign in to /admin, upload a gear image, confirm it renders on the public site
-[ ] Redeploy the backend, then check that image STILL renders (proves the disk works)
+[ ] Redeploy the backend, then check that existing Cloudinary images still render
 [ ] Run the seeder once: Render Shell -> pnpm seed
 ```
 
