@@ -1,5 +1,6 @@
 import ContactSection from "@/components/home/ContactSection";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
 
 export default function ContactPage() {
   usePageMeta({
@@ -11,6 +12,7 @@ export default function ContactPage() {
 
   return (
     <div className="bg-white">
+      <div className="container-site pt-8"><Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Contact" }]} /></div>
       <ContactSection />
       {/* Map embed — Gabu, Khokana, Lalitpur */}
       <div className="container-site pb-20 font-sans">

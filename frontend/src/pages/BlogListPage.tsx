@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { fetchBlogList } from "@/api/blog"
 import type { Blog } from "@/types"
 import { usePageMeta } from "@/hooks/usePageMeta"
+import Breadcrumbs from "@/components/ui/Breadcrumbs"
+import Pagination from "@/components/ui/Pagination"
 
 function formatPublishedDate(value: string): string {
   const date = new Date(value)
@@ -12,26 +14,27 @@ function formatPublishedDate(value: string): string {
 }
 
 export default function BlogListPage() {
+  const [params, setParams] = useSearchParams()
+  const page = Math.max(1, Number(params.get("page") || "1") || 1)
+
   usePageMeta({
-    title: "Camping & Trekking Blog",
+    title: page > 1 ? `Camping & Trekking Blog — Page ${page}` : "Camping & Trekking Blog",
     description: "Practical camping guides, trekking advice and outdoor ideas from Yatriko Gears in Nepal.",
-    path: "/blog",
+    path: `/blog${window.location.search}`,
   })
 
   const [posts, setPosts] = useState<Blog[]>([])
-  const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState("")
 
   useEffect(() => {
     let active = true
-    fetchBlogList(1)
+    setLoading(true)
+    fetchBlogList(page)
       .then((result) => {
         if (!active) return
         setPosts(result.posts)
-        setPage(result.page)
         setTotal(result.total)
         setLoading(false)
       })
@@ -43,26 +46,12 @@ export default function BlogListPage() {
     return () => {
       active = false
     }
-  }, [])
-
-  const loadMore = async () => {
-    if (loadingMore || posts.length >= total) return
-    setLoadingMore(true)
-    try {
-      const result = await fetchBlogList(page + 1)
-      setPosts((current) => [...current, ...result.posts])
-      setPage(result.page)
-      setTotal(result.total)
-    } catch {
-      setError("More posts could not be loaded. Please try again.")
-    } finally {
-      setLoadingMore(false)
-    }
-  }
+  }, [page])
 
   return (
     <section className="section-pad bg-sand/40">
       <div className="container-site">
+        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Blog" }]} />
         <div className="mx-auto max-w-2xl text-center">
           <span className="text-xs font-bold uppercase tracking-widest text-forest-600">From the trail</span>
           <h1 className="mt-2 font-display text-4xl font-bold text-navy-900 sm:text-5xl">Camping & Trekking Blog</h1>
@@ -98,13 +87,7 @@ export default function BlogListPage() {
             </div>
 
             {error && <p className="mt-6 text-center text-sm text-red-600">{error}</p>}
-            {posts.length < total && (
-              <div className="mt-10 text-center">
-                <button type="button" onClick={() => void loadMore()} className="btn-secondary" disabled={loadingMore}>
-                  {loadingMore ? "Loading…" : "Load more articles"}
-                </button>
-              </div>
-            )}
+            <Pagination current={page} total={total} pageSize={9} onChange={(nextPage) => setParams(nextPage > 1 ? { page: String(nextPage) } : {})} />
           </>
         ) : (
           <p className="mt-16 text-center text-slate-500">New camping guides are coming soon.</p>

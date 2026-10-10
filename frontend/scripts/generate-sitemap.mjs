@@ -23,7 +23,7 @@ async function loadEnvFile(filePath) {
 await loadEnvFile(path.join(frontendDirectory, ".env"))
 await loadEnvFile(path.join(frontendDirectory, ".env.local"))
 
-const siteUrl = (process.env.VITE_SITE_URL || "https://yatrikogears.com").replace(/\/+$/, "")
+const siteUrl = (process.env.VITE_SITE_URL || "https://www.yatrikogears.com.np").replace(/\/+$/, "")
 const configuredApiBase = (process.env.SITEMAP_API_URL || process.env.VITE_API_BASE_URL || siteUrl).replace(/\/+$/, "")
 const apiBase = configuredApiBase.endsWith("/api/v1")
   ? configuredApiBase

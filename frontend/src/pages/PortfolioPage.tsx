@@ -3,6 +3,7 @@ import { fetchVideos } from "@/api/gear"
 import type { Video } from "@/types"
 import SectionHeading from "@/components/common/SectionHeading"
 import { usePageMeta } from "@/hooks/usePageMeta"
+import Breadcrumbs from "@/components/ui/Breadcrumbs"
 
 /**
  * Video portfolio. Clips are shot on phones in reel/TikTok format (9:16),
@@ -55,6 +56,7 @@ export default function PortfolioPage() {
   return (
     <section className="section-pad">
       <div className="container-site">
+        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Portfolio" }]} />
         <SectionHeading
           eyebrow="Adventures on film"
           title="Our Portfolio"

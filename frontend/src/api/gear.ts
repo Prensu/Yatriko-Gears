@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { api } from "@/lib/api"
-import { gearSchema, packageSchema, destinationSchema, videoSchema, type Gear, type Package, type Destination, type Video } from "@/types"
+import { gearSchema, packageSchema, destinationSchema, videoSchema, gearCategorySchema, type Gear, type Package, type Destination, type Video, type GearCategory } from "@/types"
 import { FALLBACK_GEAR } from "@/lib/fallbackData"
 
 /**
@@ -27,22 +27,41 @@ function warnFallback(endpoint: string, error: unknown): void {
  */
 const CATALOGUE_LIMIT = 100
 
+export type GearPageResult = { gear: Gear[]; page: number; limit: number; total: number }
+
+export async function fetchGearPage(params?: {
+  category?: string
+  search?: string
+  page?: number
+  limit?: number
+}): Promise<GearPageResult> {
+  const page = params?.page ?? 1
+  const limit = params?.limit ?? CATALOGUE_LIMIT
+  try {
+    const qs = new URLSearchParams()
+    if (params?.category) qs.set("category", params.category)
+    if (params?.search) qs.set("search", params.search)
+    qs.set("page", String(page))
+    qs.set("limit", String(limit))
+    const result = await api.get(`/gear?${qs}`, z.array(gearSchema))
+    const meta = result.meta as { page?: number; limit?: number; total?: number } | undefined
+    return { gear: result.data, page: meta?.page ?? page, limit: meta?.limit ?? limit, total: meta?.total ?? result.data.length }
+  } catch (error) {
+    warnFallback("GET /gear", error)
+    const filtered = FALLBACK_GEAR.filter((gear) => !params?.search || gear.name.toLowerCase().includes(params.search.toLowerCase()))
+      .filter((gear) => !params?.category || (typeof gear.category === "object" && gear.category?.slug === params.category))
+    const start = (page - 1) * limit
+    return { gear: filtered.slice(start, start + limit), page, limit, total: filtered.length }
+  }
+}
+
 export async function fetchGear(params?: {
   category?: string
   page?: number
   limit?: number
 }): Promise<Gear[]> {
-  try {
-    const qs = new URLSearchParams()
-    if (params?.category) qs.set("category", params.category)
-    if (params?.page) qs.set("page", String(params.page))
-    qs.set("limit", String(params?.limit ?? CATALOGUE_LIMIT))
-    const { data } = await api.get(`/gear?${qs}`, z.array(gearSchema))
-    return data
-  } catch (error) {
-    warnFallback("GET /gear", error)
-    return FALLBACK_GEAR
-  }
+  const result = await fetchGearPage(params)
+  return result.gear
 }
 
 export async function fetchGearBySlug(slug: string): Promise<Gear | undefined> {
@@ -52,6 +71,16 @@ export async function fetchGearBySlug(slug: string): Promise<Gear | undefined> {
   } catch (error) {
     warnFallback(`GET /gear/${slug}`, error)
     return FALLBACK_GEAR.find((g) => g.slug === slug)
+  }
+}
+
+export async function fetchCategories(): Promise<GearCategory[]> {
+  try {
+    const { data } = await api.get(`/category?limit=${CATALOGUE_LIMIT}`, z.array(gearCategorySchema))
+    return data
+  } catch (error) {
+    warnFallback("GET /category", error)
+    return []
   }
 }
 

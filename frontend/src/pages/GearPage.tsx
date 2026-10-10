@@ -1,20 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { fetchGear } from "@/api/gear";
-import type { Gear } from "@/types";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { fetchCategories, fetchGearPage } from "@/api/gear";
+import type { Gear, GearCategory } from "@/types";
 import GearCard from "@/components/gear/GearCard";
 import SectionHeading from "@/components/common/SectionHeading";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import Pagination from "@/components/ui/Pagination";
+import { GearGridSkeleton } from "@/components/ui/Skeleton";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
-type Filter = "rent" | "sale" | "new";
-
+type Filter = "sale" | "new";
+const PAGE_SIZE = 16;
 const STORE_FILTERS: { key: Filter; label: string }[] = [
   { key: "sale", label: "For Sale" },
   { key: "new", label: "New Arrivals" },
-];
-
-const RENTAL_FILTERS: { key: Filter; label: string }[] = [
-  { key: "rent", label: "Rental List" },
 ];
 
 export default function GearPage({
@@ -23,40 +22,106 @@ export default function GearPage({
   rentalOnly?: boolean;
 }) {
   const location = useLocation();
+  const [params, setParams] = useSearchParams();
   const isRentalPage = rentalOnly || location.pathname === "/rental-list";
+  const page = Math.max(1, Number(params.get("page") || "1") || 1);
+  const query = params.get("search") ?? "";
+  const category = params.get("category") ?? "";
+  const filter = (params.get("filter") as Filter) || "sale";
+  const [gear, setGear] = useState<Gear[]>([]);
+  const [categories, setCategories] = useState<GearCategory[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const activeFilter = isRentalPage ? "rent" : filter;
+  const categoryName = categories.find((item) => item.slug === category)?.name;
+  const title = isRentalPage
+    ? "Camping Gear Rental List"
+    : "Camping Gear for Sale";
 
   usePageMeta({
-    title: isRentalPage ? "Camping Gear Rental List" : "Camping Gear for Sale",
+    title: page > 1 ? `${title} — Page ${page}` : title,
     description:
       "Browse our full camping gear catalogue — tents, sleeping bags, stoves, chairs and lighting — with nightly rental rates and valley-wide delivery.",
-    path: isRentalPage ? "/rental-list" : "/gear",
+    path: `${isRentalPage ? "/rental-list" : "/gear"}${page > 1 || query || category || filter !== "sale" ? `?${new URLSearchParams({ ...(page > 1 ? { page: String(page) } : {}), ...(query ? { search: query } : {}), ...(category ? { category } : {}), ...(!isRentalPage && filter !== "sale" ? { filter } : {}) })}` : ""}`,
   });
 
-  const [gear, setGear] = useState<Gear[]>([]);
-  const [filter, setFilter] = useState<Filter>(
-    isRentalPage ? "rent" : "sale",
-  );
-  const [query, setQuery] = useState("");
-  const activeFilter: Filter = isRentalPage ? "rent" : filter;
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    // The API cannot filter by availableFor, so rental mode loads the
+    // catalogue first and paginates the rental-only results below.
+    fetchGearPage({
+      page: isRentalPage ? 1 : page,
+      limit: isRentalPage ? 100 : PAGE_SIZE,
+      search: query,
+      category,
+    })
+      .then((result) => {
+        if (!active) return;
+        setGear(result.gear);
+        setTotal(result.total);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [page, query, category, isRentalPage]);
 
   useEffect(() => {
-    fetchGear().then(setGear);
+    fetchCategories().then(setCategories);
   }, []);
 
-  const visible = useMemo(() => {
-    return gear.filter((g) => {
-      if (isRentalPage && !g.availableFor.includes("rent")) return false;
-      if (activeFilter === "sale" && !g.availableFor.includes("sale")) return false;
-      if (activeFilter === "new" && !g.isNew) return false;
-      if (query && !g.name.toLowerCase().includes(query.toLowerCase()))
-        return false;
-      return true;
-    });
-  }, [gear, activeFilter, query, isRentalPage]);
+  const updateParams = (updates: Record<string, string>) => {
+    const next = new URLSearchParams(params);
+    Object.entries(updates).forEach(([key, value]) =>
+      value ? next.set(key, value) : next.delete(key),
+    );
+    setParams(next);
+  };
+  const resetPage = (updates: Record<string, string>) =>
+    updateParams({ ...updates, page: "" });
+  const filteredGear = gear.filter((item) => {
+    if (activeFilter === "rent" && !item.availableFor.includes("rent"))
+      return false;
+    if (activeFilter === "sale" && !item.availableFor.includes("sale"))
+      return false;
+    if (activeFilter === "new" && !item.isNew) return false;
+    return true;
+  });
+  const visible = isRentalPage
+    ? filteredGear.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    : filteredGear;
+  const paginationTotal = isRentalPage ? filteredGear.length : total;
+  const changePage = (nextPage: number) => {
+    updateParams({ page: String(nextPage) });
+    requestAnimationFrame(() =>
+      gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  };
 
   return (
     <section className="section-pad bg-sand">
       <div className="container-site">
+        <Breadcrumbs
+          items={
+            categoryName
+              ? [
+                  { label: "Home", to: "/" },
+                  {
+                    label: isRentalPage ? "Rental List" : "Gear",
+                    to: isRentalPage ? "/rental-list" : "/gear",
+                  },
+                  { label: categoryName },
+                ]
+              : [
+                  { label: "Home", to: "/" },
+                  { label: isRentalPage ? "Rental List" : "Gear" },
+                ]
+          }
+        />
         <SectionHeading
           eyebrow="Gear Up for Memories"
           title={isRentalPage ? "Rental List" : "Gear"}
@@ -66,93 +131,76 @@ export default function GearPage({
               : "Browse gear available for sale and our latest arrivals."
           }
         />
-
-        {/* Category pills + search */}
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
           <div className="flex flex-wrap justify-center gap-2">
-            {(isRentalPage ? RENTAL_FILTERS : STORE_FILTERS).map((f) => (
+            {(isRentalPage
+              ? [{ key: "rent", label: "Rental List" }]
+              : STORE_FILTERS
+            ).map((item) => (
               <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                className={`rounded-full px-4 py-2 font-display text-sm font-semibold transition ${
-                  activeFilter === f.key
-                    ? "bg-forest-600 text-white"
-                    : "bg-white text-navy-800 hover:bg-forest-50"
-                }`}
+                key={item.key}
+                type="button"
+                onClick={() => resetPage({ filter: item.key })}
+                className={`rounded-full px-4 py-2 font-display text-sm font-semibold transition ${activeFilter === item.key ? "bg-forest-600 text-white" : "bg-white text-navy-800 hover:bg-forest-50"}`}
               >
-                {f.label}
+                {item.label}
               </button>
             ))}
           </div>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search gear…"
-            className="w-full rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm outline-none focus:border-forest-500 sm:w-64"
-            aria-label="Search gear"
-          />
-        </div>
-
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {visible.map((g) => (
-            <GearCard
-              key={g._id}
-              gear={g}
-              mode={isRentalPage ? "rent" : "sale"}
+          <div className="flex w-full gap-2 sm:w-auto">
+            <select
+              aria-label="Filter by category"
+              value={category}
+              onChange={(event) => resetPage({ category: event.target.value })}
+              className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-forest-500 sm:w-44"
+            >
+              <option value="">All categories</option>
+              {categories.map((item) => (
+                <option key={item._id} value={item.slug}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => resetPage({ search: event.target.value })}
+              placeholder="Search gear…"
+              className="min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm outline-none focus:border-forest-500 sm:w-64"
+              aria-label="Search gear"
             />
-          ))}
+          </div>
         </div>
-        {visible.length === 0 && (
+        <div ref={gridRef} className="mt-10 scroll-mt-24">
+          {loading ? (
+            <GearGridSkeleton pageSize={PAGE_SIZE} />
+          ) : (
+            <div
+              aria-busy="false"
+              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {visible.map((item) => (
+                <GearCard
+                  key={item._id}
+                  gear={item}
+                  mode={isRentalPage ? "rent" : "sale"}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        {!loading && visible.length === 0 && (
           <p className="mt-16 text-center text-slate-500">
             No gear matches your search. 🏕️
           </p>
         )}
-        {isRentalPage && (
-          <div className="relative mt-12 overflow-hidden rounded-[2rem] border border-forest-100 bg-white shadow-[0_14px_45px_rgba(31,78,55,0.08)]">
-            <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-forest-50" aria-hidden="true" />
-            <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-sm">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-forest-600">
-                  <span className="h-2 w-2 rounded-full bg-forest-500" aria-hidden="true" />
-                  Plan with confidence
-                </div>
-                <h2 className="mt-2 font-display text-2xl font-extrabold text-navy-900">Before you rent</h2>
-                <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                  A few essentials to keep your adventure smooth from pickup to return.
-                </p>
-              </div>
-
-              <ul className="grid flex-1 gap-3 sm:grid-cols-2 lg:max-w-3xl lg:grid-cols-5">
-                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">🪪</span>
-                  <span className="pt-1 font-semibold">Original Nepali ID</span>
-                </li>
-                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">💰</span>
-                  <span className="pt-1 font-semibold">Rs. 1,500 refundable deposit</span>
-                </li>
-                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">✓</span>
-                  <span className="pt-1 font-semibold">50% advance, full payment before delivery</span>
-                </li>
-                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">⏱</span>
-                  <span className="pt-1 font-semibold">Rs. 100/day late fee</span>
-                </li>
-                <li className="flex items-start gap-3 rounded-2xl bg-sand/70 p-3 text-sm text-navy-900">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-base shadow-sm" aria-hidden="true">☀</span>
-                  <span className="pt-1 font-semibold">Open 6 AM to 6 PM</span>
-                </li>
-              </ul>
-            </div>
-            <div className="relative flex flex-col gap-3 border-t border-slate-100 bg-forest-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-              <p className="text-sm text-slate-600">Need the complete rental policy?</p>
-              <Link to="/rental-terms" className="inline-flex items-center font-display text-sm font-bold text-forest-700 transition hover:text-forest-900 hover:underline">
-                Read full terms and conditions <span className="ml-1" aria-hidden="true">→</span>
-              </Link>
-            </div>
-          </div>
+        {!loading && (
+          <Pagination
+            current={page}
+            total={paginationTotal}
+            pageSize={PAGE_SIZE}
+            onChange={changePage}
+          />
         )}
       </div>
     </section>

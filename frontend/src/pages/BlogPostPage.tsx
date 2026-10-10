@@ -5,6 +5,8 @@ import type { Blog } from "@/types"
 import { SITE_URL, usePageMeta } from "@/hooks/usePageMeta"
 import StructuredData from "@/components/common/StructuredData"
 import RichContent from "@/components/common/RichContent"
+import Breadcrumbs from "@/components/ui/Breadcrumbs"
+import { GearDetailSkeleton } from "@/components/ui/Skeleton"
 
 function formatPublishedDate(value: string): string {
   const date = new Date(value)
@@ -42,7 +44,7 @@ export default function BlogPostPage() {
   }, [slug])
 
   if (loading) {
-    return <div className="flex min-h-[60vh] items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-forest-100 border-t-forest-600" /></div>
+    return <div className="container-site py-6 sm:py-10" aria-busy="true"><Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Blog", to: "/blog" }, { label: "Loading…" }]} /><GearDetailSkeleton /></div>
   }
 
   if (!post) {
@@ -70,7 +72,7 @@ export default function BlogPostPage() {
     <article className="section-pad bg-sand/30">
       <StructuredData data={articleData} />
       <div className="container-site max-w-4xl">
-        <Link to="/blog" className="text-sm font-semibold text-forest-700 hover:text-forest-800">← Back to blog</Link>
+        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Blog", to: "/blog" }, { label: post.title }]} />
         <header className="mt-8 text-center">
           <h1 className="font-display text-4xl font-bold leading-tight text-navy-900 sm:text-5xl">{post.title}</h1>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm text-slate-500">

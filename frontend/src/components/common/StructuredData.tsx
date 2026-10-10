@@ -6,7 +6,7 @@ import { CONTACTS } from "@/lib/fallbackData"
  * Keep business facts here tied to CONTACTS. Do not add hours, coordinates or
  * service areas unless the business source data is updated first.
  */
-const SITE_URL = import.meta.env.VITE_SITE_URL?.replace(/\/$/, "") ?? "https://yatrikogears.com"
+const SITE_URL = import.meta.env.VITE_SITE_URL?.replace(/\/$/, "") ?? "https://www.yatrikogears.com.np"
 
 const LOCAL_BUSINESS = {
   "@context": "https://schema.org",

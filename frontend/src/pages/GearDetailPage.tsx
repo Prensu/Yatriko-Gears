@@ -10,6 +10,8 @@ import { CONTACTS } from "@/lib/fallbackData";
 import GearCard from "@/components/gear/GearCard";
 import RichContent from "@/components/common/RichContent";
 import StructuredData from "@/components/common/StructuredData";
+import Breadcrumbs from "@/components/ui/Breadcrumbs";
+import { GearDetailSkeleton } from "@/components/ui/Skeleton";
 import { FiTruck, FiShield } from "react-icons/fi";
 import { BsStars } from "react-icons/bs";
 
@@ -239,8 +241,9 @@ export default function GearDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-forest-100 border-t-forest-600" />
+      <div className="container-site py-6 sm:py-10" aria-busy="true">
+        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Gear", to: "/gear" }, { label: "Loading…" }]} />
+        <GearDetailSkeleton />
       </div>
     );
   }
@@ -332,65 +335,7 @@ export default function GearDetailPage() {
     <div className="min-h-screen bg-gradient-to-b from-sand/40 via-white to-sand/20">
       <StructuredData data={productStructuredData} />
       <div className="container-site py-6 sm:py-10">
-        {/* Breadcrumbs */}
-        <nav
-          aria-label="Breadcrumb"
-          className="mb-8 flex flex-wrap items-center gap-1.5 text-sm text-slate-400"
-        >
-          <Link to="/" className="transition-colors hover:text-forest-600">
-            Home
-          </Link>
-          <svg
-            className="h-3.5 w-3.5 text-slate-300"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-          <Link to="/gear" className="transition-colors hover:text-forest-600">
-            Gear
-          </Link>
-          {categoryName && (
-            <>
-              <svg
-                className="h-3.5 w-3.5 text-slate-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-              <span className="text-slate-500">{categoryName}</span>
-            </>
-          )}
-          <svg
-            className="h-3.5 w-3.5 text-slate-300"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-          <span className="font-medium text-navy-900 truncate max-w-[180px] sm:max-w-none">
-            {gear.name}
-          </span>
-        </nav>
+        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Gear", to: "/gear" }, ...(categoryName ? [{ label: categoryName }] : []), { label: gear.name }]} />
 
         {/* ── Main Product Layout ── */}
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">

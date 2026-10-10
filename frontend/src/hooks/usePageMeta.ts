@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 
 const SITE_NAME = "Yatriko Gears"
-export const SITE_URL = import.meta.env.VITE_SITE_URL?.replace(/\/$/, "") ?? "https://yatrikogears.com"
+export const SITE_URL = import.meta.env.VITE_SITE_URL?.replace(/\/$/, "") ?? "https://www.yatrikogears.com.np"
 
 type PageMeta = {
   title: string
@@ -33,7 +33,8 @@ function setTag(selector: string, attrs: Record<string, string>) {
 export function usePageMeta({ title, description, path, image, type = "website", noIndex = false }: PageMeta) {
   useEffect(() => {
     const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`
-    const url = `${SITE_URL}${path ?? window.location.pathname}`
+    const currentPath = path ?? `${window.location.pathname}${window.location.search}`
+    const url = `${SITE_URL}${currentPath}`
     const ogImage = image ? new URL(image, SITE_URL).toString() : `${SITE_URL}/og-image.jpg`
 
     document.title = fullTitle

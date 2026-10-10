@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { usePageMeta } from "@/hooks/usePageMeta"
 import logoImg from "@/assets/logo.png"
+import Breadcrumbs from "@/components/ui/Breadcrumbs"
 
 const bulletItems = [
   "Customers must present the original valid Nepali ID (no photocopy or digital copy accepted) and pay the security deposit before taking any gear.",
@@ -30,6 +31,7 @@ export default function RentalTermsPage() {
     <section className="bg-sand px-4 py-10 sm:py-16 print:bg-white print:px-0 print:py-0">
       <style>{`@media print { header, nav, footer, .terms-print-hidden { display: none !important; } @page { size: A4; margin: 16mm; } }`}</style>
       <div className="mx-auto max-w-3xl">
+        <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Rental List", to: "/rental-list" }, { label: "Rental Terms" }]} />
         <div className="terms-print-hidden mb-5 flex items-center justify-between gap-4">
           <Link to="/rental-list" className="text-sm font-semibold text-forest-700 hover:underline">← Back to rental list</Link>
           <button type="button" onClick={() => window.print()} className="btn-secondary !px-4 !py-2 text-sm">Print this page</button>
