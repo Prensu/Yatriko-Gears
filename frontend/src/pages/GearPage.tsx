@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, FileText, Tent } from "lucide-react";
 import { fetchCategories, fetchGearPage } from "@/api/gear";
 import type { Gear, GearCategory } from "@/types";
 import GearCard from "@/components/gear/GearCard";
@@ -22,6 +24,7 @@ export default function GearPage({
   rentalOnly?: boolean;
 }) {
   const location = useLocation();
+  const reduce = useReducedMotion();
   const [params, setParams] = useSearchParams();
   const isRentalPage = rentalOnly || location.pathname === "/rental-list";
   const page = Math.max(1, Number(params.get("page") || "1") || 1);
@@ -201,6 +204,87 @@ export default function GearPage({
             pageSize={PAGE_SIZE}
             onChange={changePage}
           />
+        )}
+
+        {isRentalPage && (
+          <motion.div
+            initial={{ opacity: 0, y: reduce ? 0 : 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.55, ease: "easeOut" }}
+            className="relative mt-12 overflow-hidden rounded-[2rem] bg-gradient-to-br from-forest-700 via-forest-600 to-navy-900 shadow-[0_24px_60px_-20px_rgba(31,78,55,0.55)]"
+          >
+            {/* floating glows */}
+            <motion.div
+              aria-hidden="true"
+              animate={reduce ? undefined : { y: [0, 18, 0], x: [0, -10, 0] }}
+              transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+              className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-forest-400/30 blur-3xl"
+            />
+            <motion.div
+              aria-hidden="true"
+              animate={reduce ? undefined : { y: [0, -16, 0], x: [0, 12, 0] }}
+              transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+              className="pointer-events-none absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-white/10 blur-3xl"
+            />
+            {/* subtle dotted texture */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:22px_22px]"
+            />
+            {/* big faint tent */}
+            <Tent
+              aria-hidden="true"
+              strokeWidth={1}
+              className="pointer-events-none absolute -bottom-10 right-6 hidden h-64 w-64 text-white/10 md:block"
+            />
+
+            <div className="relative flex flex-col gap-8 px-6 py-9 sm:px-10 sm:py-12 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-xl">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white ring-1 ring-white/20 backdrop-blur">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                  </span>
+                  Plan with confidence
+                </span>
+                <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                  Before you rent
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-white/75 sm:text-base">
+                  A few essentials to keep your adventure smooth from pickup to
+                  return.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-start gap-3 lg:items-end">
+                <p className="text-sm text-white/70">
+                  Need the complete rental policy?
+                </p>
+                <motion.div
+                  whileHover="hover"
+                  whileTap={{ scale: 0.97 }}
+                  className="w-fit"
+                >
+                  <Link
+                    to="/rental-terms"
+                    className="group inline-flex items-center gap-3 rounded-full bg-white py-2 pl-3 pr-5 font-display text-sm font-bold text-navy-900 shadow-lg shadow-black/20 transition-colors hover:bg-forest-50"
+                  >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-forest-600 text-white transition-transform duration-300 group-hover:rotate-6">
+                      <FileText className="h-4 w-4" />
+                    </span>
+                    Read full terms and conditions
+                    <motion.span
+                      variants={{ hover: { x: 4 } }}
+                      className="inline-flex"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </motion.span>
+                  </Link>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
         )}
       </div>
     </section>
