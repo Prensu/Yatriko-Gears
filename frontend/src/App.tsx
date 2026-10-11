@@ -1,47 +1,47 @@
-import { Suspense, lazy, useEffect } from "react"
-import { Outlet, Routes, Route, useLocation } from "react-router-dom"
-import Layout from "@/components/layout/Layout"
-import RequireAuth from "@/components/layout/RequireAuth"
-import HomePage from "@/pages/HomePage"
-import LeadCaptureModal from "@/components/modal/LeadCaptureModal"
-import { GearDetailPage, GearPage } from "@/lib/routes"
+import { Suspense, lazy, useEffect } from "react";
+import { Outlet, Routes, Route, useLocation } from "react-router-dom";
+import Layout from "@/components/layout/Layout";
+import RequireAuth from "@/components/layout/RequireAuth";
+import HomePage from "@/pages/HomePage";
+import LeadCaptureModal from "@/components/modal/LeadCaptureModal";
+import { GearDetailPage, GearPage } from "@/lib/routes";
 
 /**
  * Only the home page ships in the initial bundle. Everything else loads on
  * demand — most visitors land on "/", and on a Nepali mobile connection every
  * kilobyte of first paint counts.
  */
-const PortfolioPage = lazy(() => import("@/pages/PortfolioPage"))
-const ContactPage = lazy(() => import("@/pages/ContactPage"))
-const RentalTermsPage = lazy(() => import("@/pages/RentalTermsPage"))
-const BlogListPage = lazy(() => import("@/pages/BlogListPage"))
-const BlogPostPage = lazy(() => import("@/pages/BlogPostPage"))
-const LoginPage = lazy(() => import("@/pages/LoginPage"))
-const RegisterPage = lazy(() => import("@/pages/RegisterPage"))
-const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"))
-const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"))
-const CartPage = lazy(() => import("@/pages/CartPage"))
-const MyBookingsPage = lazy(() => import("@/pages/MyBookingsPage"))
-const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"))
+const PortfolioPage = lazy(() => import("@/pages/PortfolioPage"));
+const ContactPage = lazy(() => import("@/pages/ContactPage"));
+const RentalTermsPage = lazy(() => import("@/pages/RentalTermsPage"));
+const BlogListPage = lazy(() => import("@/pages/BlogListPage"));
+const BlogPostPage = lazy(() => import("@/pages/BlogPostPage"));
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const RegisterPage = lazy(() => import("@/pages/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+const CartPage = lazy(() => import("@/pages/CartPage"));
+const MyBookingsPage = lazy(() => import("@/pages/MyBookingsPage"));
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
 function RouteFallback() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-forest-100 border-t-forest-600" />
     </div>
-  )
+  );
 }
 
 function ScrollToTop() {
-  const { pathname, search, hash } = useLocation()
+  const { pathname, search, hash } = useLocation();
 
   useEffect(() => {
     // Hash navigation has its own smooth-scroll behavior in HomePage.
-    if (hash) return
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
-  }, [pathname, search, hash])
+    if (hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname, search, hash]);
 
-  return null
+  return null;
 }
 
 export default function App() {
@@ -86,5 +86,5 @@ export default function App() {
       </Routes>
       <LeadCaptureModal />
     </>
-  )
+  );
 }
