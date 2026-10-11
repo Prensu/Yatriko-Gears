@@ -57,7 +57,17 @@ export default function ContactSection() {
             Questions, bookings, event planning — we reply fast on every channel.
           </p>
           <ul className="mt-8 space-y-5 text-sm">
-            <li className="flex gap-3"><span>📍</span> {CONTACTS.address}</li>
+            <li className="flex gap-3">
+              <span>📍</span>
+              <a
+                href="https://maps.google.com/?q=Yatriko+Gears+Khokana+Lalitpur"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                {CONTACTS.address}
+              </a>
+            </li>
             {CONTACTS.phones.map((p) => (
               <li key={p} className="flex gap-3">
                 <span>📞</span>

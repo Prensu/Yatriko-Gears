@@ -143,6 +143,8 @@ export default function Footer() {
             </li>
             <li>
               <FooterLink to="/portfolio">Portfolio</FooterLink>
+            </li>
+            <li>
               <FooterLink to="/blog">Blog</FooterLink>
             </li>
             <li>
@@ -190,7 +192,15 @@ export default function Footer() {
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex items-start gap-2">
               <span className="mt-0.5">📍</span>
-              <span>{CONTACTS.address}</span>
+              <a
+                href="https://maps.google.com/?q=Yatriko+Gears+Khokana+Lalitpur"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative text-slate-300 hover:text-white"
+              >
+                {CONTACTS.address}
+                <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-emerald-400 transition-all duration-300 group-hover:w-full"></span>
+              </a>
             </li>
             {CONTACTS.phones.map((p) => (
               <li key={p} className="flex items-center gap-2">
