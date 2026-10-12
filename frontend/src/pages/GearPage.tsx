@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { useReducedMotion } from "framer-motion";
 import { fetchCategories, fetchGearPage } from "@/api/gear";
 import type { Gear, GearCategory } from "@/types";
 import GearCard from "@/components/gear/GearCard";
@@ -24,7 +23,6 @@ export default function GearPage({
   rentalOnly?: boolean;
 }) {
   const location = useLocation();
-  const reduce = useReducedMotion();
   const [params, setParams] = useSearchParams();
   const isRentalPage = rentalOnly || location.pathname === "/rental-list";
   const page = Math.max(1, Number(params.get("page") || "1") || 1);

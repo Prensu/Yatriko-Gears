@@ -3,13 +3,17 @@ import { AnimatePresence, motion } from "framer-motion"
 import { FaPaperPlane, FaXmark } from "react-icons/fa6"
 import { TbMessageChatbot } from "react-icons/tb"
 import { sendChatMessage } from "@/api/chat"
-import { sanitizeRichHtml } from "@/lib/sanitize"
+import { ApiRequestError } from "@/lib/api"
+import { renderChatMarkdown } from "@/lib/chatMarkdown"
 
 type Message = {
   id: string
   role: "user" | "assistant"
   text: string
   timestamp: Date
+  isError?: boolean
+  retryText?: string
+  showWhatsapp?: boolean
 }
 
 const GREETING: Message = {
@@ -21,18 +25,27 @@ const GREETING: Message = {
 
 /** Quick-reply chips shown before the first user message */
 const QUICK_REPLIES = [
-  "What gear do you have?",
-  "Best camping spot?",
-  "How do I book?",
-  "Camp package details",
+  "What can I rent?",
+  "Check dates",
+  "Price for a 2-night trip",
+  "Camping spots",
 ]
+
+const SESSION_STORAGE_KEY = "yatriko.chat.sessionId"
+const WHATSAPP_URL = "https://wa.me/9779747672039?text=Hi%20Yatriko%20Gears%2C%20I%20need%20help%20with%20my%20chat%20question."
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([GREETING])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
-  const [sessionId, setSessionId] = useState<string | undefined>()
+  const [sessionId, setSessionId] = useState<string | undefined>(() => {
+    try {
+      return sessionStorage.getItem(SESSION_STORAGE_KEY) ?? undefined
+    } catch {
+      return undefined
+    }
+  })
   const [hasNewMessage, setHasNewMessage] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -68,6 +81,11 @@ export default function ChatWidget() {
       try {
         const res = await sendChatMessage(text.trim(), sessionId)
         setSessionId(res.sessionId)
+        try {
+          sessionStorage.setItem(SESSION_STORAGE_KEY, res.sessionId)
+        } catch {
+          // Storage is an enhancement; the current session still works.
+        }
 
         const assistantMsg: Message = {
           id: crypto.randomUUID(),
@@ -81,11 +99,18 @@ export default function ChatWidget() {
         if (!open) setHasNewMessage(true)
       } catch (err) {
         console.error("Chat API error:", err)
+        const status = err instanceof ApiRequestError ? err.status : undefined
+        const hasWhatsappFallback = status === 429 || status === 503
         const errorMsg: Message = {
           id: crypto.randomUUID(),
           role: "assistant",
-          text: "Oops, I couldn't reach the server. Please try again or call us at +977 9747672039! 📞",
+          text: hasWhatsappFallback
+            ? "Our assistant is busy right now. Please retry, or message us on WhatsApp for immediate help."
+            : "Oops, I couldn't reach the server. Please retry or message us on WhatsApp for help.",
           timestamp: new Date(),
+          isError: true,
+          retryText: text.trim(),
+          showWhatsapp: hasWhatsappFallback,
         }
         setMessages((prev) => [...prev, errorMsg])
       } finally {
@@ -93,6 +118,14 @@ export default function ChatWidget() {
       }
     },
     [loading, sessionId, open],
+  )
+
+  const retry = useCallback(
+    (messageId: string, text: string) => {
+      setMessages((prev) => prev.filter((message) => message.id !== messageId))
+      void send(text)
+    },
+    [send],
   )
 
   function onSubmit(e: FormEvent) {
@@ -195,6 +228,8 @@ export default function ChatWidget() {
               ref={scrollRef}
               className="flex-1 space-y-3 overflow-y-auto bg-[#f7f8fa] px-4 py-4"
               style={{ scrollBehavior: "smooth" }}
+              aria-live="polite"
+              aria-label="Chat messages"
             >
               {messages.map((msg) => (
                 <div
@@ -210,8 +245,8 @@ export default function ChatWidget() {
                   >
                     {msg.role === "assistant" ? (
                       <div
-                        className="space-y-1 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_p]:mb-1 [&_p:last-child]:mb-0"
-                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(msg.text) }}
+                        className="space-y-1 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_p]:mb-1 [&_p:last-child]:mb-0 [&_h1]:font-bold [&_h2]:font-bold [&_h3]:font-bold"
+                        dangerouslySetInnerHTML={{ __html: renderChatMarkdown(msg.text) }}
                       />
                     ) : (
                       msg.text.split("\n").map((line, i) => (
@@ -220,6 +255,28 @@ export default function ChatWidget() {
                           {i < msg.text.split("\n").length - 1 && <br />}
                         </span>
                       ))
+                    )}
+                    {msg.isError && msg.retryText && (
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-red-100 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => retry(msg.id, msg.retryText ?? "")}
+                          disabled={loading}
+                          className="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                        >
+                          Retry
+                        </button>
+                        {msg.showWhatsapp && (
+                          <a
+                            href={WHATSAPP_URL}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs font-semibold text-forest-700 underline"
+                          >
+                            WhatsApp us
+                          </a>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
