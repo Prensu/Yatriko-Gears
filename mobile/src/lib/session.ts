@@ -1,4 +1,5 @@
 import * as SecureStore from "expo-secure-store"
+import { Platform } from "react-native"
 import { userSchema, type User } from "@/types/auth"
 
 /**
@@ -13,6 +14,29 @@ const USER_KEY = "yatriko.user"
 let accessTokenCache: string | null = null
 let refreshTokenCache: string | null = null
 
+const isWeb = Platform.OS === "web"
+
+function webStorage(): Storage | null {
+  return isWeb && typeof window !== "undefined" ? window.localStorage : null
+}
+
+async function setStored(key: string, value: string): Promise<void> {
+  const storage = webStorage()
+  if (storage) storage.setItem(key, value)
+  else await SecureStore.setItemAsync(key, value)
+}
+
+async function getStored(key: string): Promise<string | null> {
+  const storage = webStorage()
+  return storage ? storage.getItem(key) : SecureStore.getItemAsync(key)
+}
+
+async function deleteStored(key: string): Promise<void> {
+  const storage = webStorage()
+  if (storage) storage.removeItem(key)
+  else await SecureStore.deleteItemAsync(key)
+}
+
 export function getAccessToken(): string | null {
   return accessTokenCache
 }
@@ -25,13 +49,13 @@ export async function saveTokens(accessToken: string, refreshToken: string): Pro
   accessTokenCache = accessToken
   refreshTokenCache = refreshToken
   await Promise.all([
-    SecureStore.setItemAsync(ACCESS_KEY, accessToken),
-    SecureStore.setItemAsync(REFRESH_KEY, refreshToken),
+    setStored(ACCESS_KEY, accessToken),
+    setStored(REFRESH_KEY, refreshToken),
   ])
 }
 
 export async function saveUser(user: User): Promise<void> {
-  await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user))
+  await setStored(USER_KEY, JSON.stringify(user))
 }
 
 export type StoredSession = { hasTokens: boolean; user: User | null }
@@ -40,9 +64,9 @@ export type StoredSession = { hasTokens: boolean; user: User | null }
 export async function loadSession(): Promise<StoredSession> {
   try {
     const [access, refresh, rawUser] = await Promise.all([
-      SecureStore.getItemAsync(ACCESS_KEY),
-      SecureStore.getItemAsync(REFRESH_KEY),
-      SecureStore.getItemAsync(USER_KEY),
+      getStored(ACCESS_KEY),
+      getStored(REFRESH_KEY),
+      getStored(USER_KEY),
     ])
     accessTokenCache = access
     refreshTokenCache = refresh
@@ -66,8 +90,8 @@ export async function clearSession(): Promise<void> {
   accessTokenCache = null
   refreshTokenCache = null
   await Promise.allSettled([
-    SecureStore.deleteItemAsync(ACCESS_KEY),
-    SecureStore.deleteItemAsync(REFRESH_KEY),
-    SecureStore.deleteItemAsync(USER_KEY),
+    deleteStored(ACCESS_KEY),
+    deleteStored(REFRESH_KEY),
+    deleteStored(USER_KEY),
   ])
 }
