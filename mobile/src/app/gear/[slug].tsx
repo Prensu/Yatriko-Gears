@@ -28,6 +28,8 @@ export default function GearDetailScreen() {
   const { addItem } = useCart()
   const { data: gear, isLoading, isError, error, refetch } = useGearDetail(slug ?? "")
 
+  // When the gear supports both modes, let the user toggle; otherwise lock to the supported mode.
+  const defaultMode: CartMode = gear?.availableFor.includes("rent") ? "rent" : "sale"
   const [chosenMode, setChosenMode] = useState<CartMode | null>(null)
   const [chosenColor, setChosenColor] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
@@ -35,7 +37,7 @@ export default function GearDetailScreen() {
   const [end, setEnd] = useState<string | null>(null)
   const [imageIndex, setImageIndex] = useState(0)
 
-  const mode: CartMode = chosenMode ?? gear?.availableFor[0] ?? "rent"
+  const mode: CartMode = chosenMode ?? defaultMode
   const color = chosenColor ?? gear?.colors[0] ?? ""
 
   const availability = useAvailability(mode === "rent" ? gear?._id : undefined, start, end)
@@ -78,6 +80,11 @@ export default function GearDetailScreen() {
     toast.show(`${gear.name} added to cart`, "success")
   }
 
+  // Bottom action bar changes depending on the current mode:
+  // • Rent → WhatsApp inquiry button (no cart)
+  // • Sale → Add to cart + Go to cart
+  const isRentMode = mode === "rent"
+
   return (
     <Screen>
       <Stack.Screen options={{ title: gear.name }} />
@@ -110,6 +117,7 @@ export default function GearDetailScreen() {
         )}
 
         <View style={styles.body}>
+          {/* Badges */}
           <View style={styles.badges}>
             {categoryName(gear.category) ? <Badge label={categoryName(gear.category)} tone="blue" /> : null}
             {gear.isNew ? <Badge label="New" tone="green" /> : null}
@@ -120,6 +128,7 @@ export default function GearDetailScreen() {
             {gear.name}
           </Text>
 
+          {/* Pricing */}
           <View style={styles.priceBox}>
             {rentable ? (
               <View style={styles.priceRow}>
@@ -133,6 +142,7 @@ export default function GearDetailScreen() {
 
           {gear.description ? <Text style={styles.desc}>{gear.description}</Text> : null}
 
+          {/* Rent / Buy toggle — only shown when gear supports both modes */}
           {rentable && sellable ? (
             <View style={styles.segment}>
               {(["rent", "sale"] as const).map((m) => (
@@ -149,25 +159,7 @@ export default function GearDetailScreen() {
             </View>
           ) : null}
 
-          {gear.colors.length > 0 ? (
-            <View style={styles.block}>
-              <Text style={styles.blockTitle}>Colour</Text>
-              <View style={styles.chips}>
-                {gear.colors.map((c) => (
-                  <Pressable
-                    key={c}
-                    onPress={() => setChosenColor(c)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: color === c }}
-                    style={[styles.chip, color === c && styles.chipActive]}
-                  >
-                    <Text style={[styles.chipText, color === c && styles.chipTextActive]}>{c}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          ) : null}
-
+          {/* Rental-specific: date range availability */}
           {mode === "rent" ? (
             <View style={styles.block}>
               <DateRangeField
@@ -191,11 +183,35 @@ export default function GearDetailScreen() {
             </View>
           ) : null}
 
-          <View style={styles.block}>
-            <Text style={styles.blockTitle}>Quantity</Text>
-            <QuantityStepper value={qty} onChange={setQuantity} max={maxQty} />
-          </View>
+          {/* Sale-specific: quantity selector */}
+          {mode === "sale" ? (
+            <View style={styles.block}>
+              <Text style={styles.blockTitle}>Quantity</Text>
+              <QuantityStepper value={qty} onChange={setQuantity} max={maxQty} />
+            </View>
+          ) : null}
 
+          {/* Colour */}
+          {gear.colors.length > 0 ? (
+            <View style={styles.block}>
+              <Text style={styles.blockTitle}>Colour</Text>
+              <View style={styles.chips}>
+                {gear.colors.map((c) => (
+                  <Pressable
+                    key={c}
+                    onPress={() => setChosenColor(c)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: color === c }}
+                    style={[styles.chip, color === c && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, color === c && styles.chipTextActive]}>{c}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          {/* Specifications */}
           {Object.keys(gear.specs).length > 0 ? (
             <View style={styles.block}>
               <Text style={styles.blockTitle}>Specifications</Text>
@@ -210,6 +226,7 @@ export default function GearDetailScreen() {
             </View>
           ) : null}
 
+          {/* Long description */}
           {gear.longDescription ? (
             <View style={styles.block}>
               <Text style={styles.blockTitle}>Details</Text>
@@ -217,10 +234,22 @@ export default function GearDetailScreen() {
             </View>
           ) : null}
 
-          <View style={styles.note}>
-            <Ionicons name="information-circle-outline" size={18} color={colors.info} />
-            <Text style={styles.noteText}>Pay in cash on pickup or delivery. Delivery charges are quoted separately on WhatsApp.</Text>
-          </View>
+          {/* Rental notice — WhatsApp-only for rent mode */}
+          {isRentMode ? (
+            <View style={styles.rentalNotice}>
+              <Ionicons name="information-circle-outline" size={18} color={colors.info} />
+              <Text style={styles.rentalNoticeText}>
+                Rental bookings are confirmed by our team. Message us with your dates and we'll reserve this gear for you.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.note}>
+              <Ionicons name="information-circle-outline" size={18} color={colors.info} />
+              <Text style={styles.noteText}>Pay in cash on pickup or delivery. Delivery charges are quoted separately on WhatsApp.</Text>
+            </View>
+          )}
+
+          {/* WhatsApp button always available */}
           <Button
             title="Ask about this item on WhatsApp"
             variant="outline"
@@ -230,19 +259,45 @@ export default function GearDetailScreen() {
         </View>
       </ScrollView>
 
+      {/* Bottom action bar */}
       <View style={styles.bar}>
         <View style={styles.barPrice}>
-          <Text style={styles.barLabel}>{mode === "rent" ? (total === null ? "Per day" : `${days} day${days === 1 ? "" : "s"} · estimate`) : "Total"}</Text>
+          <Text style={styles.barLabel}>
+            {isRentMode
+              ? total === null
+                ? "Per day"
+                : `${days} day${days === 1 ? "" : "s"} · estimate`
+              : "Total"}
+          </Text>
           <Text style={styles.barValue}>{formatRs(total ?? unitPrice * qty)}</Text>
         </View>
-        <Button
-          title="Add to cart"
-          icon="bag-add"
-          onPress={onAdd}
-          disabled={soldOutForDates || (mode === "sale" && !sellable)}
-          style={styles.barBtn}
-        />
-        <Button title="Cart" variant="secondary" onPress={() => router.push("/cart")} style={styles.cartBtn} />
+
+        {isRentMode ? (
+          // Rent mode: WhatsApp CTA only — no cart
+          <Button
+            title="Enquire on WhatsApp"
+            variant="whatsapp"
+            icon="logo-whatsapp"
+            onPress={() =>
+              void openWhatsApp(
+                `Hi Yatriko Gears! I'd like to rent "${gear.name}"${start && end ? ` from ${start} to ${end}` : ""}.`,
+              )
+            }
+            style={styles.barBtn}
+          />
+        ) : (
+          // Sale mode: Add to cart + Go to cart
+          <>
+            <Button
+              title="Add to cart"
+              icon="bag-add"
+              onPress={onAdd}
+              disabled={!sellable}
+              style={styles.barBtn}
+            />
+            <Button title="Cart" variant="secondary" onPress={() => router.push("/cart")} style={styles.cartBtn} />
+          </>
+        )}
       </View>
     </Screen>
   )
@@ -283,6 +338,16 @@ const styles = StyleSheet.create({
   specRow: { flexDirection: "row", padding: spacing.md, gap: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
   specKey: { flex: 1, fontSize: 14, color: colors.textMuted, textTransform: "capitalize" },
   specVal: { flex: 1.4, fontSize: 14, fontWeight: "600", color: colors.text },
+  rentalNotice: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    backgroundColor: colors.forest50,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.forest200,
+  },
+  rentalNoticeText: { flex: 1, fontSize: 13, color: colors.forest800, lineHeight: 18 },
   note: { flexDirection: "row", gap: spacing.sm, backgroundColor: colors.infoBg, padding: spacing.md, borderRadius: radius.md },
   noteText: { flex: 1, fontSize: 13, color: colors.info, lineHeight: 18 },
   bar: { flexDirection: "row", alignItems: "center", gap: spacing.sm, padding: spacing.md, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border },

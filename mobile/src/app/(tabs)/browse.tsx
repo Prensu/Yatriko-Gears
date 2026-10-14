@@ -14,12 +14,19 @@ import type { Gear } from "@/types"
 export default function BrowseScreen() {
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("")
+  const [mode, setMode] = useState<"rent" | "sale">("rent")
   const debouncedSearch = useDebouncedValue(search.trim())
 
   const categories = useCategories()
   const query = useGearInfinite({ category, search: debouncedSearch })
 
-  const items = useMemo<Gear[]>(() => query.data?.pages.flatMap((p) => p.gear) ?? [], [query.data])
+  const allItems = useMemo<Gear[]>(() => query.data?.pages.flatMap((p) => p.gear) ?? [], [query.data])
+
+  // Filter client-side by the selected mode (rent / sale)
+  const items = useMemo<Gear[]>(
+    () => allItems.filter((g) => g.availableFor.includes(mode)),
+    [allItems, mode],
+  )
 
   const onEnd = useCallback(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) void query.fetchNextPage()
@@ -28,6 +35,25 @@ export default function BrowseScreen() {
   return (
     <Screen>
       <View style={styles.top}>
+        {/* ── Rent / Buy mode toggle ── */}
+        <View style={styles.modeRow}>
+          <View style={styles.segment}>
+            {(["rent", "sale"] as const).map((m) => (
+              <Pressable
+                key={m}
+                onPress={() => setMode(m)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: mode === m }}
+                style={[styles.segBtn, mode === m && styles.segBtnActive]}
+              >
+                <Text style={[styles.segText, mode === m && styles.segTextActive]}>
+                  {m === "rent" ? "🏕️  Rent" : "🛒  Buy"}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
         <View style={styles.search}>
           <Ionicons name="search" size={18} color={colors.textMuted} />
           <TextInput
@@ -73,14 +99,18 @@ export default function BrowseScreen() {
           onRefresh={() => void query.refetch()}
           renderItem={({ item }) => (
             <View style={styles.cell}>
-              <GearCard gear={item} />
+              <GearCard gear={item} mode={mode} />
             </View>
           )}
           ListEmptyComponent={
             <EmptyView
-              icon="search-outline"
-              title="No gear found"
-              message={debouncedSearch ? `Nothing matches "${debouncedSearch}".` : "Nothing in this category yet."}
+              icon={mode === "rent" ? "calendar-outline" : "bag-handle-outline"}
+              title={mode === "rent" ? "No rental gear found" : "No gear for sale found"}
+              message={
+                debouncedSearch
+                  ? `Nothing matches "${debouncedSearch}".`
+                  : `Nothing in this category is available for ${mode === "rent" ? "rent" : "sale"} yet.`
+              }
             />
           }
           ListFooterComponent={query.isFetchingNextPage ? <ActivityIndicator style={styles.footer} color={colors.forest600} /> : null}
@@ -105,6 +135,24 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 
 const styles = StyleSheet.create({
   top: { paddingTop: spacing.md, gap: spacing.md },
+  modeRow: { paddingHorizontal: spacing.lg },
+  segment: {
+    flexDirection: "row",
+    backgroundColor: colors.forest100,
+    borderRadius: radius.md,
+    padding: 4,
+  },
+  segBtn: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: radius.sm },
+  segBtnActive: {
+    backgroundColor: colors.white,
+    shadowColor: "#000",
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  segText: { fontSize: 14, fontWeight: "700", color: colors.forest800 },
+  segTextActive: { color: colors.forest700 },
   search: {
     flexDirection: "row",
     alignItems: "center",

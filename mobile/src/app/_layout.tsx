@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react"
+import { LogBox } from "react-native"
 import { Stack } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import * as SplashScreen from "expo-splash-screen"
@@ -11,6 +12,12 @@ import { ToastProvider } from "@/context/ToastContext"
 import { CartHeaderButton } from "@/components/HeaderButtons"
 import { queryClient, subscribeAppFocus } from "@/lib/queryClient"
 import { colors } from "@/theme"
+
+// Upstream race condition in expo-router 57.0.26 + React 19:
+// useLinking.native.js resolves the initial URL asynchronously and calls
+// setState before ContextNavigator has finished mounting. Dev-only; no
+// runtime impact. Remove once a patched expo-router release is available.
+LogBox.ignoreLogs(["Can't perform a React state update on a component that hasn't mounted yet"])
 
 void SplashScreen.preventAutoHideAsync()
 
