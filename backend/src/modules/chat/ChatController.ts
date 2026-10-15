@@ -1,4 +1,4 @@
-import { FunctionCallingConfigMode, GoogleGenAI, ThinkingLevel } from "@google/genai"
+import { FunctionCallingConfigMode, GoogleGenAI } from "@google/genai"
 import type { Content, FunctionCall, Part } from "@google/genai"
 import type { NextFunction, Response } from "express"
 import sanitizeHtml from "sanitize-html"
@@ -34,7 +34,7 @@ export const SYSTEM_PROMPT = `You are "Yatriko", the friendly AI assistant for $
 - You can explain catalogue information and estimates, but you cannot place, change, or cancel a booking. Direct booking questions to the shop's contact options from getShopInfo.
 `
 
-const MODEL_CANDIDATES = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.7-flash"]
+const MODEL_CANDIDATES = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
 
 function shouldTryNextModel(status: number | undefined): boolean {
   return status === 404 || status === 429 || status === 500 || status === 502 || status === 503
@@ -78,7 +78,6 @@ class ChatController {
             systemInstruction: SYSTEM_PROMPT,
             maxOutputTokens: 800,
             temperature: 0.5,
-            thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
             tools: forceText ? undefined : [{ functionDeclarations: chatFunctionDeclarations }],
             ...(forceText
               ? { toolConfig: { functionCallingConfig: { mode: FunctionCallingConfigMode.NONE } } }
