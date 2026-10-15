@@ -17,7 +17,7 @@ jobs:
     name: Backend (typecheck + tests)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -48,7 +48,7 @@ jobs:
     name: Public site (lint + build)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -79,7 +79,7 @@ jobs:
     name: Admin CMS (typecheck + lint + tests + build)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 9
