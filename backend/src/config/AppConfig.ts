@@ -69,3 +69,24 @@ export const adminSeedConfig = {
   password: process.env.ADMIN_PASSWORD ?? "",
   phone: process.env.ADMIN_PHONE ?? "9800000000",
 }
+
+/**
+ * Meta WhatsApp Business Cloud API.
+ * All three values must be present for WhatsApp messages to be sent.
+ * If any are blank the service skips silently — bookings still succeed.
+ *
+ * WHATSAPP_ACCESS_TOKEN    — permanent (System User) or temporary token from
+ *                            Meta Business → WhatsApp → API Setup.
+ * WHATSAPP_PHONE_NUMBER_ID — the numeric Phone Number ID (not the display number)
+ *                            shown on the same API Setup page.
+ * WHATSAPP_TEMPLATE_NAME   — exact name of the approved Utility template, e.g.
+ *                            "booking_confirmation".
+ */
+export const whatsAppConfig = {
+  accessToken: process.env.WHATSAPP_ACCESS_TOKEN ?? "",
+  phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID ?? "",
+  templateName: process.env.WHATSAPP_TEMPLATE_NAME ?? "booking_confirmation",
+  get isConfigured() {
+    return this.accessToken.length > 0 && this.phoneNumberId.length > 0
+  },
+}

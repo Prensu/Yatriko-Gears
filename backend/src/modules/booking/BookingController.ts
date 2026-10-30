@@ -4,6 +4,7 @@ import GearModel from "../gear/GearModel"
 import { assertAvailable, getAvailability } from "./AvailabilityService"
 import { calculateSubtotal, calculateTotal, countDays } from "./BookingPricing"
 import EmailService from "../../services/EmailService"
+import WhatsAppService from "../../services/WhatsAppService"
 import { notifyEmail } from "../../config/smtpConfig"
 import { getPagination } from "../../utilities/helpers"
 import type { IAuthRequest } from "../auth/AuthContract"
@@ -12,6 +13,7 @@ import { loggerFor } from "../../config/logger"
 const log = loggerFor("BookingController")
 
 const emailService = new EmailService()
+const whatsAppService = new WhatsAppService()
 
 /** PRASHNA-260905-4F2A — first name + date + random, short enough to read out on the phone. */
 function makeBookingCode(customerName: string): string {
@@ -153,6 +155,25 @@ class BookingController {
         })
         .catch((err) => {
           log.error({ err, to: booking.customerEmail, code: booking.code }, "Booking receipt email could not be sent")
+        })
+
+      // WhatsApp confirmation — fire-and-forget, same pattern as email above.
+      // A WhatsApp API hiccup must never block or fail the booking response.
+      const gearSummary = items
+        .map((item: { name: string; quantity: number }) => `${item.name} × ${item.quantity}`)
+        .join(", ")
+
+      whatsAppService
+        .sendBookingConfirmation({
+          customerName: booking.customerName,
+          customerPhone: booking.customerPhone,
+          bookingCode: booking.code,
+          gearSummary,
+          dateRange: hasRental ? dateRange : "Purchase order",
+          total,
+        })
+        .catch((err) => {
+          log.error({ err, phone: booking.customerPhone, code: booking.code }, "WhatsApp booking confirmation could not be sent")
         })
     } catch (exception) {
       next(exception)
@@ -299,6 +320,30 @@ class BookingController {
         { new: true },
       )
       if (!booking) throw { code: 404, message: "Booking not found" }
+
+      // When the admin confirms a booking, nudge the customer on WhatsApp.
+      if (req.body.status === "confirmed") {
+        const gearSummary = booking.items
+          .map((item: { name: string; quantity: number }) => `${item.name} × ${item.quantity}`)
+          .join(", ")
+        const dateRange =
+          booking.startDate && booking.endDate
+            ? `${booking.startDate.toISOString().slice(0, 10)} to ${booking.endDate.toISOString().slice(0, 10)}`
+            : "Purchase order"
+
+        whatsAppService
+          .sendBookingConfirmation({
+            customerName: booking.customerName,
+            customerPhone: booking.customerPhone,
+            bookingCode: booking.code,
+            gearSummary,
+            dateRange,
+            total: booking.total,
+          })
+          .catch((err) => {
+            log.error({ err, phone: booking.customerPhone, code: booking.code }, "WhatsApp status-confirmed message could not be sent")
+          })
+      }
 
       res.json({ data: booking, message: "Booking status updated", meta: null })
     } catch (exception) {
