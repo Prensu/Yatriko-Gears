@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { usePageMeta } from "@/hooks/usePageMeta"
 import logoImg from "@/assets/logo.png"
+import rentalRateCardImg from "@/assets/rental-rate-card.jpeg"
 import Breadcrumbs from "@/components/ui/Breadcrumbs"
 
 const bulletItems = [
@@ -30,13 +31,16 @@ export default function RentalTermsPage() {
   return (
     <section className="bg-sand px-4 py-10 sm:py-16 print:bg-white print:px-0 print:py-0">
       <style>{`@media print { header, nav, footer, .terms-print-hidden { display: none !important; } @page { size: A4; margin: 16mm; } }`}</style>
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-[1440px] print:max-w-none">
         <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Rental List", to: "/rental-list" }, { label: "Rental Terms" }]} />
-        <div className="terms-print-hidden mb-5 flex items-center justify-between gap-4">
+        <div className="terms-print-hidden mb-5 flex flex-wrap items-center justify-between gap-4">
           <Link to="/rental-list" className="text-sm font-semibold text-forest-700 hover:underline">← Back to rental list</Link>
-          <button type="button" onClick={() => window.print()} className="btn-secondary !px-4 !py-2 text-sm">Print this page</button>
+          <div className="flex flex-wrap gap-3">
+            <button type="button" onClick={() => window.print()} className="btn-secondary !px-4 !py-2 text-sm">Print this page</button>
+          </div>
         </div>
-        <article className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white px-6 py-8 shadow-sm sm:px-12 sm:py-10 print:rounded-none print:border-0 print:p-0 print:shadow-none">
+        <div className="grid items-start gap-6 lg:grid-cols-2 lg:gap-8 print:block">
+        <article className="relative min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white px-6 py-8 shadow-sm sm:px-10 sm:py-10 print:rounded-none print:border-0 print:p-0 print:shadow-none">
           <img src={logoImg} alt="Yatriko Gears" className="pointer-events-none absolute right-8 top-36 w-56 opacity-[0.025] sm:right-16" aria-hidden="true" />
           <div className="relative">
             <img src={logoImg} alt="Yatriko Gears" className="h-20 w-auto object-contain object-left" />
@@ -53,6 +57,19 @@ export default function RentalTermsPage() {
             </div>
           </div>
         </article>
+        <aside aria-labelledby="gear-prices-heading" className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm print:break-before-page print:rounded-none print:border-0 print:shadow-none">
+          <div className="border-b border-slate-100 px-6 py-6 sm:px-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-forest-700">Yatriko Gears</p>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+              <h2 id="gear-prices-heading" className="font-display text-2xl font-extrabold text-navy-900">Gear Rental Prices</h2>
+              <a href={rentalRateCardImg} target="_blank" rel="noopener noreferrer" className="terms-print-hidden text-sm font-semibold text-forest-700 hover:underline">View full size ↗</a>
+            </div>
+          </div>
+          <a href={rentalRateCardImg} target="_blank" rel="noopener noreferrer" aria-label="Open gear rental price sheet at full size" className="block p-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-forest-700 sm:p-5 print:p-0">
+            <img src={rentalRateCardImg} alt="Yatriko Gears price sheet listing 19 rental items with original and discounted prices in Nepalese rupees." width={1131} height={1600} className="h-auto w-full" />
+          </a>
+        </aside>
+        </div>
       </div>
     </section>
   )

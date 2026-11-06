@@ -657,6 +657,15 @@ export default function CartPage() {
               </button>
             )}
 
+            <a
+              href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent("Hi Yatriko Gears! I would like to confirm delivery for my order.")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex w-full items-center justify-center rounded-full border border-forest-700 px-4 py-3 text-center text-sm font-semibold text-forest-700 transition-colors hover:bg-forest-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-700"
+            >
+              Confirm Delivery On Whatsapp
+            </a>
+
             <p className="mt-3 text-center text-xs text-slate-400">
               Delivery charge will be discussed and confirmed on WhatsApp.
             </p>
