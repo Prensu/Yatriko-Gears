@@ -1,3 +1,4 @@
+import { sumGearQuantities } from "./BookingSelection"
 import BookingModel from "./BookingModel"
 import GearModel from "../gear/GearModel"
 
@@ -84,7 +85,7 @@ export async function assertAvailable(
     excludeBookingId,
   )
 
-  for (const item of items) {
+  for (const item of sumGearQuantities(items)) {
     const info = availability.get(item.gear)
     if (!info) throw { code: 422, message: "One or more items are no longer available" }
 

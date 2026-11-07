@@ -1,5 +1,6 @@
 import type { NextFunction, Response } from "express"
 import BookingModel from "./BookingModel"
+import { resolveBookingColor, sumGearQuantities } from "./BookingSelection"
 import GearModel from "../gear/GearModel"
 import { assertAvailable, getAvailability } from "./AvailabilityService"
 import { calculateSubtotal, calculateTotal, countDays } from "./BookingPricing"
@@ -55,17 +56,21 @@ class BookingController {
 
       const days = hasRental && startDate && endDate ? countDays(startDate, endDate) : 0
 
-      const gearIds = body.items.map((item: { gear: string }) => item.gear)
+      const gearIds = [...new Set<string>(body.items.map((item: { gear: string }) => item.gear))]
       const gearDocs = await GearModel.find({ _id: { $in: gearIds }, status: "active" })
       if (gearDocs.length !== gearIds.length) {
         throw { code: 422, message: "One or more items are no longer available" }
       }
 
+      const saleQuantities = new Map(sumGearQuantities(
+        body.items.filter((item: { mode: string }) => item.mode === "sale"),
+      ).map((item) => [item.gear, item.quantity]))
+
       const items = body.items.map((item: { gear: string; quantity: number; mode: "rent" | "sale"; color?: string }) => {
         const gear = gearDocs.find((doc) => String(doc._id) === item.gear)
         if (!gear) throw { code: 422, message: "Gear not found" }
         if (!gear.availableFor.includes(item.mode)) throw { code: 422, message: `${gear.name} is not available for ${item.mode === "sale" ? "purchase" : "rental"}` }
-        if (item.mode === "sale" && item.quantity > gear.quantityTotal) throw { code: 422, message: `Only ${gear.quantityTotal} × ${gear.name} available to buy` }
+        if (item.mode === "sale" && (saleQuantities.get(item.gear) ?? 0) > gear.quantityTotal) throw { code: 422, message: `Only ${gear.quantityTotal} × ${gear.name} available to buy` }
         return {
           gear: gear._id,
           name: gear.name,
@@ -74,7 +79,7 @@ class BookingController {
           pricePerDay: item.mode === "rent" ? gear.discountedPrice : 0,
           unitPrice: item.mode === "sale" ? (gear.salePrice ?? gear.discountedPrice) : undefined,
           quantity: item.quantity,
-          color: item.color,
+          color: resolveBookingColor(gear, item.color),
         }
       })
 
@@ -160,7 +165,7 @@ class BookingController {
       // WhatsApp confirmation — fire-and-forget, same pattern as email above.
       // A WhatsApp API hiccup must never block or fail the booking response.
       const gearSummary = items
-        .map((item: { name: string; quantity: number }) => `${item.name} × ${item.quantity}`)
+        .map((item: { name: string; quantity: number; color?: string | null }) => `${item.name}${item.color ? ` — ${item.color}` : ""} × ${item.quantity}`)
         .join(", ")
 
       whatsAppService
@@ -324,7 +329,7 @@ class BookingController {
       // When the admin confirms a booking, nudge the customer on WhatsApp.
       if (req.body.status === "confirmed") {
         const gearSummary = booking.items
-          .map((item: { name: string; quantity: number }) => `${item.name} × ${item.quantity}`)
+          .map((item: { name: string; quantity: number; color?: string | null }) => `${item.name}${item.color ? ` — ${item.color}` : ""} × ${item.quantity}`)
           .join(", ")
         const dateRange =
           booking.startDate && booking.endDate

@@ -149,16 +149,18 @@ export default function CartPage() {
 
   const hasStockIssue = useMemo(() => {
     for (const item of items) {
+      const quantity = items.filter((other) => other.gearId === item.gearId && other.mode === item.mode)
+        .reduce((sum, other) => sum + other.quantity, 0);
       if (item.mode === "rent") {
         const avail = availability.get(item.gearId);
-        if (avail && item.quantity > avail.quantityAvailable) return true;
+        if (avail && quantity > avail.quantityAvailable) return true;
       } else {
         const gear = gearMap.get(item.gearId);
-        if (gear && item.quantity > (gear.quantityTotal ?? 1)) return true;
+        if (gear && quantity > (gear.quantityTotal ?? 1)) return true;
       }
     }
     return false;
-  }, [items, availability]);
+  }, [items, availability, gearMap]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -172,6 +174,19 @@ export default function CartPage() {
 
     if (items.length === 0) {
       setError("Your cart is empty.");
+      return;
+    }
+
+    const invalidSelection = items.find((item) => {
+      const gear = gearMap.get(item.gearId);
+      return gear && (gear.colors.length > 0 || item.color) && !gear.colors.includes(item.color ?? "");
+    });
+    if (invalidSelection) {
+      setError(`Please remove ${gearMap.get(invalidSelection.gearId)?.name} and add it again with an available color.`);
+      return;
+    }
+    if (hasStockIssue) {
+      setError("Please reduce quantities to match available stock across all colors.");
       return;
     }
 
@@ -287,16 +302,18 @@ export default function CartPage() {
                     if (!gear) return null;
                     const imageSrc = resolveGearImage(gear.image);
                     const avail = availability.get(item.gearId);
+                    const quantity = items.filter((other) => other.gearId === item.gearId && other.mode === item.mode)
+                      .reduce((sum, other) => sum + other.quantity, 0);
                     const overStock =
                       item.mode === "sale"
-                        ? item.quantity > (gear.quantityTotal ?? 1)
+                        ? quantity > (gear.quantityTotal ?? 1)
                         : avail
-                          ? item.quantity > avail.quantityAvailable
+                          ? quantity > avail.quantityAvailable
                           : false;
 
                     return (
                       <li
-                        key={`${item.gearId}-${item.mode}`}
+                        key={JSON.stringify([item.gearId, item.mode, item.color])}
                         className="flex gap-4 py-4 first:pt-0 last:pb-0"
                       >
                         {imageSrc ? (
@@ -572,9 +589,9 @@ export default function CartPage() {
                 const gear = gearMap.get(item.gearId);
                 if (!gear) return null;
                 return (
-                  <div key={item.gearId} className="flex justify-between gap-2">
+                  <div key={JSON.stringify([item.gearId, item.mode, item.color])} className="flex justify-between gap-2">
                     <dt className="truncate text-slate-500">
-                      {gear.name} × {item.quantity}
+                      {gear.name}{item.color ? ` — ${item.color}` : ""} × {item.quantity}
                     </dt>
                     <dd className="whitespace-nowrap font-medium text-navy-900">
                       Rs.{" "}

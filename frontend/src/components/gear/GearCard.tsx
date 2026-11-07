@@ -74,7 +74,7 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
         {gear.colors.length > 0 && (
           <p className="mt-2 text-[11px] text-slate-400">Colors: {gear.colors.join(" · ")}</p>
         )}
-        {showingSale ? (
+        {showingSale && gear.colors.length === 0 ? (
           <button
             type="button"
             onClick={handleAdd}
@@ -95,7 +95,7 @@ export default function GearCard({ gear, mode = "rent" }: { gear: Gear; mode?: "
             sharedElementRef={imageRef}
             className="btn-secondary mt-4 flex w-full items-center justify-center"
           >
-            View details
+            {showingSale && gear.colors.length > 0 ? "Choose color" : "View details"}
           </TransitionLink>
         )}
       </div>

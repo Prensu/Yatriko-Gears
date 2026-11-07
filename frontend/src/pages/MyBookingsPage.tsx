@@ -131,12 +131,12 @@ export default function MyBookingsPage() {
 
                 <ul className="mt-4 space-y-1 text-sm text-slate-600">
                   {booking.items.map((item) => (
-                    <li key={item.gear} className="flex justify-between gap-3">
+                    <li key={JSON.stringify([item.gear, item.mode, item.color])} className="flex justify-between gap-3">
                       <span>
                         <span className="mr-2 rounded-full bg-sand px-2 py-0.5 text-xs font-semibold text-forest-700">
                           {item.mode === "sale" ? "Buy" : "Rent"}
                         </span>
-                        {item.name} × {item.quantity}
+                        {item.name}{item.color ? ` — ${item.color}` : ""} × {item.quantity}
                       </span>
                       <span className="text-slate-400">
                         {item.mode === "sale"

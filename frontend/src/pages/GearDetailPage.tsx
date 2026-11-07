@@ -186,7 +186,9 @@ export default function GearDetailPage() {
   const [relatedGear, setRelatedGear] = useState<Gear[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [pricingMode, setPricingMode] = useState<"rent" | "sale">("rent");
-  const [selectedColor, setSelectedColor] = useState("");
+  const [colorSelection, setColorSelection] = useState({ slug: "", color: "" });
+  const selectedColor = colorSelection.slug === slug ? colorSelection.color : "";
+  const setSelectedColor = (color: string) => setColorSelection({ slug: slug ?? "", color });
 
   const loading = !state || state.slug !== slug;
   const gear = state && state.slug === slug ? state.gear : null;
@@ -330,6 +332,10 @@ export default function GearDetailPage() {
 
   const handleAddToCart = () => {
     if (!showingSale) return;
+    if (gear.colors.length > 0 && !gear.colors.includes(selectedColor)) {
+      toast.error("Please select a color before adding this gear.");
+      return;
+    }
     addItem(gear._id, quantity, "sale", selectedColor || undefined);
     toast.success(`${quantity}x ${gear.name} added to your cart`);
   };
@@ -520,7 +526,8 @@ export default function GearDetailPage() {
                   {gear.colors.map((color) => (
                     <button type="button" onClick={() => setSelectedColor(color)}
                       key={color}
-                      className="rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-forest-300 hover:bg-forest-50"
+                      aria-pressed={selectedColor === color}
+                      className={`rounded-lg border px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-colors ${selectedColor === color ? "border-forest-600 bg-forest-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-forest-300 hover:bg-forest-50"}`}
                     >
                       {color}
                     </button>
